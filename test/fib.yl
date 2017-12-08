@@ -1,10 +1,14 @@
 ; Fibonacci!
+(let UNIT 1)
 (def fib (n)
-  (if (<= n 1) (
-      1
-    ) (
-      (+ (fib (- n 1)) (fib (- n 2)))
-    )
-  )
-)
+  (let ret
+    (if (<= n 1)
+      (
+        UNIT
+      )
+      (
+        (+ (fib (- n 1)) (fib (- n 2)))
+      )
+    ))
+  ret)
 (print (fib 20))
