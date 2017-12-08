@@ -80,6 +80,14 @@ GLOBAL_VARS = {
             return evaluate(exp1, scope, false);
         }
     },
+    ['loop'] (identifier, values, exp, scope) {
+        var ret = YL_FALSE;
+        for (var i = 0; i < values.length; i++) {
+            scope.set(identifier, values[i]);
+            ret = evaluate(exp, scope);
+        }
+        return ret;
+    },
     ['argv'] (n, scope) {
         return process.argv[n + 2];
     }
@@ -132,6 +140,8 @@ function evaluate(exp, scope, evaluate_function=true) {
         } else if (exp[0] === 'if') {
             // Do not directly evaluate if's arguments! Use lazy evaluation
             return scope.vars['if'](exp[1], exp[2], exp[3], scope);
+        } else if (exp[0] === 'loop') {
+            return scope.vars['loop'](exp[1], exp[2], exp[3], scope);
         } else {
             // Run a function
             var args = []
