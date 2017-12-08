@@ -1,32 +1,3 @@
-/*
- * AST
- * {
- *   type: "list",
- *   tokens: [
- *      AST,
- *      ...
- *   ]
- * }
- * OR
- * "string"
- *
- * Example:
- *
- * (print 1)
- *
- * {
- *   type: "list",
- *   tokens: [
- *       {
- *           type: "list",
- *           tokens: [
- *               'print',
- *               '1'
- *           ]
- *       }
- *   ]
- * }
- */
 
 function InputStream(input) {
     var pos = 0, line = 1, col = 0;
