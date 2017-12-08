@@ -18,6 +18,11 @@ GLOBAL_VARS = {
         scope.set(identifier, rhs);
         return rhs;
     },
+    ['set'] (identifier, exp, scope) {
+        rhs = evaluate(exp, scope);
+        scope.set(identifier, rhs);
+        return rhs;
+    },
     ['print'] (obj, scope) {
         console.log(evaluate(obj, scope));
         return YL_FALSE;
@@ -82,6 +87,14 @@ GLOBAL_VARS = {
     },
     ['loop'] (identifier, values, exp, scope) {
         var ret = YL_FALSE;
+        if (values[0] === 'range') {
+            var min = evaluate(values[1], scope);
+            var max = evaluate(values[2], scope);
+            values = [];
+            for (var i = min; i < max; i++) {
+                values.push(i);
+            }
+        }
         for (var i = 0; i < values.length; i++) {
             scope.set(identifier, values[i]);
             ret = evaluate(exp, scope);
@@ -142,6 +155,8 @@ function evaluate(exp, scope, evaluate_function=true) {
             return scope.vars['if'](exp[1], exp[2], exp[3], scope);
         } else if (exp[0] === 'loop') {
             return scope.vars['loop'](exp[1], exp[2], exp[3], scope);
+        } else if (exp[0] === 'set') {
+            return scope.vars['set'](exp[1], exp[2], scope);
         } else {
             // Run a function
             var args = []

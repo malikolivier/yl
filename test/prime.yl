@@ -1,0 +1,14 @@
+(def "is prime" (n)
+  (let ret 1)
+  (loop i (range 2 n)
+      (
+        (if ret (
+          (let div (% n i))
+          (if (= div 0) (
+              ; Break loop here
+              (set ret ())
+           ))
+        ))
+      ))
+  ret)
+(print ("is prime" (argv 1)))
