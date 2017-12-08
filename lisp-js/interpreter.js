@@ -5,9 +5,9 @@ GLOBAL_VARS = {
     ['def'] (identifier, arg_names, exps, scope) {
         function rhs () {
             var fn_scope = scope.extend();
-            arg_names.forEach(function (name, i) {
-                fn_scope.set(name, i < arguments.length ? arguments[i] : YL_FALSE);
-            });
+            for (var i = 0; i < arguments.length - 1; i++) {
+                fn_scope.set(arg_names[i], i < arguments.length - 1 ? arguments[i] : YL_FALSE);
+            }
             return evaluate(exps, fn_scope);
         }
         scope.set(identifier, rhs);
@@ -89,13 +89,24 @@ function evaluate(exp, scope) {
             }
         }
     } else if (scope.vars[exp[0]]) {
-        // Run a function
-        var args = []
-        for (var i = 1; i < exp.length; i++) {
-            args.push(evaluate(exp[i], scope));
+        if (exp[0] === 'def') {
+            // Create a funtion
+            var identifier = exp[1];
+            var arg_names = exp[2];
+            var fn_body = [];
+            for (var i = 3; i < exp.length; i++) {
+                fn_body.push(exp[i]);
+            }
+            return scope.vars['def'](identifier, arg_names, fn_body, scope);
+        } else {
+            // Run a function
+            var args = []
+            for (var i = 1; i < exp.length; i++) {
+                args.push(evaluate(exp[i], scope));
+            }
+            args.push(scope);
+            return scope.vars[exp[0]].apply(null, args);
         }
-        args.push(scope);
-        return scope.vars[exp[0]].apply(null, args);
     } else {
         var ret = YL_FALSE;
         exp.forEach(function (subexp) {
