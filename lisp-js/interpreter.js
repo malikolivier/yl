@@ -151,4 +151,7 @@ function evaluate(exp, scope, evaluate_function=true) {
 }
 
 
-module.exports = evaluate;
+module.exports = {
+    Interpreter: evaluate,
+    Scope
+};

@@ -2,10 +2,11 @@ const fs = require('fs');
 const readline = require('readline');
 
 const Parser = require('./parser');
-const Interpreter = require('./interpreter');
+const {Scope, Interpreter} = require('./interpreter');
 
 var inputFile = process.argv[2];
 if (!inputFile) {
+    var cliScope = new Scope(null);
     var rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -13,7 +14,7 @@ if (!inputFile) {
     process.stdout.write('> ');
     rl.on('line', function (cmd) {
         var ast = Parser(cmd);
-        var ret = Interpreter(ast);
+        var ret = Interpreter(ast, cliScope, false);
         console.log(ret);
         process.stdout.write('> ');
     });
