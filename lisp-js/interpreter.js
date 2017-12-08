@@ -85,6 +85,7 @@ function evaluate(exp, scope) {
         for (var i = 1; i < exp.length; i++) {
             args.push(evaluate(exp[i], scope));
         }
+        args.push(scope);
         return scope.vars[exp[0]].apply(null, args);
     } else {
         var ret = YL_FALSE;
