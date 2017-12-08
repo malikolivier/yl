@@ -1,0 +1,21 @@
+# YaFLisp
+
+Type inferrence
+
+## Data types
+
+- UTF-8 Strings
+- Numbers
+
+## Built-in symbols
+
++: Add
+-: Substract
+*: Multiply
+/: Divide
+%: Modulo
+=: Equality operator
+print: Print argument
+def: Declare a function
+let: Declare a variable
+if
