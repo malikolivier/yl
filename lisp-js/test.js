@@ -10,6 +10,9 @@ console.log(
   Parser('fa')
 )
 console.log(
+  Parser('fa "fd 1"')
+)
+console.log(
   Parser('()')
 )
 

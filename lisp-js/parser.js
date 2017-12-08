@@ -94,7 +94,7 @@ function TokenStream(input) {
         return str;
     }
     function read_string() {
-        return { type: "str", value: read_escaped('"') };
+        return { type: "symbol", value: read_escaped('"') };
     }
     function read_symbol() {
         var id = read_while(is_symbol);
