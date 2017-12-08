@@ -78,7 +78,16 @@ function evaluate(exp, scope) {
         scope = new Scope(null); // Global scope
     }
     if (! (exp instanceof Array)) {
-        return exp;
+        try {
+            return scope.get(exp);
+        } catch (_) {
+            if (/^[0-9]+\.?[0-9]*$/.test(exp)) {
+                // This is a number!
+                return Number(exp);
+            } else {
+                return exp;
+            }
+        }
     } else if (scope.vars[exp[0]]) {
         // Run a function
         var args = []
