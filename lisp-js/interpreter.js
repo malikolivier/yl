@@ -8,7 +8,7 @@ GLOBAL_VARS = {
             for (var i = 0; i < arguments.length - 1; i++) {
                 fn_scope.set(arg_names[i], i < arguments.length - 1 ? arguments[i] : YL_FALSE);
             }
-            return evaluate(exps, fn_scope);
+            return evaluate(exps, fn_scope, false);
         }
         scope.set(identifier, rhs);
         return rhs;
@@ -75,9 +75,9 @@ GLOBAL_VARS = {
     ['if'] (cond, exp1, exp2, scope) {
         var ret = evaluate(cond, scope);
         if (ret === YL_FALSE) {
-            return evaluate(exp2, scope);
+            return evaluate(exp2, scope, false);
         } else {
-            return evaluate(exp1, scope);
+            return evaluate(exp1, scope, false);
         }
     }
 };
@@ -101,7 +101,8 @@ Scope.prototype = {
     }
 }
 
-function evaluate(exp, scope) {
+function evaluate(exp, scope, evaluate_function=true) {
+    debug(exp);
     if (!scope) {
         scope = new Scope(null); // Global scope
     }
@@ -116,7 +117,7 @@ function evaluate(exp, scope) {
                 return exp;
             }
         }
-    } else if (scope.vars[exp[0]]) {
+    } else if (evaluate_function && scope.vars[exp[0]]) {
         if (exp[0] === 'def') {
             // Create a funtion
             var identifier = exp[1];
