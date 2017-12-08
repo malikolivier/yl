@@ -102,7 +102,6 @@ Scope.prototype = {
 }
 
 function evaluate(exp, scope, evaluate_function=true) {
-    debug(exp);
     if (!scope) {
         scope = new Scope(null); // Global scope
     }
