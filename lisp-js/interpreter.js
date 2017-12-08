@@ -79,6 +79,9 @@ GLOBAL_VARS = {
         } else {
             return evaluate(exp1, scope, false);
         }
+    },
+    ['argv'] (n, scope) {
+        return process.argv[n + 2];
     }
 };
 
