@@ -29,6 +29,34 @@ GLOBAL_VARS = {
             return YL_FALSE;
         }
     },
+    ['>'] (a, b, scope) {
+        if (evaluate(a, scope) > evaluate(b, scope)) {
+            return YL_TRUE;
+        } else {
+            return YL_FALSE;
+        }
+    },
+    ['<'] (a, b, scope) {
+        if (evaluate(a, scope) < evaluate(b, scope)) {
+            return YL_TRUE;
+        } else {
+            return YL_FALSE;
+        }
+    },
+    ['>='] (a, b, scope) {
+        if (evaluate(a, scope) >= evaluate(b, scope)) {
+            return YL_TRUE;
+        } else {
+            return YL_FALSE;
+        }
+    },
+    ['<='] (a, b, scope) {
+        if (evaluate(a, scope) <= evaluate(b, scope)) {
+            return YL_TRUE;
+        } else {
+            return YL_FALSE;
+        }
+    },
     ['+'] (a, b, scope) {
         return evaluate(a, scope) + evaluate(b, scope);
     },
@@ -98,6 +126,9 @@ function evaluate(exp, scope) {
                 fn_body.push(exp[i]);
             }
             return scope.vars['def'](identifier, arg_names, fn_body, scope);
+        } else if (exp[0] === 'if') {
+            // Do not directly evaluate if's arguments! Use lazy evaluation
+            return scope.vars['if'](exp[1], exp[2], exp[3], scope);
         } else {
             // Run a function
             var args = []

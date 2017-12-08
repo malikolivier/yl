@@ -1,0 +1,13 @@
+(if (< 0 1) (
+    (print "TRUE")
+  ) (
+    (print "FALSE")
+  )
+)
+
+(if (= 0 1) (
+    (print "TRUE")
+  ) (
+    (print "FALSE")
+  )
+)
