@@ -18,13 +18,13 @@ GLOBAL_VARS = {
         scope.set(identifier, rhs);
         return rhs;
     },
-    ['set'] (identifier, exp, scope) {
-        rhs = evaluate(exp, scope);
-        scope.set(identifier, rhs);
-        return rhs;
-    },
     ['print'] (obj, scope) {
-        console.log(evaluate(obj, scope));
+        var out = evaluate(obj, scope);
+        if (out === YL_FALSE) {
+            console.log('()')
+        } else {
+            console.log(out);
+        }
         return YL_FALSE;
     },
     ['='] (a, b, scope) {
@@ -32,6 +32,22 @@ GLOBAL_VARS = {
             return YL_TRUE;
         } else {
             return YL_FALSE;
+        }
+    },
+    ['&'] (a, b, scope) {
+        var a_ret = evaluate(a, scope);
+        if (a_ret === YL_FALSE) {
+            return a_ret;
+        } else {
+            return evaluate(b, scope);
+        }
+    },
+    ['|'] (a, b, scope) {
+        var a_ret = evaluate(a, scope);
+        if (a_ret === YL_FALSE) {
+            return evaluate(b, scope);
+        } else {
+            return a_ret;
         }
     },
     ['>'] (a, b, scope) {
@@ -88,16 +104,23 @@ GLOBAL_VARS = {
     ['loop'] (identifier, values, exp, scope) {
         var ret = YL_FALSE;
         if (values[0] === 'range') {
-            var min = evaluate(values[1], scope);
-            var max = evaluate(values[2], scope);
+            var min, max;
+            if (values.length === 2) {
+                var min = 0;
+                var max = evaluate(values[1], scope);
+            } else {
+                var min = evaluate(values[1], scope);
+                var max = evaluate(values[2], scope);
+            }
             values = [];
             for (var i = min; i < max; i++) {
                 values.push(i);
             }
         }
+        var loop_scope = scope.extend();
         for (var i = 0; i < values.length; i++) {
-            scope.set(identifier, values[i]);
-            ret = evaluate(exp, scope);
+            loop_scope.set(identifier, values[i]);
+            ret = evaluate(exp, loop_scope);
         }
         return ret;
     },
@@ -155,8 +178,6 @@ function evaluate(exp, scope, evaluate_function=true) {
             return scope.vars['if'](exp[1], exp[2], exp[3], scope);
         } else if (exp[0] === 'loop') {
             return scope.vars['loop'](exp[1], exp[2], exp[3], scope);
-        } else if (exp[0] === 'set') {
-            return scope.vars['set'](exp[1], exp[2], scope);
         } else {
             // Run a function
             var args = []

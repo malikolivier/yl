@@ -19,7 +19,12 @@ if (!inputFile) {
         process.stdout.write('> ');
     });
 } else {
-    var code = fs.readFileSync(inputFile, 'utf8');
+    var code;
+    if (inputFile === '-e') {
+        code = process.argv[3];
+    } else {
+        code = fs.readFileSync(inputFile, 'utf8');
+    }
     var ast = Parser(code);
     var ret = Interpreter(ast);
 
