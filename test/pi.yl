@@ -1,0 +1,22 @@
+(def "random point inside circle?" ()
+  (let x (rand))
+  (let y (rand))
+  (let x2 (* x x))
+  (let y2 (* y y))
+  (let d2 (+ x2 y2))
+  (if (<= d2 1) (1) (0)))
+
+(def "compute n*pi/4" (n)
+  (let ret ("random point inside circle?"))
+  (if (< n 1) (
+      ret
+    ) (
+      (+ ret ("compute n*pi/4" (- n 1)))
+    )))
+
+
+(let precision (argv 1))
+(let n*pi/4 ("compute n*pi/4" precision))
+(let pi/4 (/ n*pi/4 precision))
+(let pi (* pi/4 4))
+(print pi)
