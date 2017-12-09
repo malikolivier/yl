@@ -20,6 +20,8 @@ runtest () {
 
 runtest '' ''
 runtest "(print 1)" "1"
+runtest "(print (! ()))" "1"
+runtest "(print (! 1))" "()"
 runtest "(print (& () 1))" "()"
 runtest "(print (| () 1))" "1"
 runtest "(print (= 0 1))" "()"
@@ -31,6 +33,7 @@ runtest '(def echo (n) n) (print (echo "ds"))' 'ds'
 runtest '(let ret 1) (if ret ( (print "TRUE") ))' 'TRUE'
 runtest '(let ret ()) (if ret ( (print "TRUE") ))' ''
 runtest '(let ret ()) (if ret ( (print "TRUE") ) ( (print "FALSE") ))' 'FALSE'
+runtest "(print (if () (1)))" "()"
 runtest '(loop x (0 1 2) ( (print x) ))' '0
 1
 2'

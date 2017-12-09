@@ -1,14 +1,23 @@
-(def "is prime" (n)
-  (let ret 1)
-  (loop i (range 2 n)
-      (
-        (if ret (
-          (let div (% n i))
-          (if (= div 0) (
-              ; Break loop here
-              (let ret ())
-           ))
+(def "divisible by nothing under" (n i)
+  (if (<= i 1)
+    (
+      1
+    ) (
+      (if (= (% n i) 0)
+        (
+          ()
+        ) (
+          ("divisible by nothing under" n (- i 1))
         ))
-      ))
-  ret)
-(print ("is prime" (argv 1)))
+      )
+    ))
+
+(def "is prime" (n)
+  (if (> n 1) (
+    ("divisible by nothing under" n (- n 1)))))
+
+(let till (argv 1))
+(loop n (range till)
+  (if ("is prime" n)
+    (
+      (print n))))

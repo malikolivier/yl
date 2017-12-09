@@ -27,6 +27,13 @@ GLOBAL_VARS = {
         }
         return YL_FALSE;
     },
+    ['!'] (a, scope) {
+        if (evaluate(a, scope) === YL_FALSE) {
+            return YL_TRUE;
+        } else {
+            return YL_FALSE;
+        }
+    },
     ['='] (a, b, scope) {
         if (evaluate(a, scope) === evaluate(b, scope)) {
             return YL_TRUE;
@@ -96,7 +103,11 @@ GLOBAL_VARS = {
     ['if'] (cond, exp1, exp2, scope) {
         var ret = evaluate(cond, scope);
         if (ret === YL_FALSE) {
-            return evaluate(exp2, scope, false);
+            if (exp2) {
+                return evaluate(exp2, scope, false);
+            } else {
+                return YL_FALSE;
+            }
         } else {
             return evaluate(exp1, scope, false);
         }
