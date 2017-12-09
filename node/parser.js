@@ -109,9 +109,6 @@ function TokenStream(input) {
 
 function Parser(input) {
     return parse_expression();
-    function unexpected() {
-        input.croak("Unexpected token: " + JSON.stringify(input.peek()));
-    }
     function parse_expression() {
         var list = []
         do {
