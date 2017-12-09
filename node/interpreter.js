@@ -42,19 +42,17 @@ GLOBAL_VARS = {
         }
     },
     ['&'] (a, b, scope) {
-        var a_ret =a;
-        if (a_ret === YL_FALSE) {
-            return a_ret;
+        if (a === YL_FALSE) {
+            return a;
         } else {
             return b;
         }
     },
     ['|'] (a, b, scope) {
-        var a_ret = a;
-        if (a_ret === YL_FALSE) {
+        if (a === YL_FALSE) {
             return b;
         } else {
-            return a_ret;
+            return a;
         }
     },
     ['>'] (a, b, scope) {
@@ -116,11 +114,11 @@ GLOBAL_VARS = {
         if (values[0] === 'range') {
             var min, max;
             if (values.length === 2) {
-                var min = 0;
-                var max = evaluate(values[1], scope);
+                min = 0;
+                max = evaluate(values[1], scope);
             } else {
-                var min = evaluate(values[1], scope);
-                var max = evaluate(values[2], scope);
+                min = evaluate(values[1], scope);
+                max = evaluate(values[2], scope);
             }
             values = [];
             for (var i = min; i < max; i++) {

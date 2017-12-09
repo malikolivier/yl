@@ -11,4 +11,4 @@
       )
     ))
   ret)
-(print (fib 20))
+(print (fib (argv 1)))

@@ -1,13 +1,14 @@
 # YaFLisp
 
-Type inferrence
+Type inference
 
 ## Data types
 
-- UTF-8 Strings
-- Numbers
+- Symbol
 
 ## Built-in symbols
+
+Comments: ;
 
 +: Add
 -: Substract
@@ -15,7 +16,10 @@ Type inferrence
 /: Divide
 %: Modulo
 =: Equality operator
-print: Print argument
 def: Declare a function
 let: Declare a variable
+print: Print argument
 if
+loop
+argv
+rand
