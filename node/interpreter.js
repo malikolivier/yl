@@ -14,12 +14,12 @@ GLOBAL_VARS = {
         return rhs;
     },
     ['let'] (identifier, exp, scope) {
-        rhs = evaluate(exp, scope);
+        rhs = exp;
         scope.set(identifier, rhs);
         return rhs;
     },
     ['print'] (obj, scope) {
-        var out = evaluate(obj, scope);
+        var out = obj;
         if (out === YL_FALSE) {
             console.log('()')
         } else {
@@ -28,81 +28,80 @@ GLOBAL_VARS = {
         return YL_FALSE;
     },
     ['!'] (a, scope) {
-        if (evaluate(a, scope) === YL_FALSE) {
+        if (a === YL_FALSE) {
             return YL_TRUE;
         } else {
             return YL_FALSE;
         }
     },
     ['='] (a, b, scope) {
-        if (evaluate(a, scope) === evaluate(b, scope)) {
+        if (a === b) {
             return YL_TRUE;
         } else {
             return YL_FALSE;
         }
     },
     ['&'] (a, b, scope) {
-        var a_ret = evaluate(a, scope);
+        var a_ret =a;
         if (a_ret === YL_FALSE) {
             return a_ret;
         } else {
-            return evaluate(b, scope);
+            return b;
         }
     },
     ['|'] (a, b, scope) {
-        var a_ret = evaluate(a, scope);
+        var a_ret = a;
         if (a_ret === YL_FALSE) {
-            return evaluate(b, scope);
+            return b;
         } else {
             return a_ret;
         }
     },
     ['>'] (a, b, scope) {
-        if (evaluate(a, scope) > evaluate(b, scope)) {
+        if (a > b) {
             return YL_TRUE;
         } else {
             return YL_FALSE;
         }
     },
     ['<'] (a, b, scope) {
-        if (evaluate(a, scope) < evaluate(b, scope)) {
+        if (a < b) {
             return YL_TRUE;
         } else {
             return YL_FALSE;
         }
     },
     ['>='] (a, b, scope) {
-        if (evaluate(a, scope) >= evaluate(b, scope)) {
+        if (a >= b) {
             return YL_TRUE;
         } else {
             return YL_FALSE;
         }
     },
     ['<='] (a, b, scope) {
-        if (evaluate(a, scope) <= evaluate(b, scope)) {
+        if (a <= b) {
             return YL_TRUE;
         } else {
             return YL_FALSE;
         }
     },
     ['+'] (a, b, scope) {
-        return evaluate(a, scope) + evaluate(b, scope);
+        return a + b;
     },
     ['-'] (a, b, scope) {
-        return evaluate(a, scope) - evaluate(b, scope);
+        return a - b;
     },
     ['*'] (a, b, scope) {
-        return evaluate(a, scope) * evaluate(b, scope);
+        return a * b;
     },
     ['/'] (a, b, scope) {
-        return evaluate(a, scope) / evaluate(b, scope);
+        return a / b;
     },
     ['%'] (a, b, scope) {
-        return evaluate(a, scope) % evaluate(b, scope);
+        return a % b;
     },
     ['if'] (cond, exp1, exp2, scope) {
-        var ret = evaluate(cond, scope);
-        if (ret === YL_FALSE) {
+        if (cond === YL_FALSE) {
             if (exp2) {
                 return evaluate(exp2, scope, false);
             } else {
@@ -186,7 +185,8 @@ function evaluate(exp, scope, evaluate_function=true) {
             return scope.vars['def'](identifier, arg_names, fn_body, scope);
         } else if (exp[0] === 'if') {
             // Do not directly evaluate if's arguments! Use lazy evaluation
-            return scope.vars['if'](exp[1], exp[2], exp[3], scope);
+            var cond = evaluate(exp[1], scope);
+            return scope.vars['if'](cond, exp[2], exp[3], scope);
         } else if (exp[0] === 'loop') {
             return scope.vars['loop'](exp[1], exp[2], exp[3], scope);
         } else {
