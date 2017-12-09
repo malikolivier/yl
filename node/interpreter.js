@@ -136,6 +136,9 @@ GLOBAL_VARS = {
     },
     ['argv'] (n, scope) {
         return process.argv[n + 2];
+    },
+    ['rand'] (scope) {
+        return Math.random();
     }
 };
 
