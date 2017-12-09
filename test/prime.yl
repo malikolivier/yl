@@ -3,10 +3,8 @@
     (
       1
     ) (
-      (if (= (% n i) 0)
+      (if (! (= (% n i) 0))
         (
-          ()
-        ) (
           ("divisible by nothing under" n (- i 1))
         ))
       )
