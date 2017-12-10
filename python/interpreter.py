@@ -164,7 +164,7 @@ def argv_fn(args, scope):
 
 
 def rand_fn(args, scope):
-    return random.ramdom()
+    return random.random()
 
 
 GLOBAL_VARS = {
