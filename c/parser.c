@@ -276,10 +276,13 @@ int ast_fprintf(FILE* f, struct AST* ast)
 {
 	int ret = 0;
 	ret += fprintf(f, "(");
-	if (ast->type == AST_VAL) {
-		ret += fprintf(f, "\"%s\" ", ast->val.tok);
-	} else if (ast->type == AST_LIST) {
-		ret += ast_fprintf(f, ast->val.ast);
+	while (ast != NULL) {
+		if (ast->type == AST_VAL) {
+			ret += fprintf(f, "\"%s\" ", ast->val.tok);
+		} else if (ast->type == AST_LIST) {
+			ret += ast_fprintf(f, ast->val.ast);
+		}
+		ast = ast->tail;
 	}
 	ret += fprintf(f, ")");
 	return ret;
