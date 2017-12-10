@@ -55,7 +55,7 @@ void inputstream_croak(struct YL_InputStream* stream, char* msg)
 
 int token_eof(struct YL_TokenStream* tokstream)
 {
-	return feof(tokstream->input->f) != 0;
+	return inputstream_peek(tokstream->input) == EOF;
 }
 
 char* token_read_while(struct YL_TokenStream* tokstream,
@@ -67,7 +67,6 @@ char* token_read_while(struct YL_TokenStream* tokstream,
 	while(!token_eof(tokstream) &&
               predicate(inputstream_peek(tokstream->input))) {
 		char c = inputstream_next(tokstream->input);
-		if (c == EOF)	break;
 		if (pos >= size - 1) {
 			// Increase buffer size
 			size += BUF_SIZE;
@@ -91,10 +90,9 @@ char* token_read_escaped(struct YL_TokenStream* tokstream, char end)
 	int size = 0;
 	int pos = 0;
 	char add_char = 0;
+	inputstream_next(tokstream->input);
 	while(!token_eof(tokstream)) {
 		char ch = inputstream_next(tokstream->input);
-		if (ch == EOF)
-			break;
 		if (escaped) {
 			add_char = 1;
 			escaped = 0;
@@ -174,8 +172,6 @@ struct YL_Token* token_read_next(struct YL_TokenStream* tokstream)
 	if (token_eof(tokstream))
 		return NULL;
 	char ch = inputstream_peek(tokstream->input);
-	if (ch == EOF)
-		return NULL;
 	if (ch == ';') {
 		skip_comment(tokstream);
 		return token_read_next(tokstream);
