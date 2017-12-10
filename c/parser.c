@@ -77,7 +77,7 @@ char* token_read_while(struct YL_TokenStream* tokstream,
 		buf[pos] = c;
 		pos++;
 	}
-	if (!buf)	buf[pos] = '\0';
+	if (buf)	buf[pos] = '\0';
 	return buf;
 }
 
@@ -218,36 +218,65 @@ int token_is_opening(struct YL_Token* tok)
 
 void ast_free(struct AST* ast)
 {
-	if (ast != NULL) {
-		free(ast->tok);
-		ast_free(ast->tail);
+	if (ast->type == AST_EMPTY) {
 		free(ast);
+	} else if (ast->type == AST_VAL) {
+		free(ast->val.tok);
+		if (ast->tail)
+			ast_free(ast->tail);
+	} else if (ast->type == AST_LIST) {
+		ast_free(ast->val.ast);
+		if (ast->tail)
+			ast_free(ast->tail);
 	}
 }
 
 
 struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 {
-	struct AST* ast = NULL;
-	struct AST* next_ast = NULL;
+	struct AST* ast = malloc(sizeof(ast));
+	ast->type = AST_EMPTY;
+	struct AST* next_ast = ast;
 	struct YL_Token* tok = NULL;
+	int second_loop = 0;
 	while ((tok = token_next(tokstream)) && !token_is_closing(tok)) {
+		if (second_loop) {
+			next_ast->tail = malloc(sizeof(ast));
+			next_ast = next_ast->tail;
+			next_ast->type = AST_EMPTY;
+		}
 		if (tok->type == YL_TOKEN_SYM) {
-			next_ast = malloc(sizeof(next_ast));
+			next_ast->val.tok = tok->val;
 		} else if (token_is_opening(tok)) {
-			next_ast = parse_tok_stream(tokstream);
+			next_ast->val.ast = parse_tok_stream(tokstream);
 		}
-		if (!ast) {
-			ast = next_ast;
-		}
-		next_ast->tok = tok->val;
-		next_ast = next_ast->tail;
+		next_ast->tail = NULL;
+		second_loop = 1;
 	}
 	return ast;
 }
 
-struct AST* yl_parse(FILE* f) {
+struct AST* yl_parse(FILE* f)
+{
 	struct YL_InputStream stream = { 0, 0, f };
 	struct YL_TokenStream tokstream = { NULL, &stream };
 	return parse_tok_stream(&tokstream);
+}
+
+int ast_fprintf(FILE* f, struct AST* ast)
+{
+	int ret = 0;
+	ret += fprintf(f, "(");
+	if (ast->type == AST_VAL) {
+		ret += fprintf(f, "\"%s\" ", ast->val.tok);
+	} else if (ast->type == AST_LIST) {
+		ret += ast_fprintf(f, ast->val.ast);
+	}
+	ret += fprintf(f, ")");
+	return ret;
+}
+
+int ast_printf(struct AST* ast)
+{
+	return ast_fprintf(stdin, ast);
 }
