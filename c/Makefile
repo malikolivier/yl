@@ -13,3 +13,6 @@ $(OBJECTS): %.o : %.c
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
+
+tags:
+	ctags -R .
