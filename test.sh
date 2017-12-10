@@ -2,7 +2,8 @@
 
 set -o errexit
 
-INTERPRETER="node node/yl.js"
+# INTERPRETER="node node/yl.js"
+INTERPRETER="python3 python/yl.py"
 
 runtest () {
 	CODE="$1"
