@@ -19,5 +19,6 @@ struct YL_Obj {
 };
 
 struct YL_Obj* yl_evaluate(struct AST*);
+void yl_print(struct YL_Obj*);
 
 #endif

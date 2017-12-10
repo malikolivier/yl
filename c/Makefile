@@ -6,7 +6,7 @@ WARNINGS=-Wall -Wextra -Wpedantic
 .PHONY: clean
 
 $(EXECUTABLE): $(OBJECTS)
-	gcc  $(OBJECTS) $(WARNINGS) -o $@
+	gcc $(OBJECTS) $(WARNINGS) -o $@
 
 $(OBJECTS): %.o : %.c
 	gcc $< $(WARNINGS) -c -o $@

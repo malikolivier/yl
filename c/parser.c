@@ -12,8 +12,8 @@ struct InputStream {
 
 char input_stream_next(struct InputStream* stream)
 {
-	char ch = 'c';
-	/* TODO */
+	(void)stream;
+	return EOF;
 }
 
 void ast_free(struct AST* ast)
@@ -30,6 +30,7 @@ struct AST* yl_parse(FILE* f)
 	struct AST* ast = NULL;
 	if (ast == NULL) {
 		ast = malloc(sizeof(struct AST*));
+		(void)f;
 	}
 	return ast;
 }

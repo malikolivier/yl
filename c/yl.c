@@ -4,6 +4,8 @@
 #include "parser.h"
 #include "interpreter.h"
 
+#define PROMPT_MAXLEN 65536
+
 
 static void usage(void)
 {
@@ -15,13 +17,34 @@ int main(int argc, char** argv)
 {
 	int ret;
 	FILE* f;
+	struct AST* ast;
+	struct YL_Obj* obj;
 	if (argc < 2) {
 		/* Interactive CLI */
+		char code[PROMPT_MAXLEN];
+		int col = 0;
+		printf("> ");
 		while (1) {
-			/* TODO */
-			puts("Not implemented!");
-			return 1;
+			int c = getchar();
+			if (c == EOF) {
+				break;
+			} else if (c == '\n') {
+				f = fmemopen(code, col, "r");
+				col = 0;
+				printf("> ");
+				ast = yl_parse(f);
+				obj = yl_evaluate(ast);
+				ast_free(ast);
+				yl_print(obj);
+			} else {
+				if (col > PROMPT_MAXLEN) {
+					printf("Input too long! ( > %d)", PROMPT_MAXLEN);
+					return 1;
+				}
+				code[col++] = c;
+			}
 		}
+		return 0;
 	}
 	if (argc < 3) {
 		f = fopen(argv[1], "r");
@@ -42,8 +65,8 @@ int main(int argc, char** argv)
 			return 1;
 		}
 	}
-	struct AST* ast = yl_parse(f);
-	struct YL_Obj* obj = yl_evaluate(ast);
+	ast = yl_parse(f);
+	obj = yl_evaluate(ast);
 	ast_free(ast);
 	if (obj->type != YL_TYPE_NUMBER)
 		ret = 0;
