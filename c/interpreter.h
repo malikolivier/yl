@@ -14,21 +14,17 @@ struct YL_Var;
 	struct YL_Func_##len { \
 		int argc; \
 		int builtin; \
-		union { \
-			struct YL_Var* (*builtin_fn)(int, struct YL_Var*); \
-			struct AST* ast; \
-		} u; \
+		struct AST* ast; \
+		struct YL_Scope* scope; \
 		char* arg_names[len]; \
 	}
 
 struct YL_Func {
 	int argc;
 	int builtin;
-	union {
-		struct YL_Var* (*builtin_fn)(int, struct YL_Var*);
-		struct AST* ast;
-	} u;
-	char* arg_names[];
+	struct AST* ast;
+	struct YL_Scope* scope;
+	char** arg_names;
 };
 DECLARE_YL_Func(2);
 
@@ -43,6 +39,7 @@ struct YL_Var {
 };
 
 struct YL_VarList {
+	int empty;
 	char* name;
 	struct YL_Var* val;
 	struct YL_VarList* tail;
