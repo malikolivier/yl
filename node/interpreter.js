@@ -41,20 +41,6 @@ GLOBAL_VARS = {
             return YL_FALSE;
         }
     },
-    ['&'] (a, b, scope) {
-        if (a === YL_FALSE) {
-            return a;
-        } else {
-            return b;
-        }
-    },
-    ['|'] (a, b, scope) {
-        if (a === YL_FALSE) {
-            return b;
-        } else {
-            return a;
-        }
-    },
     ['>'] (a, b, scope) {
         if (a > b) {
             return YL_TRUE;

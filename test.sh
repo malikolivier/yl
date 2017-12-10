@@ -22,8 +22,6 @@ runtest '' ''
 runtest "(print 1)" "1"
 runtest "(print (! ()))" "1"
 runtest "(print (! 1))" "()"
-runtest "(print (& () 1))" "()"
-runtest "(print (| () 1))" "1"
 runtest "(print (= 0 1))" "()"
 runtest "(print (= 0 0))" "1"
 runtest "(print (< 0 1))" "1"
