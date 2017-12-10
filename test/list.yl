@@ -1,0 +1,20 @@
+(def cons (a b)
+  (def "anonymous function" (func)
+    (func a b)))
+(def car (cell)
+  (cell (def first (a b) a)))
+(def cdr (cell)
+  (cell (def second (a b) b)))
+(def NIL (f)
+  (f NIL NIL))
+
+
+(let y (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 NIL)))))))
+
+(def map (list f)
+  (if (! (= list NIL)) (
+    (f (car list))
+    (map (cdr list) f))
+  ))
+
+(map y print)
