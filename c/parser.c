@@ -90,8 +90,9 @@ char* token_read_escaped(struct YL_TokenStream* tokstream, char end)
 	int size = 0;
 	int pos = 0;
 	char add_char = 0;
+	int end_of_string = 0;
 	inputstream_next(tokstream->input);
-	while(!token_eof(tokstream)) {
+	while(!token_eof(tokstream) && !end_of_string) {
 		char ch = inputstream_next(tokstream->input);
 		if (escaped) {
 			add_char = 1;
@@ -102,6 +103,7 @@ char* token_read_escaped(struct YL_TokenStream* tokstream, char end)
 		} else if (ch == end) {
 			ch = '\0';
 			add_char = 1;
+			end_of_string = 1;
 		} else {
 			add_char = 1;
 		}
