@@ -158,7 +158,10 @@ def def_fn(args, scope):
 def argv_fn(args, scope):
     n = int(args[0]) + 1
     if n < len(sys.argv):
-        return sys.argv[n]
+        if is_number(sys.argv[n]):
+            return float(sys.argv[n])
+        else:
+            return sys.argv[n]
     else:
         return YL_FALSE
 
@@ -217,12 +220,17 @@ class Scope:
         return value
 
 
+def is_number(string):
+    return re.match(r'^[0-9]+\.?[0-9]*$', string)
+
+
 def evaluate(exp, scope=Scope(), evaluate_function=True):
+    #print(exp)
     if type(exp) is not list:
         try:
             return scope.get(exp)
         except InterpreterException:
-            if re.match(r'^[0-9]+\.?[0-9]*$', exp):
+            if is_number(exp):
                 return float(exp)
             else:
                 return exp
