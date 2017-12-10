@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	int ret;
 	FILE* f;
 	struct AST* ast;
-	struct YL_Obj* obj;
+	struct YL_Var* obj;
 	if (argc < 2) {
 		/* Interactive CLI */
 		char code[PROMPT_MAXLEN];
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	if (obj->type != YL_TYPE_NUMBER)
 		ret = 0;
 	else {
-		ret = (int) obj->value.num;
+		ret = (int) obj->u.num;
 	}
 	return ret;
 }
