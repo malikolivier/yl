@@ -16,6 +16,7 @@ struct YL_Token {
 };
 
 struct YL_InputStream {
+	long pos;
 	int line;
 	int col;
 	FILE* f;
@@ -29,7 +30,7 @@ struct YL_TokenStream {
 char inputstream_peek(struct YL_InputStream* stream)
 {
 	char ch = fgetc(stream->f);
-	fseek(stream->f, -1L, SEEK_CUR);
+	fseek(stream->f, stream->pos, SEEK_SET);
 	return ch;
 }
 
@@ -42,6 +43,7 @@ char inputstream_next(struct YL_InputStream* stream)
 	} else {
 		stream->col++;
 	}
+	stream->pos++;
 	return ch;
 }
 
@@ -53,7 +55,7 @@ void inputstream_croak(struct YL_InputStream* stream, char* msg)
 
 int token_eof(struct YL_TokenStream* tokstream)
 {
-	return feof(tokstream->input->f);
+	return feof(tokstream->input->f) != 0;
 }
 
 char* token_read_while(struct YL_TokenStream* tokstream,
@@ -65,6 +67,7 @@ char* token_read_while(struct YL_TokenStream* tokstream,
 	while(!token_eof(tokstream) &&
               predicate(inputstream_peek(tokstream->input))) {
 		char c = inputstream_next(tokstream->input);
+		if (c == EOF)	break;
 		if (pos >= size - 1) {
 			// Increase buffer size
 			size += BUF_SIZE;
@@ -90,6 +93,8 @@ char* token_read_escaped(struct YL_TokenStream* tokstream, char end)
 	char add_char = 0;
 	while(!token_eof(tokstream)) {
 		char ch = inputstream_next(tokstream->input);
+		if (ch == EOF)
+			break;
 		if (escaped) {
 			add_char = 1;
 			escaped = 0;
@@ -169,6 +174,8 @@ struct YL_Token* token_read_next(struct YL_TokenStream* tokstream)
 	if (token_eof(tokstream))
 		return NULL;
 	char ch = inputstream_peek(tokstream->input);
+	if (ch == EOF)
+		return NULL;
 	if (ch == ';') {
 		skip_comment(tokstream);
 		return token_read_next(tokstream);
@@ -246,8 +253,10 @@ struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 			next_ast->type = AST_EMPTY;
 		}
 		if (tok->type == YL_TOKEN_SYM) {
+			next_ast->type = AST_VAL;
 			next_ast->val.tok = tok->val;
 		} else if (token_is_opening(tok)) {
+			next_ast->type = AST_LIST;
 			next_ast->val.ast = parse_tok_stream(tokstream);
 		}
 		next_ast->tail = NULL;
@@ -258,7 +267,7 @@ struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 
 struct AST* yl_parse(FILE* f)
 {
-	struct YL_InputStream stream = { 0, 0, f };
+	struct YL_InputStream stream = { 0, 0, 0, f };
 	struct YL_TokenStream tokstream = { NULL, &stream };
 	return parse_tok_stream(&tokstream);
 }
