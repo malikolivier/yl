@@ -38,6 +38,38 @@ def eq_op(args, scope):
         return YL_FALSE
 
 
+def gt_op(args, scope):
+    a, b = args[0], args[1]
+    if a > b:
+        return YL_TRUE
+    else:
+        return YL_FALSE
+
+
+def ge_op(args, scope):
+    a, b = args[0], args[1]
+    if a >= b:
+        return YL_TRUE
+    else:
+        return YL_FALSE
+
+
+def lt_op(args, scope):
+    a, b = args[0], args[1]
+    if a < b:
+        return YL_TRUE
+    else:
+        return YL_FALSE
+
+
+def le_op(args, scope):
+    a, b = args[0], args[1]
+    if a <= b:
+        return YL_TRUE
+    else:
+        return YL_FALSE
+
+
 def plus_op(args, scope):
     any_string = False
     for arg in args:
@@ -52,6 +84,22 @@ def plus_op(args, scope):
         for arg in args:
             ret += arg
     return ret
+
+
+def minus_op(args, scope):
+    return args[0] - args[1]
+
+
+def multiply_op(args, scope):
+    return args[0] * args[1]
+
+
+def divide_op(args, scope):
+    return args[0] / args[1]
+
+
+def modulo_op(args, scope):
+    return args[0] % args[1]
 
 
 def let_fn(args, scope):
@@ -123,7 +171,15 @@ GLOBAL_VARS = {
     'print': print_fn,
     '!': not_op,
     '=': eq_op,
+    '>': gt_op,
+    '<': lt_op,
+    '>=': ge_op,
+    '<=': le_op,
     '+': plus_op,
+    '-': minus_op,
+    '*': multiply_op,
+    '/': divide_op,
+    '%': modulo_op,
     'let': let_fn,
     'if': if_fn,
     'loop': loop_fn,
