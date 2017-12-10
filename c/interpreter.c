@@ -12,6 +12,7 @@
 	} while(0);
 
 struct YL_Var YL_FALSE = { YL_TYPE_FALSE, { (double) 0 } };
+struct YL_Var YL_TRUE = { YL_TYPE_NUMBER, { (double) 1 } };
 
 
 void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
@@ -47,21 +48,40 @@ struct YL_Var* def_fn(char* identifier, int argc, char** arg_names,
 	CHECK_MEM_ALLOC(fn->u.func);
 	fn->u.func->argc = argc;
 	fn->u.func->builtin = 0;
-	fn->u.func->ast = ast;
+	fn->u.func->u.ast = ast;
 	fn->u.func->scope = scope;
 	fn->u.func->arg_names = arg_names;
 	scope_set(scope, identifier, fn);
 	return fn;
 }
 
-struct YL_Func_2 DEF_FN = {
-	.argc=2, .builtin=1, .arg_names={ "lhs", "rhs" },
+struct YL_Var* not_op(int argc, struct YL_Var* argv)
+{
+	if (argc == 0) {
+		return &YL_TRUE;
+	}
+	if (argv == &YL_FALSE) {
+		return &YL_TRUE;
+	} else {
+		return &YL_FALSE;
+	}
+}
+
+struct YL_Func DEF_FN = {
+	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
+};
+struct YL_Func NOT_OP = {
+	.argc=1, .builtin=1, .u.builtin_fn=not_op, .arg_names=NULL
 };
 struct YL_Var BUILTIN_VAR_VALS[] = {
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &NOT_OP }
+};
+struct YL_VarList NOT_OP_VAR = {
+	.name="!", .val=&BUILTIN_VAR_VALS[1], .tail=NULL
 };
 struct YL_VarList GLOBAL_VARS = {
-	.name="def", .val=&BUILTIN_VAR_VALS[0], .tail=NULL
+	.name="def", .val=&BUILTIN_VAR_VALS[0], .tail=&NOT_OP_VAR
 };
 struct YL_Scope GLOBAL_SCOPE = { .vars=&GLOBAL_VARS, .parent=NULL };
 
