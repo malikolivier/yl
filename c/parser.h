@@ -21,6 +21,6 @@ struct AST {
 
 struct AST* yl_parse(FILE* f);
 void ast_free(struct AST*);
-void ast_print(struct AST*);
+int ast_printf(struct AST*);
 
 #endif

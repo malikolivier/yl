@@ -31,11 +31,12 @@ int main(int argc, char** argv)
 			} else if (c == '\n') {
 				f = fmemopen(code, col, "r");
 				col = 0;
-				printf("> ");
 				ast = yl_parse(f);
+				ast_printf(ast);
 				obj = yl_evaluate(ast);
 				ast_free(ast);
 				yl_print(obj);
+				printf("> ");
 			} else {
 				if (col > PROMPT_MAXLEN) {
 					printf("Input too long! ( > %d)", PROMPT_MAXLEN);
