@@ -292,9 +292,9 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 					fprintf(stderr, "%s", fn_name);
 					CROAK(" is not a function");
 				}
-				int argc = ast_len(ast->tail);
+				int argc = ast_len(fn_name_exp->tail);
 				struct YL_Var** argv = malloc(sizeof(struct YL_Var*)*argc);
-				ast_extract_argv(ast->tail, scope, argv);
+				ast_extract_argv(fn_name_exp->tail, scope, argv);
 				if (fn->u.func->builtin) {
 					return fn->u.func->u.builtin_fn(argc, argv);
 				} else {
