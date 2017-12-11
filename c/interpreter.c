@@ -295,10 +295,11 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 				}
 			}
 		} else {
-			struct AST* subexp = ast;
+			struct AST* subexp = ast->val.ast;
 			ret = &YL_FALSE;
 			while (subexp != NULL) {
 				ret = yl_evaluate_in_scope(subexp, scope, 1);
+				subexp = ast->tail;
 			}
 			return ret;
 		}
