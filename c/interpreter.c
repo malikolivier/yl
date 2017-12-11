@@ -114,6 +114,30 @@ struct YL_VarList GLOBAL_VARS = {
 };
 struct YL_Scope GLOBAL_SCOPE = { .vars=&GLOBAL_VARS, .parent=NULL };
 
+int is_number(char* str)
+{
+	char** endptr = &str;
+	double out = strtod(str, endptr);
+	if (out == 0 && &str == endptr) {
+		return 0;
+	} else {
+		return **endptr == '\0';
+	}
+}
+
+int ast_len(struct AST* ast) {
+	if (!ast)
+		return 0;
+	switch(ast->type) {
+	case AST_EMPTY:
+		return 0;
+	case AST_VAL:
+		return 1 + ast_len(ast->tail);
+	case AST_LIST:
+		return ast_len(ast->val.ast) + ast_len(ast->tail);
+	}
+}
+
 struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
                                     int evaluate_function)
 {
@@ -127,11 +151,28 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			return ret;
 		} else if(is_number(ast->val.tok)) {
 			ret = malloc(sizeof(ret));
-			return strtod(ast->val.tok, NULL);
+			ret->type = YL_TYPE_NUMBER;
+			ret->u.num = strtod(ast->val.tok, NULL);
+			return ret;
+		} else {
+			ret = malloc(sizeof(ret));
+			ret->type = YL_TYPE_STRING;
+			ret->u.str = ast->val.tok;
+			return ret;
+		}
+	case AST_LIST:
+		if (evaluate_function && ast_len(ast) > 0 &&
+		    ast->val.ast->type == AST_VAL &&
+		    scope_get(scope, ast->val.ast->val.tok) != NULL) {
+			char* fn_name = ast->val.ast->val.tok;
+			if (strcmp(fn_name, "def") == 0) {
+				/* TODO  Call def_fn */
+			} else {
+				/* Run a normal function */
+				/* TODO */
+			}
 		}
 	}
-	(void)ast;
-	(void)scope;
 	return &YL_FALSE;
 }
 
