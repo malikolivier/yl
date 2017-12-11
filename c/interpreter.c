@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "parser.h"
 #include "interpreter.h"
@@ -32,10 +33,38 @@ void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
 	varlist->tail = NULL;
 }
 
+struct YL_Var* varlist_find(struct YL_VarList* varlist, char* id)
+{
+	if (varlist == NULL || varlist->empty) {
+		return NULL;
+	} else {
+		if (strcmp(varlist->name, id) == 0) {
+			return varlist->val;
+		} else {
+			return varlist_find(varlist->tail, id);
+		}
+	}
+}
+
 struct YL_Var* scope_set(struct YL_Scope* scope, char* id, struct YL_Var* val)
 {
 	varlist_add(scope->vars, id, val);
 	return val;
+}
+
+struct YL_Var* scope_get(struct YL_Scope* scope, char* id)
+{
+	struct YL_Var* val = NULL;
+	if (scope == NULL) {
+		return NULL;
+	} else {
+		val = varlist_find(scope->vars, id);
+		if (val) {
+			return val;
+		} else {
+			return scope_get(scope->parent, id);
+		}
+	}
 }
 
 struct YL_Var* def_fn(char* identifier, int argc, char** arg_names,
@@ -85,9 +114,22 @@ struct YL_VarList GLOBAL_VARS = {
 };
 struct YL_Scope GLOBAL_SCOPE = { .vars=&GLOBAL_VARS, .parent=NULL };
 
-struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope)
+struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
+                                    int evaluate_function)
 {
-	/* TODO */
+	struct YL_Var* ret;
+	switch(ast->type) {
+	case AST_EMPTY:
+		return &YL_FALSE;
+	case AST_VAL:
+		ret = scope_get(scope, ast->val.tok);
+		if (ret) {
+			return ret;
+		} else if(is_number(ast->val.tok)) {
+			ret = malloc(sizeof(ret));
+			return strtod(ast->val.tok, NULL);
+		}
+	}
 	(void)ast;
 	(void)scope;
 	return &YL_FALSE;
@@ -96,7 +138,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope)
 
 struct YL_Var* yl_evaluate(struct AST* ast)
 {
-	return yl_evaluate_in_scope(ast, &GLOBAL_SCOPE);
+	return yl_evaluate_in_scope(ast, &GLOBAL_SCOPE, 1);
 }
 
 void yl_print(struct YL_Var* obj)
