@@ -7,8 +7,7 @@
 #define CHECK_MEM_ALLOC(ptr) \
 	do { \
 		if (!ptr) { \
-			printf("Memory allocation failed!"); \
-			exit(1); \
+			CROAK("Memory allocation failed!"); \
 		} \
 	} while(0);
 
@@ -67,19 +66,39 @@ struct YL_Var* scope_get(struct YL_Scope* scope, char* id)
 	}
 }
 
-struct YL_Var* def_fn(char* identifier, int argc, char** arg_names,
-                      struct AST* ast, struct YL_Scope* scope)
+/* Prototypes */
+int ast_len(struct AST*);
+struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
+                                    int evaluate_function);
+char* cast_yl_var_to_string(struct YL_Var* var);
+
+char** ast_get_names(struct AST* ast, struct YL_Scope* scope, char** names)
+{
+	int i = 0;
+	while(ast != NULL && ast->type != AST_EMPTY) {
+		struct YL_Var* var = yl_evaluate_in_scope(ast, scope, 0);
+		names[i] = cast_yl_var_to_string(var);
+	}
+	return names;
+}
+
+struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope)
 {
 	struct YL_Var* fn = malloc(sizeof(fn));
 	CHECK_MEM_ALLOC(fn);
 	fn->type = YL_TYPE_FUNC;
 	fn->u.func = malloc(sizeof(fn->u.func));
 	CHECK_MEM_ALLOC(fn->u.func);
-	fn->u.func->argc = argc;
+	if (args->type != AST_LIST) {
+		CROAK("Expected a list of arguments to the function!");
+	}
+	fn->u.func->argc = ast_len(args->val.ast);
 	fn->u.func->builtin = 0;
-	fn->u.func->u.ast = ast;
+	fn->u.func->u.ast = args->tail;
 	fn->u.func->scope = scope;
-	fn->u.func->arg_names = arg_names;
+	fn->u.func->arg_names = malloc(sizeof(char*)*fn->u.func->argc);
+	CHECK_MEM_ALLOC(fn->u.func->arg_names);
+	ast_get_names(args->val.ast, scope, fn->u.func->arg_names);
 	scope_set(scope, identifier, fn);
 	return fn;
 }
@@ -135,6 +154,19 @@ int ast_len(struct AST* ast) {
 		return 1 + ast_len(ast->tail);
 	case AST_LIST:
 		return ast_len(ast->val.ast) + ast_len(ast->tail);
+	default:
+		CROAK("Unkown AST type");
+		return -1;
+	}
+}
+
+char* cast_yl_var_to_string(struct YL_Var* var)
+{
+	if (var->type == YL_TYPE_STRING) {
+		return var->u.str;
+	} else {
+		fprintf(stderr, "TODO: Integer cast\n");
+		exit(1);
 	}
 }
 
@@ -164,9 +196,17 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 		if (evaluate_function && ast_len(ast) > 0 &&
 		    ast->val.ast->type == AST_VAL &&
 		    scope_get(scope, ast->val.ast->val.tok) != NULL) {
-			char* fn_name = ast->val.ast->val.tok;
+			struct AST* fn_name_exp = ast->val.ast;
+			char* fn_name = fn_name_exp->val.tok;
 			if (strcmp(fn_name, "def") == 0) {
 				/* TODO  Call def_fn */
+				struct AST* id_exp = ast->val.ast->tail;
+				if (!id_exp) {
+					CROAK("Missing argument to 'def' function!");
+				}
+				struct YL_Var* id = yl_evaluate_in_scope(id_exp, scope, 1);
+				char* id_s = cast_yl_var_to_string(id);
+				return def_fn(id_s, id_exp->tail, scope);
 			} else {
 				/* Run a normal function */
 				/* TODO */

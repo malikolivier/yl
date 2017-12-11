@@ -1,6 +1,13 @@
 #ifndef YL_INTERPRETER
 #define YL_INTERPRETER
 
+#define CROAK(string) \
+	do { \
+		fprintf(stderr, string); \
+		fprintf(stderr, "Exiting at %s:%d", __FILE__, __LINE__); \
+		exit(1); \
+	} while(0);
+
 enum YL_Type {
 	YL_TYPE_FALSE,
 	YL_TYPE_NUMBER,
