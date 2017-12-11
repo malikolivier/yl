@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 				col = 0;
 				ast = yl_parse(f);
 				/* ast_printf(ast); */
-				obj = yl_evaluate(ast);
+				obj = yl_evaluate_in_scope(ast, &GLOBAL_SCOPE, 0);
 				ast_free(ast);
 				yl_print(obj);
 				printf("> ");

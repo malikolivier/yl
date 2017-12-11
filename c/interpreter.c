@@ -80,8 +80,6 @@ struct YL_Scope* scope_extend(struct YL_Scope* scope)
 
 /* Prototypes */
 int ast_len(struct AST*);
-struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
-                                    int evaluate_function);
 char* cast_yl_var_to_string(struct YL_Var* var);
 
 void ast_get_names(struct AST* ast, struct YL_Scope* scope, char** names)

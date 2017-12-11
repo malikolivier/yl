@@ -65,6 +65,10 @@ struct YL_Scope {
 
 
 struct YL_Var* yl_evaluate(struct AST*);
+struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
+                                    int evaluate_function);
 void yl_print(struct YL_Var*);
+
+extern struct YL_Scope GLOBAL_SCOPE;
 
 #endif
