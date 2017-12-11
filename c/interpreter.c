@@ -183,18 +183,25 @@ struct YL_Var* print_fn(int argc, struct YL_Var** argv)
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
+struct YL_Func PRINT_FN = {
+	.argc=1, .builtin=1, .u.builtin_fn=print_fn, .arg_names=NULL
+};
 struct YL_Func NOT_OP = {
 	.argc=1, .builtin=1, .u.builtin_fn=not_op, .arg_names=NULL
 };
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PRINT_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &NOT_OP }
 };
 struct YL_VarList NOT_OP_VAR = {
-	.name="!", .val=&BUILTIN_VAR_VALS[1], .tail=NULL
+	.name="!", .val=&BUILTIN_VAR_VALS[2], .tail=NULL
+};
+struct YL_VarList PRINT_FN_VAR = {
+	.name="print", .val=&BUILTIN_VAR_VALS[1], .tail=&NOT_OP_VAR
 };
 struct YL_VarList GLOBAL_VARS = {
-	.name="def", .val=&BUILTIN_VAR_VALS[0], .tail=&NOT_OP_VAR
+	.name="def", .val=&BUILTIN_VAR_VALS[0], .tail=&PRINT_FN_VAR
 };
 struct YL_Scope GLOBAL_SCOPE = { .vars=&GLOBAL_VARS, .parent=NULL };
 
