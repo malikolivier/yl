@@ -3,8 +3,8 @@
 
 #define CROAK(string) \
 	do { \
-		fprintf(stderr, string); \
-		fprintf(stderr, "Exiting at %s:%d", __FILE__, __LINE__); \
+		fprintf(stderr, "%s\n", string); \
+		fprintf(stderr, "Exiting at %s:%d\n", __FILE__, __LINE__); \
 		exit(1); \
 	} while(0);
 
