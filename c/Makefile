@@ -1,15 +1,16 @@
 SOURCES=$(wildcard *.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
 EXECUTABLE=yl
-WARNINGS=-Wall -Wextra -Wpedantic
+CFLAGS=-Wall -Wextra -Wpedantic
+LDFLAGS=-lm
 
 .PHONY: clean
 
 $(EXECUTABLE): $(OBJECTS)
-	gcc $(OBJECTS) $(WARNINGS) -o $@
+	$(CC) $(OBJECTS) $(CFLAGS) $(LDFLAGS) -o $@
 
 $(OBJECTS): %.o : %.c
-	gcc $< $(WARNINGS) -c -o $@
+	$(CC) -g $< $(CFLAGS) $(LDFLAGS) -c -o $@
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)

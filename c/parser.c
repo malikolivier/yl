@@ -289,6 +289,5 @@ int ast_fprintf(FILE* f, struct AST* ast)
 int ast_printf(struct AST* ast)
 {
 	int ret = ast_fprintf(stdout, ast);
-	printf("\n");
 	return ret;
 }

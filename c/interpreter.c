@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "parser.h"
 #include "interpreter.h"
@@ -136,6 +137,51 @@ struct YL_Var* not_op(int argc, struct YL_Var** argv)
 	}
 }
 
+int yl_printf(struct YL_Var* var)
+{
+	int ret = 0;
+	switch(var->type) {
+	case YL_TYPE_FALSE:
+		ret += printf("()");
+		break;
+	case YL_TYPE_NUMBER:
+		{}
+		double val = var->u.num;
+		if (abs(round(val) - val) < 0.00000001) {
+			ret += printf("%d", (int) val);
+		} else {
+			ret += printf("%f", val);
+		}
+		break;
+	case YL_TYPE_STRING:
+		ret += printf("%s", var->u.str);
+		break;
+	case YL_TYPE_FUNC:
+		ret += printf("(def function (");
+		for (int i = 0; i < var->u.func->argc; i++) {
+			ret += printf("%s ", var->u.func->arg_names[i]);
+		}
+		ret += printf(") ");
+		if (var->u.func->builtin) {
+			ret += printf("[native code] ");
+		} else {
+			ret += ast_printf(var->u.func->u.ast);
+		}
+		ret += printf(")");
+	}
+	return ret;
+}
+
+struct YL_Var* print_fn(int argc, struct YL_Var** argv)
+{
+	for(int i = 0; i < argc; i++) {
+		yl_printf(argv[i]);
+		printf("\n");
+	}
+	return &YL_FALSE;
+}
+
+
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
@@ -268,8 +314,7 @@ struct YL_Var* yl_evaluate(struct AST* ast)
 	return yl_evaluate_in_scope(ast, &GLOBAL_SCOPE, 1);
 }
 
-void yl_print(struct YL_Var* obj)
+void yl_print(struct YL_Var* var)
 {
-	/* TODO */
-	(void)obj;
+	print_fn(1, &var);
 }

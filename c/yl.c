@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 				f = fmemopen(code, col, "r");
 				col = 0;
 				ast = yl_parse(f);
-				ast_printf(ast);
+				/* ast_printf(ast); */
 				obj = yl_evaluate(ast);
 				ast_free(ast);
 				yl_print(obj);
