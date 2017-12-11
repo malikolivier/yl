@@ -66,20 +66,41 @@ struct YL_Var* scope_get(struct YL_Scope* scope, char* id)
 	}
 }
 
+struct YL_Scope* scope_extend(struct YL_Scope* scope)
+{
+	struct YL_Scope* child = malloc(sizeof(child));
+	CHECK_MEM_ALLOC(child);
+	child->parent = scope;
+	child->vars = malloc(sizeof(child->vars));
+	CHECK_MEM_ALLOC(child->vars);
+	child->vars->empty = 1;
+	return child;
+}
+
 /* Prototypes */
 int ast_len(struct AST*);
 struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
                                     int evaluate_function);
 char* cast_yl_var_to_string(struct YL_Var* var);
 
-char** ast_get_names(struct AST* ast, struct YL_Scope* scope, char** names)
+void ast_get_names(struct AST* ast, struct YL_Scope* scope, char** names)
 {
 	int i = 0;
 	while(ast != NULL && ast->type != AST_EMPTY) {
 		struct YL_Var* var = yl_evaluate_in_scope(ast, scope, 0);
 		names[i] = cast_yl_var_to_string(var);
+		i++;
 	}
-	return names;
+}
+
+void ast_extract_argv(struct AST* ast, struct YL_Scope* scope,
+                      struct YL_Var** argv)
+{
+	int i = 0;
+	while(ast != NULL && ast->type != AST_EMPTY) {
+		argv[i] = yl_evaluate_in_scope(ast, scope, 1);
+		i++;
+	}
 }
 
 struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope)
@@ -103,12 +124,12 @@ struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope
 	return fn;
 }
 
-struct YL_Var* not_op(int argc, struct YL_Var* argv)
+struct YL_Var* not_op(int argc, struct YL_Var** argv)
 {
 	if (argc == 0) {
 		return &YL_TRUE;
 	}
-	if (argv == &YL_FALSE) {
+	if (argv[0] == &YL_FALSE) {
 		return &YL_TRUE;
 	} else {
 		return &YL_FALSE;
@@ -145,19 +166,10 @@ int is_number(char* str)
 }
 
 int ast_len(struct AST* ast) {
-	if (!ast)
+	if (!ast || ast->type == AST_EMPTY)
 		return 0;
-	switch(ast->type) {
-	case AST_EMPTY:
-		return 0;
-	case AST_VAL:
+	else
 		return 1 + ast_len(ast->tail);
-	case AST_LIST:
-		return ast_len(ast->val.ast) + ast_len(ast->tail);
-	default:
-		CROAK("Unkown AST type");
-		return -1;
-	}
 }
 
 char* cast_yl_var_to_string(struct YL_Var* var)
@@ -168,6 +180,21 @@ char* cast_yl_var_to_string(struct YL_Var* var)
 		fprintf(stderr, "TODO: Integer cast\n");
 		exit(1);
 	}
+}
+
+
+struct YL_Var* func_run(struct YL_Func* func, int argc, struct YL_Var** argv)
+{
+	int i;
+	struct YL_Scope* fn_scope = scope_extend(func->scope);
+	for (i = 0; i < func->argc; i++) {
+		if (i < argc) {
+			scope_set(fn_scope, func->arg_names[i], argv[i]);
+		} else {
+			scope_set(fn_scope, func->arg_names[i], &YL_FALSE);
+		}
+	}
+	return yl_evaluate_in_scope(func->u.ast, fn_scope, 0);
 }
 
 struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
@@ -209,8 +236,27 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 				return def_fn(id_s, id_exp->tail, scope);
 			} else {
 				/* Run a normal function */
-				/* TODO */
+				struct YL_Var* fn = scope_get(scope, fn_name);
+				if (fn->type == YL_TYPE_FUNC) {
+					fprintf(stderr, "%s", fn_name);
+					CROAK(" is not a function");
+				}
+				int argc = ast_len(ast->tail);
+				struct YL_Var** argv = malloc(sizeof(struct YL_Var*)*argc);
+				ast_extract_argv(ast->tail, scope, argv);
+				if (fn->u.func->builtin) {
+					return fn->u.func->u.builtin_fn(argc, argv);
+				} else {
+					return func_run(fn->u.func, argc, argv);
+				}
 			}
+		} else {
+			struct AST* subexp = ast;
+			ret = &YL_FALSE;
+			while (subexp != NULL) {
+				ret = yl_evaluate_in_scope(subexp, scope, 1);
+			}
+			return ret;
 		}
 	}
 	return &YL_FALSE;

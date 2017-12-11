@@ -33,7 +33,7 @@ struct YL_Func {
 	int argc;
 	int builtin;
 	union {
-		struct YL_Var* (*builtin_fn)(int, struct YL_Var*);
+		struct YL_Var* (*builtin_fn)(int, struct YL_Var**);
 		struct AST* ast;
 	} u;
 	struct YL_Scope* scope;
