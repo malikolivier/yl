@@ -288,7 +288,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			} else {
 				/* Run a normal function */
 				struct YL_Var* fn = scope_get(scope, fn_name);
-				if (fn->type == YL_TYPE_FUNC) {
+				if (fn->type != YL_TYPE_FUNC) {
 					fprintf(stderr, "%s", fn_name);
 					CROAK(" is not a function");
 				}
