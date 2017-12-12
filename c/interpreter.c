@@ -136,6 +136,11 @@ struct YL_Var* not_op(int argc, struct YL_Var** argv)
 	}
 }
 
+int dfloat_equal(double d1, double d2)
+{
+	return abs(d1 - d2) < 0.00000001;
+}
+
 int yl_printf(struct YL_Var* var)
 {
 	int ret = 0;
@@ -146,7 +151,7 @@ int yl_printf(struct YL_Var* var)
 	case YL_TYPE_NUMBER:
 		{}
 		double val = var->u.num;
-		if (abs(round(val) - val) < 0.00000001) {
+		if (dfloat_equal(round(val), val)) {
 			ret += printf("%d", (int) val);
 		} else {
 			ret += printf("%f", val);
