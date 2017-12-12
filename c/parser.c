@@ -239,7 +239,11 @@ void ast_free(struct AST* ast)
 
 struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 {
+	struct AST* master_ast = malloc(sizeof(master_ast));
+	master_ast->type = AST_LIST;
+	master_ast->tail = NULL;
 	struct AST* ast = malloc(sizeof(ast));
+	master_ast->val.ast = ast;
 	ast->type = AST_EMPTY;
 	struct AST* next_ast = ast;
 	struct YL_Token* tok = NULL;
@@ -260,7 +264,7 @@ struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 		next_ast->tail = NULL;
 		second_loop = 1;
 	}
-	return ast;
+	return master_ast;
 }
 
 struct AST* yl_parse(FILE* f)
