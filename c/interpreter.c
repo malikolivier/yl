@@ -250,6 +250,14 @@ struct YL_Var* le_op(int argc, struct YL_Var** argv) {
                (eq_op(argc, argv) == &YL_TRUE) ? &YL_TRUE : &YL_FALSE;
 }
 
+struct YL_Var* gt_op(int argc, struct YL_Var** argv) {
+	return (le_op(argc, argv) == &YL_TRUE) ? &YL_FALSE : &YL_TRUE;
+}
+
+struct YL_Var* ge_op(int argc, struct YL_Var** argv) {
+	return (lt_op(argc, argv) == &YL_TRUE) ? &YL_FALSE : &YL_TRUE;
+}
+
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
@@ -268,16 +276,30 @@ struct YL_Func LT_OP = {
 struct YL_Func LE_OP = {
 	.argc=2, .builtin=1, .u.builtin_fn=le_op, .arg_names=NULL
 };
+struct YL_Func GT_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=gt_op, .arg_names=NULL
+};
+struct YL_Func GE_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=ge_op, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PRINT_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &NOT_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &EQ_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LT_OP },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LE_OP }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LE_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &GT_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &GE_OP }
+};
+struct YL_VarList GE_OP_VAR = {
+	.name=">=", .val=&BUILTIN_VAR_VALS[7], .tail=NULL
+};
+struct YL_VarList GT_OP_VAR = {
+	.name=">", .val=&BUILTIN_VAR_VALS[6], .tail=&GE_OP_VAR
 };
 struct YL_VarList LE_OP_VAR = {
-	.name="<=", .val=&BUILTIN_VAR_VALS[5], .tail=NULL
+	.name="<=", .val=&BUILTIN_VAR_VALS[5], .tail=&GT_OP_VAR
 };
 struct YL_VarList LT_OP_VAR = {
 	.name="<", .val=&BUILTIN_VAR_VALS[4], .tail=&LE_OP_VAR
