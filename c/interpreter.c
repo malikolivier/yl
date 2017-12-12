@@ -18,19 +18,17 @@ struct YL_Var YL_TRUE = { YL_TYPE_NUMBER, { (double) 1 } };
 
 void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
 {
+	struct YL_VarList* new_var;
 	if (!varlist->empty) {
-		while(varlist != NULL) {
-			if (varlist->tail == NULL) {
-				varlist->tail = malloc(sizeof(varlist->tail));
-				CHECK_MEM_ALLOC(varlist->tail);
-				varlist = varlist->tail;
-			}
-		}
+		new_var = varlist;
+	} else {
+		new_var = malloc(sizeof(new_var));
+		CHECK_MEM_ALLOC(new_var);
 	}
-	varlist->empty = 0;
-	varlist->name = id;
-	varlist->val = val;
-	varlist->tail = NULL;
+	new_var->empty = 0;
+	new_var->name = id;
+	new_var->val = val;
+	new_var->tail = varlist;
 }
 
 struct YL_Var* varlist_find(struct YL_VarList* varlist, char* id)
