@@ -98,6 +98,7 @@ void ast_extract_argv(struct AST* ast, struct YL_Scope* scope,
 	int i = 0;
 	while(ast != NULL && ast->type != AST_EMPTY) {
 		argv[i] = yl_evaluate_in_scope(ast, scope, 1);
+		ast = ast->tail;
 		i++;
 	}
 }
@@ -271,7 +272,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			return ret;
 		}
 	case AST_LIST:
-		if (evaluate_function && ast_len(ast) > 0 &&
+		if (evaluate_function && ast_len(ast->val.ast) > 0 &&
 		    ast->val.ast->type == AST_VAL &&
 		    scope_get(scope, ast->val.ast->val.tok) != NULL) {
 			struct AST* fn_name_exp = ast->val.ast;
