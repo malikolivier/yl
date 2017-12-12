@@ -37,16 +37,16 @@ struct YL_Var* yl_var_new_string(char* s)
 void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
 {
 	struct YL_VarList* new_var;
-	if (!varlist->empty) {
+	if (varlist->empty) {
 		new_var = varlist;
 	} else {
 		new_var = malloc(sizeof(new_var));
 		CHECK_MEM_ALLOC(new_var);
+		new_var->tail = varlist;
 	}
 	new_var->empty = 0;
 	new_var->name = id;
 	new_var->val = val;
-	new_var->tail = varlist;
 }
 
 struct YL_Var* varlist_find(struct YL_VarList* varlist, char* id)
