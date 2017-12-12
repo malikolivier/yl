@@ -251,12 +251,12 @@ struct YL_Scope GLOBAL_SCOPE = { .vars=&GLOBAL_VARS, .parent=NULL };
 
 int is_number(char* str)
 {
-	char** endptr = &str;
-	double out = strtod(str, endptr);
-	if (out == 0 && &str == endptr) {
+	char* endptr;
+	double out = strtod(str, &endptr);
+	if (out == 0 && str == endptr) {
 		return 0;
 	} else {
-		return **endptr == '\0';
+		return *endptr == '\0';
 	}
 }
 
