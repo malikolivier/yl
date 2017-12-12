@@ -24,6 +24,16 @@ struct YL_Var* yl_var_new_number(double n)
 	return var;
 }
 
+struct YL_Var* yl_var_new_string(char* s)
+{
+	struct YL_Var* var = malloc(sizeof(var));
+	CHECK_MEM_ALLOC(var);
+	var->type = YL_TYPE_STRING;
+	var->u.str = s;
+	return var;
+}
+
+
 void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
 {
 	struct YL_VarList* new_var;
@@ -383,11 +393,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			double num = strtod(ast->val.tok, NULL);
 			return yl_var_new_number(num);
 		} else {
-			ret = malloc(sizeof(ret));
-			CHECK_MEM_ALLOC(ret);
-			ret->type = YL_TYPE_STRING;
-			ret->u.str = ast->val.tok;
-			return ret;
+			return yl_var_new_string(ast->val.tok);
 		}
 	case AST_LIST:
 		if (evaluate_function && ast_len(ast->val.ast) > 0 &&
