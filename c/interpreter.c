@@ -217,6 +217,36 @@ struct YL_Var* eq_op(int argc, struct YL_Var** argv)
 	}
 }
 
+struct YL_Var* lt_op(int argc, struct YL_Var** argv)
+{
+	(void)argc; /*  Assumes 2 arguments were given */
+	if (argv[0]->type != argv[1]->type)
+		return &YL_FALSE;
+	switch(argv[0]->type) {
+	case YL_TYPE_FALSE:
+		/* YL_FALSE is lesser than everything */
+		if (argv[1]->type != YL_TYPE_FALSE)
+			return &YL_TRUE;
+		else
+			return &YL_FALSE;
+	case YL_TYPE_NUMBER:
+		if (argv[0]->u.num < argv[1]->u.num)
+			return &YL_TRUE;
+		else
+			return &YL_FALSE;
+	case YL_TYPE_STRING:
+		if (strcmp(argv[0]->u.str, argv[1]->u.str) < 0)
+			return &YL_TRUE;
+		else
+			return &YL_FALSE;
+	case YL_TYPE_FUNC:
+		return &YL_FALSE;
+	default:
+		CROAK("Why I am here?");
+		return &YL_FALSE;
+	}
+}
+
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
@@ -229,14 +259,21 @@ struct YL_Func NOT_OP = {
 struct YL_Func EQ_OP = {
 	.argc=2, .builtin=1, .u.builtin_fn=eq_op, .arg_names=NULL
 };
+struct YL_Func LT_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=lt_op, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PRINT_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &NOT_OP },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &EQ_OP }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &EQ_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LT_OP }
+};
+struct YL_VarList LT_OP_VAR = {
+	.name="<", .val=&BUILTIN_VAR_VALS[4], .tail=NULL
 };
 struct YL_VarList EQ_OP_VAR = {
-	.name="=", .val=&BUILTIN_VAR_VALS[3], .tail=NULL
+	.name="=", .val=&BUILTIN_VAR_VALS[3], .tail=&LT_OP_VAR
 };
 struct YL_VarList NOT_OP_VAR = {
 	.name="!", .val=&BUILTIN_VAR_VALS[2], .tail=&EQ_OP_VAR
