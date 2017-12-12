@@ -140,6 +140,14 @@ struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope
 	return fn;
 }
 
+struct YL_Var* let_fn(int argc, struct YL_Var** argv, struct YL_Scope* scope) {
+	if (argc <= 0)
+		return &YL_FALSE;
+	char* id = cast_yl_var_to_string(argv[0]);
+	struct YL_Var* rhs = argc > 1 ? argv[1] : &YL_FALSE;
+	return scope_set(scope, id, rhs);
+}
+
 struct YL_Var* not_op(int argc, struct YL_Var** argv)
 {
 	if (argc == 0) {
@@ -354,6 +362,9 @@ struct YL_Var* modulo_op(int argc, struct YL_Var** argv) {
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
+struct YL_Func LET_FN = {
+	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
+};
 struct YL_Func PRINT_FN = {
 	.argc=1, .builtin=1, .u.builtin_fn=print_fn, .arg_names=NULL
 };
@@ -392,6 +403,7 @@ struct YL_Func MODULO_OP = {
 };
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LET_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PRINT_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &NOT_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &EQ_OP },
@@ -405,43 +417,46 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP }
 };
 struct YL_VarList MODULO_OP_VAR = {
-	.name="%", .val=&BUILTIN_VAR_VALS[12], .tail=NULL
+	.name="%", .val=&BUILTIN_VAR_VALS[13], .tail=NULL
 };
 struct YL_VarList DIVIDE_OP_VAR = {
-	.name="/", .val=&BUILTIN_VAR_VALS[11], .tail=&MODULO_OP_VAR
+	.name="/", .val=&BUILTIN_VAR_VALS[12], .tail=&MODULO_OP_VAR
 };
 struct YL_VarList MULTIPLY_OP_VAR = {
-	.name="*", .val=&BUILTIN_VAR_VALS[10], .tail=&DIVIDE_OP_VAR
+	.name="*", .val=&BUILTIN_VAR_VALS[11], .tail=&DIVIDE_OP_VAR
 };
 struct YL_VarList MINUS_OP_VAR = {
-	.name="-", .val=&BUILTIN_VAR_VALS[9], .tail=&MULTIPLY_OP_VAR
+	.name="-", .val=&BUILTIN_VAR_VALS[10], .tail=&MULTIPLY_OP_VAR
 };
 struct YL_VarList PLUS_OP_VAR = {
-	.name="+", .val=&BUILTIN_VAR_VALS[8], .tail=&MINUS_OP_VAR
+	.name="+", .val=&BUILTIN_VAR_VALS[9], .tail=&MINUS_OP_VAR
 };
 struct YL_VarList GE_OP_VAR = {
-	.name=">=", .val=&BUILTIN_VAR_VALS[7], .tail=&PLUS_OP_VAR
+	.name=">=", .val=&BUILTIN_VAR_VALS[8], .tail=&PLUS_OP_VAR
 };
 struct YL_VarList GT_OP_VAR = {
-	.name=">", .val=&BUILTIN_VAR_VALS[6], .tail=&GE_OP_VAR
+	.name=">", .val=&BUILTIN_VAR_VALS[7], .tail=&GE_OP_VAR
 };
 struct YL_VarList LE_OP_VAR = {
-	.name="<=", .val=&BUILTIN_VAR_VALS[5], .tail=&GT_OP_VAR
+	.name="<=", .val=&BUILTIN_VAR_VALS[6], .tail=&GT_OP_VAR
 };
 struct YL_VarList LT_OP_VAR = {
-	.name="<", .val=&BUILTIN_VAR_VALS[4], .tail=&LE_OP_VAR
+	.name="<", .val=&BUILTIN_VAR_VALS[5], .tail=&LE_OP_VAR
 };
 struct YL_VarList EQ_OP_VAR = {
-	.name="=", .val=&BUILTIN_VAR_VALS[3], .tail=&LT_OP_VAR
+	.name="=", .val=&BUILTIN_VAR_VALS[4], .tail=&LT_OP_VAR
 };
 struct YL_VarList NOT_OP_VAR = {
-	.name="!", .val=&BUILTIN_VAR_VALS[2], .tail=&EQ_OP_VAR
+	.name="!", .val=&BUILTIN_VAR_VALS[3], .tail=&EQ_OP_VAR
 };
 struct YL_VarList PRINT_FN_VAR = {
-	.name="print", .val=&BUILTIN_VAR_VALS[1], .tail=&NOT_OP_VAR
+	.name="print", .val=&BUILTIN_VAR_VALS[2], .tail=&NOT_OP_VAR
+};
+struct YL_VarList LET_FN_VAR = {
+	.name="let", .val=&BUILTIN_VAR_VALS[1], .tail=&PRINT_FN_VAR
 };
 struct YL_VarList GLOBAL_VARS = {
-	.name="def", .val=&BUILTIN_VAR_VALS[0], .tail=&PRINT_FN_VAR
+	.name="def", .val=&BUILTIN_VAR_VALS[0], .tail=&LET_FN_VAR
 };
 struct YL_Scope GLOBAL_SCOPE = { .vars=&GLOBAL_VARS, .parent=NULL };
 
@@ -530,6 +545,9 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 				struct YL_Var** argv = malloc(sizeof(struct YL_Var*)*argc);
 				ast_extract_argv(fn_name_exp->tail, scope, argv);
 				if (fn->u.func->builtin) {
+					if (strcmp(fn_name, "let") == 0) {
+						return let_fn(argc, argv, scope);
+					}
 					return fn->u.func->u.builtin_fn(argc, argv);
 				} else {
 					return func_run(fn->u.func, argc, argv);
