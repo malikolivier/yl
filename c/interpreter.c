@@ -178,9 +178,14 @@ int yl_printf(struct YL_Var* var)
 		break;
 	case YL_TYPE_FUNC:
 		ret += printf("(def function (");
+		if (!var->u.func->arg_names) {
+			ret += printf("...");
+			goto end_of_arguments_output;
+		}
 		for (int i = 0; i < var->u.func->argc; i++) {
 			ret += printf("%s ", var->u.func->arg_names[i]);
 		}
+end_of_arguments_output:
 		ret += printf(") ");
 		if (var->u.func->builtin) {
 			ret += printf("[native code] ");
