@@ -276,6 +276,76 @@ struct YL_Var* ge_op(int argc, struct YL_Var** argv) {
 	return (lt_op(argc, argv) == &YL_TRUE) ? &YL_FALSE : &YL_TRUE;
 }
 
+struct YL_Var* plus_op(int argc, struct YL_Var** argv) {
+	int i;
+	int any_non_number = 0;
+	struct YL_Var* ret;
+	for (i = 0; i < argc; i++) {
+		if (argv[i]->type != YL_TYPE_NUMBER) {
+			any_non_number = 1;
+			break;
+		}
+	}
+
+	if (any_non_number) {
+		/* TODO Cast all non-strings to strings */
+		int total_len = 1;
+		for (i = 0; i < argc; i++) {
+			total_len += strlen(argv[i]->u.str);
+		}
+		char* concat_str = malloc(total_len);
+		CHECK_MEM_ALLOC(concat_str);
+		int j = 0;
+		for (i = 0; i < argc; i++) {
+			char c = argv[i]->u.str[j];
+			while (c != '\0')
+				concat_str[j++] = c;
+		}
+		concat_str[j++] = '\0';
+		ret = yl_var_new_string(concat_str);
+	} else {
+		double out = 0;
+		for (i = 0; i < argc; i++) {
+			out += argv[i]->u.num;
+		}
+		ret = yl_var_new_number(out);
+	}
+	return ret;
+}
+
+struct YL_Var* minus_op(int argc, struct YL_Var** argv) {
+	/* !BEWARE!  Undefined behaviour if arguments are not numbers! */
+	(void)argc;
+	return yl_var_new_number(argv[0]->u.num - argv[1]->u.num);
+}
+
+struct YL_Var* multiply_op(int argc, struct YL_Var** argv) {
+	/* !BEWARE!  Undefined behaviour if arguments are not numbers! */
+	(void)argc;
+	return yl_var_new_number(argv[0]->u.num * argv[1]->u.num);
+}
+
+struct YL_Var* divide_op(int argc, struct YL_Var** argv) {
+	/* !BEWARE!  Undefined behaviour if arguments are not numbers! */
+	(void)argc;
+	return yl_var_new_number(argv[0]->u.num / argv[1]->u.num);
+}
+
+struct YL_Var* modulo_op(int argc, struct YL_Var** argv) {
+	/* !BEWARE!  Undefined behaviour if arguments are not numbers! */
+	(void)argc;
+	double n = argv[0]->u.num;
+	double mod = abs(argv[1]->u.num);
+	double ret = n;
+	while (abs(ret) >= mod || ret < 0) {
+		if (n < 0)
+			ret += mod;
+		else
+			ret -= mod;
+	}
+	return yl_var_new_number(ret);
+}
+
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
@@ -300,6 +370,21 @@ struct YL_Func GT_OP = {
 struct YL_Func GE_OP = {
 	.argc=2, .builtin=1, .u.builtin_fn=ge_op, .arg_names=NULL
 };
+struct YL_Func PLUS_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=plus_op, .arg_names=NULL
+};
+struct YL_Func MINUS_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=minus_op, .arg_names=NULL
+};
+struct YL_Func MULTIPLY_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=multiply_op, .arg_names=NULL
+};
+struct YL_Func DIVIDE_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=divide_op, .arg_names=NULL
+};
+struct YL_Func MODULO_OP = {
+	.argc=2, .builtin=1, .u.builtin_fn=modulo_op, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PRINT_FN },
@@ -308,10 +393,29 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LT_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LE_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &GT_OP },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &GE_OP }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &GE_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PLUS_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MINUS_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DIVIDE_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP }
+};
+struct YL_VarList MODULO_OP_VAR = {
+	.name="%", .val=&BUILTIN_VAR_VALS[12], .tail=NULL
+};
+struct YL_VarList DIVIDE_OP_VAR = {
+	.name="/", .val=&BUILTIN_VAR_VALS[11], .tail=&MODULO_OP_VAR
+};
+struct YL_VarList MULTIPLY_OP_VAR = {
+	.name="*", .val=&BUILTIN_VAR_VALS[10], .tail=&DIVIDE_OP_VAR
+};
+struct YL_VarList MINUS_OP_VAR = {
+	.name="-", .val=&BUILTIN_VAR_VALS[9], .tail=&MULTIPLY_OP_VAR
+};
+struct YL_VarList PLUS_OP_VAR = {
+	.name="+", .val=&BUILTIN_VAR_VALS[8], .tail=&MINUS_OP_VAR
 };
 struct YL_VarList GE_OP_VAR = {
-	.name=">=", .val=&BUILTIN_VAR_VALS[7], .tail=NULL
+	.name=">=", .val=&BUILTIN_VAR_VALS[7], .tail=&PLUS_OP_VAR
 };
 struct YL_VarList GT_OP_VAR = {
 	.name=">", .val=&BUILTIN_VAR_VALS[6], .tail=&GE_OP_VAR
