@@ -540,7 +540,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			ret = &YL_FALSE;
 			while (subexp != NULL) {
 				ret = yl_evaluate_in_scope(subexp, scope, 1);
-				subexp = ast->tail;
+				subexp = subexp->tail;
 			}
 			return ret;
 		}
