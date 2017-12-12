@@ -374,11 +374,13 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			return ret;
 		} else if(is_number(ast->val.tok)) {
 			ret = malloc(sizeof(ret));
+			CHECK_MEM_ALLOC(ret);
 			ret->type = YL_TYPE_NUMBER;
 			ret->u.num = strtod(ast->val.tok, NULL);
 			return ret;
 		} else {
 			ret = malloc(sizeof(ret));
+			CHECK_MEM_ALLOC(ret);
 			ret->type = YL_TYPE_STRING;
 			ret->u.str = ast->val.tok;
 			return ret;
