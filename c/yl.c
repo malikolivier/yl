@@ -68,11 +68,11 @@ int main(int argc, char** argv)
 	}
 	ast = yl_parse(f);
 	obj = yl_evaluate(ast);
-	ast_free(ast);
 	if (obj->type != YL_TYPE_NUMBER)
 		ret = 0;
 	else {
 		ret = (int) obj->u.num;
 	}
+	ast_free(ast);
 	return ret;
 }
