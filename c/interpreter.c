@@ -154,7 +154,7 @@ struct YL_Var* not_op(int argc, struct YL_Var** argv)
 
 int dfloat_equal(double d1, double d2)
 {
-	return abs(d1 - d2) < 0.00000001;
+	return fabs(d1 - d2) < 0.00000001;
 }
 
 int yl_printf(struct YL_Var* var)
