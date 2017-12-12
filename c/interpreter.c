@@ -349,8 +349,7 @@ char* cast_yl_var_to_string(struct YL_Var* var)
 	if (var->type == YL_TYPE_STRING) {
 		return var->u.str;
 	} else {
-		fprintf(stderr, "TODO: Integer cast\n");
-		exit(1);
+		CROAK("TODO: Integer cast\n");
 	}
 }
 
