@@ -15,6 +15,14 @@
 struct YL_Var YL_FALSE = { YL_TYPE_FALSE, { (double) 0 } };
 struct YL_Var YL_TRUE = { YL_TYPE_NUMBER, { (double) 1 } };
 
+struct YL_Var* yl_var_new_number(double n)
+{
+	struct YL_Var* var = malloc(sizeof(var));
+	CHECK_MEM_ALLOC(var);
+	var->type = YL_TYPE_NUMBER;
+	var->u.num = n;
+	return var;
+}
 
 void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
 {
@@ -373,11 +381,8 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 		if (ret) {
 			return ret;
 		} else if(is_number(ast->val.tok)) {
-			ret = malloc(sizeof(ret));
-			CHECK_MEM_ALLOC(ret);
-			ret->type = YL_TYPE_NUMBER;
-			ret->u.num = strtod(ast->val.tok, NULL);
-			return ret;
+			double num = strtod(ast->val.tok, NULL);
+			return yl_var_new_number(num);
 		} else {
 			ret = malloc(sizeof(ret));
 			CHECK_MEM_ALLOC(ret);
