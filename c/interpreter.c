@@ -34,11 +34,13 @@ struct YL_Var* yl_var_new_string(char* s)
 }
 
 
-void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
+struct YL_VarList* varlist_prepend(struct YL_VarList* varlist,
+                                   char* id, struct YL_Var* val)
 {
 	struct YL_VarList* new_var;
 	if (varlist->empty) {
 		new_var = varlist;
+		new_var->tail = NULL;
 	} else {
 		new_var = malloc(sizeof(new_var));
 		CHECK_MEM_ALLOC(new_var);
@@ -47,6 +49,7 @@ void varlist_add(struct YL_VarList* varlist, char* id, struct YL_Var* val)
 	new_var->empty = 0;
 	new_var->name = id;
 	new_var->val = val;
+	return new_var;
 }
 
 struct YL_Var* varlist_find(struct YL_VarList* varlist, char* id)
@@ -64,7 +67,7 @@ struct YL_Var* varlist_find(struct YL_VarList* varlist, char* id)
 
 struct YL_Var* scope_set(struct YL_Scope* scope, char* id, struct YL_Var* val)
 {
-	varlist_add(scope->vars, id, val);
+	scope->vars = varlist_prepend(scope->vars, id, val);
 	return val;
 }
 
