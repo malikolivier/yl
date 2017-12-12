@@ -267,7 +267,10 @@ struct AST* yl_parse(FILE* f)
 {
 	struct YL_InputStream stream = { 0, 0, 0, f };
 	struct YL_TokenStream tokstream = { NULL, &stream };
-	return parse_tok_stream(&tokstream);
+	struct AST* master_ast = malloc(sizeof(master_ast));
+	master_ast->type = AST_LIST;
+	master_ast->val.ast = parse_tok_stream(&tokstream);
+	return master_ast;
 }
 
 int ast_fprintf(FILE* f, struct AST* ast)
