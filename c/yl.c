@@ -32,7 +32,8 @@ int main(int argc, char** argv)
 				f = fmemopen(code, col, "r");
 				col = 0;
 				ast = yl_parse(f);
-				/* ast_printf(ast); */
+				/* ast_printf(ast);
+				   puts(""); */
 				obj = yl_evaluate_in_scope(ast, &GLOBAL_SCOPE, 0);
 				ast_free(ast);
 				yl_print(obj);
