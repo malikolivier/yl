@@ -107,6 +107,7 @@ void ast_get_names(struct AST* ast, struct YL_Scope* scope, char** names)
 	while(ast != NULL && ast->type != AST_EMPTY) {
 		struct YL_Var* var = yl_evaluate_in_scope(ast, scope, 0);
 		names[i] = cast_yl_var_to_string(var);
+		ast = ast->tail;
 		i++;
 	}
 }
@@ -529,7 +530,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 			struct AST* fn_name_exp = ast->val.ast;
 			char* fn_name = fn_name_exp->val.tok;
 			if (strcmp(fn_name, "def") == 0) {
-				/* TODO  Call def_fn */
+				/* Call def_fn */
 				struct AST* id_exp = ast->val.ast->tail;
 				if (!id_exp) {
 					CROAK("Missing argument to 'def' function!");
@@ -546,6 +547,7 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 				}
 				int argc = ast_len(fn_name_exp->tail);
 				struct YL_Var** argv = malloc(sizeof(struct YL_Var*)*argc);
+				CHECK_MEM_ALLOC(argv);
 				ast_extract_argv(fn_name_exp->tail, scope, argv);
 				if (fn->u.func->builtin) {
 					if (strcmp(fn_name, "let") == 0) {
