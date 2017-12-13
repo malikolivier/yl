@@ -75,7 +75,7 @@ struct YL_Var* scope_get(struct YL_Scope* scope, char* id)
 {
 	struct YL_Var* val = NULL;
 	if (scope == NULL) {
-		return NULL;
+		return NULL; /* TODO This should probalbly return &YL_FALSE  */
 	} else {
 		val = varlist_find(scope->vars, id);
 		if (val) {
