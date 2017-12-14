@@ -61,6 +61,7 @@ int main(int argc, char** argv)
 			usage();
 			return 1;
 		}
+		yl_set_argv(argc - 2, argv + 2);
 	} else {
 		if (strncmp(argv[1], "-e", 2) == 0) {
 			f = fmemopen(argv[2], strlen(argv[2]), "r");
@@ -72,6 +73,7 @@ int main(int argc, char** argv)
 			usage();
 			return 1;
 		}
+		yl_set_argv(argc - 3, argv + 3);
 	}
 	ast = yl_parse(f);
 	fclose(f);

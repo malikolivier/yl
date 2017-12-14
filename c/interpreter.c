@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <errno.h>
 
 #include "util.h"
 #include "parser.h"
@@ -8,6 +9,16 @@
 
 struct YL_Var YL_FALSE = { YL_TYPE_FALSE, { (double) 0 } };
 struct YL_Var YL_TRUE = { YL_TYPE_NUMBER, { (double) 1 } };
+
+/* The two globals below are meant to be overwritten by yl_set_argv on start */
+int YL_ARGC = 0;
+char** YL_ARGV = NULL;
+
+void yl_set_argv(int argc, char** argv)
+{
+	YL_ARGC = argc;
+	YL_ARGV = argv;
+}
 
 struct YL_Var* yl_var_new_number(double n)
 {
@@ -463,6 +474,26 @@ struct YL_Var* modulo_op(int argc, struct YL_Var** argv) {
 			ret -= mod;
 	}
 	return yl_var_new_number(ret);
+}
+
+struct YL_Var* argv_fn(int argc, struct YL_Var** argv) {
+	if (argc != 1)
+		CROAK("'argv' function expects one argument!");
+	if (argv[0]->type != YL_TYPE_NUMBER)
+		CROAK("'argv' function expects a number as input!");
+	int n = (int) argv[0]->u.num;
+	if (n >= YL_ARGC)
+		CROAK("This argument is not provided to yl!");
+	char* arg = YL_ARGV[n];
+	FILE* f = fmemopen(arg, strlen(arg), "r");
+	if (!f) {
+		fprintf(stderr, "Failed to open memory! %s", strerror(errno));
+		CROAK("Call to 'argv' failed!");
+	}
+	struct AST* ast = yl_parse(f);
+	struct YL_Var* ret = yl_evaluate(ast);
+	fclose(f);
+	return ret;
 }
 
 struct YL_Func DEF_FN = {

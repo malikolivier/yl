@@ -51,4 +51,6 @@ void yl_print(struct YL_Var*);
 
 extern struct YL_Scope GLOBAL_SCOPE;
 
+void yl_set_argv(int argc, char** argv);
+
 #endif
