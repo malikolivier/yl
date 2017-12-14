@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "parser.h"
 #include "interpreter.h"
@@ -30,6 +31,10 @@ int main(int argc, char** argv)
 				break;
 			} else if (c == '\n') {
 				f = fmemopen(code, col, "r");
+				if (!f) {
+					printf("Failed to open memory! %s", strerror(errno));
+					return 1;
+				}
 				col = 0;
 				ast = yl_parse(f);
 				fclose(f);
