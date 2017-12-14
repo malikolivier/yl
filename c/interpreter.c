@@ -544,6 +544,9 @@ struct YL_Func IF_FN = {
 struct YL_Func LOOP_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
+struct YL_Func ARGV_FN = {
+	.argc=1, .builtin=1, .u.builtin_fn=argv_fn, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LET_FN },
@@ -560,10 +563,14 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DIVIDE_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &IF_FN },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LOOP_FN }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LOOP_FN },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &ARGV_FN }
+};
+struct YL_VarList ARGV_FN_VAR = {
+	.name="argv", .val=&BUILTIN_VAR_VALS[16], .tail=NULL
 };
 struct YL_VarList LOOP_FN_VAR = {
-	.name="loop", .val=&BUILTIN_VAR_VALS[15], .tail=NULL
+	.name="loop", .val=&BUILTIN_VAR_VALS[15], .tail=&ARGV_FN_VAR
 };
 struct YL_VarList IF_FN_VAR = {
 	.name="if", .val=&BUILTIN_VAR_VALS[14], .tail=&LOOP_FN_VAR
