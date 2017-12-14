@@ -146,6 +146,16 @@ struct YL_Var* let_fn(int argc, struct YL_Var** argv, struct YL_Scope* scope) {
 	return scope_set(scope, id, rhs);
 }
 
+struct YL_Var* if_fn(struct YL_Var* cond, struct AST* then, struct AST* els,
+                     struct YL_Scope* scope) {
+	if (cond != &YL_FALSE)
+		return yl_evaluate_in_scope(then, scope, 0);
+	else if (els)
+		return yl_evaluate_in_scope(els, scope, 0);
+	else
+		return &YL_FALSE;
+}
+
 struct YL_Var* not_op(int argc, struct YL_Var** argv)
 {
 	if (argc == 0) {
@@ -399,6 +409,9 @@ struct YL_Func DIVIDE_OP = {
 struct YL_Func MODULO_OP = {
 	.argc=2, .builtin=1, .u.builtin_fn=modulo_op, .arg_names=NULL
 };
+struct YL_Func IF_FN = {
+	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LET_FN },
@@ -412,10 +425,14 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PLUS_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MINUS_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DIVIDE_OP },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &IF_FN }
+};
+struct YL_VarList IF_FN_VAR = {
+	.name="if", .val=&BUILTIN_VAR_VALS[14], .tail=NULL
 };
 struct YL_VarList MODULO_OP_VAR = {
-	.name="%", .val=&BUILTIN_VAR_VALS[13], .tail=NULL
+	.name="%", .val=&BUILTIN_VAR_VALS[13], .tail=&IF_FN_VAR
 };
 struct YL_VarList DIVIDE_OP_VAR = {
 	.name="/", .val=&BUILTIN_VAR_VALS[12], .tail=&MODULO_OP_VAR
@@ -532,6 +549,17 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 				struct YL_Var* id = yl_evaluate_in_scope(id_exp, scope, 1);
 				char* id_s = cast_yl_var_to_string(id);
 				return def_fn(id_s, id_exp->tail, scope);
+			} else if (strcmp(fn_name, "if") == 0) {
+				/*  Call if_fn */
+				struct AST* cond_exp = fn_name_exp->tail;
+				if (!cond_exp)
+					CROAK("Missing argument to 'if' function!");
+				struct YL_Var* cond = yl_evaluate_in_scope(cond_exp, scope, 1);
+				struct AST* then = cond_exp->tail;
+				if (!then) /* No argument given to if... Nothing to do */
+					return &YL_FALSE;
+				struct AST* els = then->tail;
+				return if_fn(cond, then, els, scope);
 			} else {
 				/* Run a normal function */
 				struct YL_Var* fn = scope_get(scope, fn_name);
