@@ -658,6 +658,8 @@ struct YL_Var* func_run(struct YL_Func* func, int argc, struct YL_Var** argv)
 			scope_set(fn_scope, func->arg_names[i], &YL_FALSE);
 		}
 	}
+	if (!func->u.ast)
+		return &YL_FALSE;
 	return yl_evaluate_in_scope(func->u.ast, fn_scope, 0);
 }
 
