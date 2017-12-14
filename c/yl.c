@@ -32,6 +32,7 @@ int main(int argc, char** argv)
 				f = fmemopen(code, col, "r");
 				col = 0;
 				ast = yl_parse(f);
+				fclose(f);
 				/* ast_printf(ast);
 				   puts(""); */
 				obj = yl_evaluate_in_scope(ast, &GLOBAL_SCOPE, 0);
@@ -68,6 +69,7 @@ int main(int argc, char** argv)
 		}
 	}
 	ast = yl_parse(f);
+	fclose(f);
 	obj = yl_evaluate(ast);
 	if (obj->type != YL_TYPE_NUMBER)
 		ret = 0;
