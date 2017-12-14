@@ -17,18 +17,6 @@ enum YL_Type {
 
 struct YL_Var;
 
-#define DECLARE_YL_Func(len) \
-	struct YL_Func_##len { \
-		int argc; \
-		int builtin; \
-		union { \
-			struct YL_Var* (*builtin_fn)(int, struct YL_Var*); \
-			struct AST* ast; \
-		} u; \
-		struct YL_Scope* scope; \
-		char* arg_names[len]; \
-	}
-
 struct YL_Func {
 	int argc;
 	int builtin;
@@ -39,7 +27,6 @@ struct YL_Func {
 	struct YL_Scope* scope;
 	char** arg_names;
 };
-DECLARE_YL_Func(2);
 
 struct YL_Var {
 	enum YL_Type type;
