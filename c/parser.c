@@ -154,7 +154,7 @@ void skip_comment(struct YL_TokenStream* tokstream)
 struct YL_Token* token_read_symbol(struct YL_TokenStream* tokstream)
 {
 	char* identifier = token_read_while(tokstream, is_symbol);
-	struct YL_Token* tok = malloc(sizeof(tok));
+	struct YL_Token* tok = malloc(sizeof(*tok));
 	CHECK_MEM_ALLOC(tok);
 	tok->type = YL_TOKEN_SYM;
 	tok->val = identifier;
@@ -164,7 +164,7 @@ struct YL_Token* token_read_symbol(struct YL_TokenStream* tokstream)
 struct YL_Token* token_read_string(struct YL_TokenStream* tokstream)
 {
 	char* identifier = token_read_escaped(tokstream, '"');
-	struct YL_Token* tok = malloc(sizeof(tok));
+	struct YL_Token* tok = malloc(sizeof(*tok));
 	CHECK_MEM_ALLOC(tok);
 	tok->type = YL_TOKEN_SYM;
 	tok->val = identifier;
@@ -188,7 +188,7 @@ struct YL_Token* token_read_next(struct YL_TokenStream* tokstream)
 		return token_read_symbol(tokstream);
 	}
 	if (is_parenthesis(ch)) {
-		struct YL_Token* tok = malloc(sizeof(tok));
+		struct YL_Token* tok = malloc(sizeof(*tok));
 		CHECK_MEM_ALLOC(tok);
 		tok->type = YL_TOKEN_PUNC;
 		tok->val = malloc(2);
@@ -241,7 +241,7 @@ void ast_free(struct AST* ast)
 
 struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 {
-	struct AST* ast = malloc(sizeof(ast));
+	struct AST* ast = malloc(sizeof(*ast));
 	CHECK_MEM_ALLOC(ast);
 	ast->type = AST_EMPTY;
 	struct AST* next_ast = ast;
@@ -249,7 +249,7 @@ struct AST* parse_tok_stream(struct YL_TokenStream* tokstream)
 	int second_loop = 0;
 	while ((tok = token_next(tokstream)) && !token_is_closing(tok)) {
 		if (second_loop) {
-			next_ast->tail = malloc(sizeof(ast));
+			next_ast->tail = malloc(sizeof(*ast));
 			CHECK_MEM_ALLOC(next_ast->tail);
 			next_ast = next_ast->tail;
 			next_ast->type = AST_EMPTY;
@@ -271,7 +271,7 @@ struct AST* yl_parse(FILE* f)
 {
 	struct YL_InputStream stream = { 0, 0, 0, f };
 	struct YL_TokenStream tokstream = { NULL, &stream };
-	struct AST* master_ast = malloc(sizeof(master_ast));
+	struct AST* master_ast = malloc(sizeof(*master_ast));
 	CHECK_MEM_ALLOC(master_ast);
 	master_ast->type = AST_LIST;
 	master_ast->val.ast = parse_tok_stream(&tokstream);

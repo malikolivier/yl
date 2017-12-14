@@ -11,7 +11,7 @@ struct YL_Var YL_TRUE = { YL_TYPE_NUMBER, { (double) 1 } };
 
 struct YL_Var* yl_var_new_number(double n)
 {
-	struct YL_Var* var = malloc(sizeof(var));
+	struct YL_Var* var = malloc(sizeof(*var));
 	CHECK_MEM_ALLOC(var);
 	var->type = YL_TYPE_NUMBER;
 	var->u.num = n;
@@ -20,7 +20,7 @@ struct YL_Var* yl_var_new_number(double n)
 
 struct YL_Var* yl_var_new_string(char* s)
 {
-	struct YL_Var* var = malloc(sizeof(var));
+	struct YL_Var* var = malloc(sizeof(*var));
 	CHECK_MEM_ALLOC(var);
 	var->type = YL_TYPE_STRING;
 	var->u.str = s;
@@ -36,7 +36,7 @@ struct YL_VarList* varlist_prepend(struct YL_VarList* varlist,
 		new_var = varlist;
 		new_var->tail = NULL;
 	} else {
-		new_var = malloc(sizeof(new_var));
+		new_var = malloc(sizeof(*new_var));
 		CHECK_MEM_ALLOC(new_var);
 		new_var->tail = varlist;
 	}
@@ -82,10 +82,10 @@ struct YL_Var* scope_get(struct YL_Scope* scope, char* id)
 
 struct YL_Scope* scope_extend(struct YL_Scope* scope)
 {
-	struct YL_Scope* child = malloc(sizeof(child));
+	struct YL_Scope* child = malloc(sizeof(*child));
 	CHECK_MEM_ALLOC(child);
 	child->parent = scope;
-	child->vars = malloc(sizeof(child->vars));
+	child->vars = malloc(sizeof(*child->vars));
 	CHECK_MEM_ALLOC(child->vars);
 	child->vars->empty = 1;
 	return child;
@@ -119,10 +119,10 @@ void ast_extract_argv(struct AST* ast, struct YL_Scope* scope,
 
 struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope)
 {
-	struct YL_Var* fn = malloc(sizeof(fn));
+	struct YL_Var* fn = malloc(sizeof(*fn));
 	CHECK_MEM_ALLOC(fn);
 	fn->type = YL_TYPE_FUNC;
-	fn->u.func = malloc(sizeof(fn->u.func));
+	fn->u.func = malloc(sizeof(*fn->u.func));
 	CHECK_MEM_ALLOC(fn->u.func);
 	if (args->type != AST_LIST) {
 		CROAK("Expected a list of arguments to the function!");
