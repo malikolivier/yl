@@ -556,6 +556,7 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &GE_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &PLUS_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MINUS_OP },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MULTIPLY_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DIVIDE_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &IF_FN },
