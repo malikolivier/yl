@@ -156,6 +156,104 @@ struct YL_Var* if_fn(struct YL_Var* cond, struct AST* then, struct AST* els,
 		return &YL_FALSE;
 }
 
+double __force_number(struct AST* ast, struct YL_Scope* scope)
+{
+
+	struct YL_Var* yl_var = yl_evaluate_in_scope(ast, scope, 1);
+	if (yl_var->type != YL_TYPE_NUMBER)
+		CROAK("'range' expects a number!");
+	return yl_var->u.num;
+}
+
+struct YL_VarList* loop_build_non_trivial_list(struct AST* values, struct YL_Scope* scope)
+{
+	struct YL_VarList* list = NULL;
+	struct YL_VarList* sublist = list;
+	/* Assume `values' given as argument is of type AST_LIST */
+	values = values->val.ast;
+	if (values->type == AST_VAL && strcmp(values->val.tok, "range") == 0)
+	{
+		struct AST* min_ast = values->tail;
+		if (!min_ast) {
+			/* Nothing to do! Only range is here */
+			return NULL;
+		}
+		struct AST* max_ast = min_ast->tail;
+		double min, max;
+		if (!max_ast) {
+			min = 0;
+			max = __force_number(min_ast, scope);
+		} else {
+			min = __force_number(min_ast, scope);
+			max = __force_number(max_ast, scope);
+		}
+		double i = min;
+		while (i < max) {
+			struct YL_VarList* newval = malloc(sizeof(*newval));
+			newval->tail = NULL;
+			newval->val = yl_var_new_number(i);
+			if (!list) {
+				list = newval;
+			} else {
+				sublist->tail = newval;
+			}
+			sublist = newval;
+			i++;
+		}
+	} else {
+		while (values != NULL) {
+			struct YL_VarList* newval = malloc(sizeof(*newval));
+			newval->tail = NULL;
+			newval->val = yl_evaluate_in_scope(values, scope, 1);
+			if (!list) {
+				list = newval;
+			} else {
+				sublist->tail = newval;
+			}
+			sublist = newval;
+			values = values->tail;
+		}
+	}
+	return list;
+}
+
+struct YL_VarList* loop_build_list(struct AST* values, struct YL_Scope* scope)
+{
+	struct YL_VarList* list;
+	switch(values->type) {
+	case AST_EMPTY:
+		return NULL;
+	case AST_VAL:
+		list = malloc(sizeof(*list));
+		list->empty = 0;
+		list->name = NULL;
+		list->val = yl_evaluate_in_scope(values, scope, 1);
+		list->tail = NULL;
+		return list;
+	case AST_LIST:
+		return loop_build_non_trivial_list(values, scope);
+	default:
+		CROAK("Why am I here?");
+	}
+}
+
+struct YL_Var* loop_fn(char* identifier, struct AST* values, struct AST* loop,
+                       struct YL_Scope* scope)
+{
+	struct YL_Var* ret = &YL_FALSE;
+	struct YL_VarList* list;
+	if (loop->type != AST_LIST)
+		CROAK("I don't know what this loop can do with this value");
+	list = loop_build_list(values, scope);
+	while (list != NULL) {
+		struct YL_Scope* loop_scope = scope_extend(scope);
+		scope_set(loop_scope, identifier, list->val);
+		ret = yl_evaluate_in_scope(loop->val.ast, loop_scope, 1);
+		list = list->tail;
+	}
+	return ret;
+}
+
 struct YL_Var* not_op(int argc, struct YL_Var** argv)
 {
 	if (argc == 0) {
@@ -412,6 +510,9 @@ struct YL_Func MODULO_OP = {
 struct YL_Func IF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
+struct YL_Func LOOP_FN = {
+	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LET_FN },
@@ -426,10 +527,14 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MINUS_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DIVIDE_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &IF_FN }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &IF_FN },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LOOP_FN }
+};
+struct YL_VarList LOOP_FN_VAR = {
+	.name="loop", .val=&BUILTIN_VAR_VALS[15], .tail=NULL
 };
 struct YL_VarList IF_FN_VAR = {
-	.name="if", .val=&BUILTIN_VAR_VALS[14], .tail=NULL
+	.name="if", .val=&BUILTIN_VAR_VALS[14], .tail=&LOOP_FN_VAR
 };
 struct YL_VarList MODULO_OP_VAR = {
 	.name="%", .val=&BUILTIN_VAR_VALS[13], .tail=&IF_FN_VAR
@@ -560,6 +665,17 @@ struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
 					return &YL_FALSE;
 				struct AST* els = then->tail;
 				return if_fn(cond, then, els, scope);
+			} else if (strcmp(fn_name, "loop") == 0) {
+				struct AST* id_exp = fn_name_exp->tail;
+				if (!id_exp)
+					CROAK("Missing argument to 'loop' function!");
+				struct YL_Var* id = yl_evaluate_in_scope(id_exp, scope, 1);
+				char* id_s = cast_yl_var_to_string(id);
+				struct AST* values = id_exp->tail;
+				if (!values) /* Nothing to loop with so nothing to do */
+					return &YL_FALSE;
+				struct AST* loop_ast = values->tail;
+				return loop_fn(id_s, values, loop_ast, scope);
 			} else {
 				/* Run a normal function */
 				struct YL_Var* fn = scope_get(scope, fn_name);
