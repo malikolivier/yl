@@ -54,7 +54,18 @@ int main(int argc, char** argv)
 		}
 		return 0;
 	}
-	if (argc < 3) {
+	if (strncmp(argv[1], "-e", 2) == 0) {
+		if (argc < 2) {
+			usage();
+			return 1;
+		}
+		f = fmemopen(argv[2], strlen(argv[2]), "r");
+		if (!f) {
+			fprintf(stderr, "Could not open memory stream\n");
+			return 1;
+		}
+		yl_set_argv(argc - 3, argv + 3);
+	} else {
 		f = fopen(argv[1], "r");
 		if (!f) {
 			fprintf(stderr, "Failed to open file '%s'\n", argv[1]);
@@ -62,18 +73,6 @@ int main(int argc, char** argv)
 			return 1;
 		}
 		yl_set_argv(argc - 2, argv + 2);
-	} else {
-		if (strncmp(argv[1], "-e", 2) == 0) {
-			f = fmemopen(argv[2], strlen(argv[2]), "r");
-			if (!f) {
-				fprintf(stderr, "Could not open memory stream\n");
-				return 1;
-			}
-		} else {
-			usage();
-			return 1;
-		}
-		yl_set_argv(argc - 3, argv + 3);
 	}
 	ast = yl_parse(f);
 	fclose(f);
