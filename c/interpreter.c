@@ -2,15 +2,9 @@
 #include <string.h>
 #include <math.h>
 
+#include "util.h"
 #include "parser.h"
 #include "interpreter.h"
-
-#define CHECK_MEM_ALLOC(ptr) \
-	do { \
-		if (!ptr) { \
-			CROAK("Memory allocation failed!"); \
-		} \
-	} while(0);
 
 struct YL_Var YL_FALSE = { YL_TYPE_FALSE, { (double) 0 } };
 struct YL_Var YL_TRUE = { YL_TYPE_NUMBER, { (double) 1 } };
