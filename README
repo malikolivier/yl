@@ -27,27 +27,4 @@ rand
 
 TODO
 
-$ ./yl -e '(def echo (n) n) (echo "ds")'
-Segmentation fault (core dumped)
-
-Debugging:
-
-$ gdb ./yl
-(gdb) b interpreter.c:549
-Breakpoint 1 at 0x3724: file interpreter.c, line 549.
-(gdb) set args -e '(def echo (n) n) (echo "ds")'
-(gdb) r
-Starting program: /home/malik/workspace/veille/lisp/c/yl -e '(def echo (n) n) (echo "ds")'
-
-Breakpoint 1, yl_evaluate_in_scope (ast=0x55555575c8e0,
-    scope=0x5555557594a0 <GLOBAL_SCOPE>, evaluate_function=1) at interpreter.c:549
-549					struct YL_Var** argv = malloc(sizeof(struct YL_Var*)*argc);
-(gdb) p *scope
-$1 = {vars = 0x55555575cb50, parent = 0x0}
-(gdb) p *scope->vars
-$2 = {empty = 0, name = 0x55555575c520 "echo", val = 0x55555575cad0,
-  tail = 0x555555759480 <GLOBAL_VARS>}
-(gdb) n
-550					CHECK_MEM_ALLOC(argv);
-(gdb) p *scope->vars
-$3 = {empty = 0, name = 0x55555575c520 "echo", val = 0x55555575cad0, tail = 0x21}
+prime.yl does not work
