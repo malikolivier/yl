@@ -660,7 +660,7 @@ struct YL_Var* func_run(struct YL_Func* func, int argc, struct YL_Var** argv)
 	}
 	if (!func->u.ast)
 		return &YL_FALSE;
-	return yl_evaluate_in_scope(func->u.ast, fn_scope, 0);
+	return yl_evaluate_in_scope(func->u.ast, fn_scope, 1);
 }
 
 struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
