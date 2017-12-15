@@ -34,6 +34,7 @@ runtest "(print (>= 0 0))" "1"
 runtest "(print (+ 1 1))" "2"
 runtest '(let x 1) (print x)' "1"
 runtest '(def echo (n) n) (print (echo "ds"))' 'ds'
+runtest '(def do_print (x) (print x)) (do_print 1)' '1'
 runtest '(let ret 1) (if ret ( (print "TRUE") ))' 'TRUE'
 runtest '(let ret ()) (if ret ( (print "TRUE") ))' ''
 runtest '(let ret ()) (if ret ( (print "TRUE") ) ( (print "FALSE") ))' 'FALSE'
