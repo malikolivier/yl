@@ -56,6 +56,11 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
     Ok(())
 }
 
+pub fn evaluate_code(code: String) -> i32 {
+    // TODO
+    0
+}
+
 
 #[cfg(test)]
 mod get_code {

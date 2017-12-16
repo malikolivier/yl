@@ -11,5 +11,12 @@ fn main() {
             eprintln!("Application error: {}", e);
             process::exit(1);
         }
+    } else {
+        let code = yl::get_code(&args).unwrap_or_else(|err| {
+            eprintln!("Could not get code: {:?}", err);
+            process::exit(1);
+        });
+        let ret = yl::evaluate_code(code);
+        process::exit(ret);
     }
 }
