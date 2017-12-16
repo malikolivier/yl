@@ -3,6 +3,7 @@ use std::str;
 use std::iter;
 
 
+#[derive(Debug)]
 pub enum AstNode {
     Val(String),
     List(Vec<AstNode>),
@@ -28,6 +29,7 @@ fn parse_tokstream(input: &mut TokenStream) -> AstNode {
     AstNode::List(list)
 }
 
+#[derive(Debug)]
 struct InputStream<'a> {
     input: iter::Peekable<str::Chars<'a>>,
     pos: u32,
@@ -71,13 +73,14 @@ impl<'a> InputStream<'a> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Token {
     Open,
     Close,
     Sym(String),
 }
 
+#[derive(Debug)]
 struct TokenStream<'a> {
     input: &'a mut InputStream<'a>,
     current: Option<Token>,
