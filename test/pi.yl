@@ -15,7 +15,7 @@
     )))
 
 
-(let precision (argv 1))
+(let precision (argv 0))
 (let n*pi/4 ("compute n*pi/4" precision))
 (let pi/4 (/ n*pi/4 precision))
 (let pi (* pi/4 4))

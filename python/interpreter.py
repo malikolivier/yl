@@ -156,7 +156,7 @@ def def_fn(args, scope):
 
 
 def argv_fn(args, scope):
-    n = int(args[0]) + 1
+    n = int(args[0]) + 2
     if n < len(sys.argv):
         if is_number(sys.argv[n]):
             return float(sys.argv[n])

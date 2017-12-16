@@ -119,7 +119,7 @@ GLOBAL_VARS = {
         return ret;
     },
     ['argv'] (n, scope) {
-        return process.argv[n + 2];
+        return process.argv[n + 3];
     },
     ['rand'] (scope) {
         return Math.random();
