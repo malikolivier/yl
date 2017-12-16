@@ -29,12 +29,12 @@ pub enum YlVar {
     Func(YlFunc)
 }
 
-pub fn evaluate(ast: &Vec<AstNode>) -> YlVar {
+pub fn evaluate(ast: &AstNode) -> YlVar {
     let scope = YlScope::new(None);
     evaluate_in_scope(ast, &scope)
 }
 
-pub fn evaluate_in_scope(ast: &Vec<AstNode>, scope: &YlScope) -> YlVar {
+pub fn evaluate_in_scope(ast: &AstNode, scope: &YlScope) -> YlVar {
     // TODO
     YlVar::False
 }
