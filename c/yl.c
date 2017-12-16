@@ -41,8 +41,8 @@ int main(int argc, char** argv)
 				/* ast_printf(ast);
 				   puts(""); */
 				obj = yl_evaluate_in_scope(ast, &GLOBAL_SCOPE, 0);
-				ast_free(ast);
 				yl_print(obj);
+				ast_free(ast);
 				printf("> ");
 			} else {
 				if (col > PROMPT_MAXLEN) {
