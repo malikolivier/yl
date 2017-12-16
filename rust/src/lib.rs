@@ -70,4 +70,24 @@ mod get_code {
             "(code)"
         );
     }
+    #[test]
+    fn from_file() {
+        let args = vec!["yl".to_string(),
+                        "../test/argv.yl".to_string()];
+        assert_eq!(
+            get_code(&args).unwrap(),
+            "(print (argv 0))\n"
+        );
+    }
+    #[test]
+    fn from_non_existing_file() {
+        let args = vec!["yl".to_string(),
+                        "I DON'T EXIST.yl".to_string()];
+        assert!(
+            match get_code(&args) {
+                Ok(_) => false,
+                Err(_) => true,
+            }
+        );
+    }
 }
