@@ -123,7 +123,7 @@ impl<'a> TokenStream<'a> {
                     Some(ch) => *ch,
                 }
             };
-            if predicate(ch) {
+            if !predicate(ch) {
                 break;
             }
             string.push(self.input.next().unwrap())
@@ -178,8 +178,14 @@ impl<'a> TokenStream<'a> {
                 self._read_next()
             },
             '"' => Some(self._read_string()),
-            '(' => Some(Token::Open),
-            ')' => Some(Token::Close),
+            '(' => {
+                self.input.next();
+                Some(Token::Open)
+            },
+            ')' => {
+                self.input.next();
+                Some(Token::Close)
+            },
             _ => {
                 if is_symbol(ch) {
                     Some(self._read_symbol())
