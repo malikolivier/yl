@@ -23,8 +23,3 @@ if
 loop
 argv
 rand
-
-
-TODO
-
-prime.yl does not work
