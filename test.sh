@@ -61,5 +61,6 @@ runtest '(loop x (range 3) ( (print x) ))' '0
 runtest '(loop x (range 1 3) ( (print x) ))' '1
 2'
 runtest '(def noop ()) (print (noop))' '()'
+runtest '(def print_let () (let x 1) (print x)) (print_let)' '1'
 
 echo
