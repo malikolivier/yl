@@ -2,6 +2,7 @@
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#include <time.h>
 
 #include "util.h"
 #include "parser.h"
@@ -496,6 +497,20 @@ struct YL_Var* argv_fn(int argc, struct YL_Var** argv) {
 	return ret;
 }
 
+int random_seeded = 0;
+
+struct YL_Var* rand_fn(int argc, struct YL_Var** argv)
+{
+	(void)argc;
+	(void)argv;
+	if (!random_seeded) {
+		srand(time(NULL));
+		random_seeded = 1;
+	}
+	double n = rand();
+	return yl_var_new_number(n / RAND_MAX);
+}
+
 struct YL_Func DEF_FN = {
 	.argc=-1, .builtin=1, .u.builtin_fn=NULL, .arg_names=NULL
 };
@@ -547,6 +562,9 @@ struct YL_Func LOOP_FN = {
 struct YL_Func ARGV_FN = {
 	.argc=1, .builtin=1, .u.builtin_fn=argv_fn, .arg_names=NULL
 };
+struct YL_Func RAND_FN = {
+	.argc=0, .builtin=1, .u.builtin_fn=rand_fn, .arg_names=NULL
+};
 struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &DEF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LET_FN },
@@ -564,10 +582,14 @@ struct YL_Var BUILTIN_VAR_VALS[] = {
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &MODULO_OP },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &IF_FN },
 	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &LOOP_FN },
-	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &ARGV_FN }
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &ARGV_FN },
+	{ .type=YL_TYPE_FUNC, .u.func=(struct YL_Func*) &RAND_FN }
+};
+struct YL_VarList RAND_FN_VAR = {
+	.name="rand", .val=&BUILTIN_VAR_VALS[17], .tail=NULL
 };
 struct YL_VarList ARGV_FN_VAR = {
-	.name="argv", .val=&BUILTIN_VAR_VALS[16], .tail=NULL
+	.name="argv", .val=&BUILTIN_VAR_VALS[16], .tail=&RAND_FN_VAR
 };
 struct YL_VarList LOOP_FN_VAR = {
 	.name="loop", .val=&BUILTIN_VAR_VALS[15], .tail=&ARGV_FN_VAR
