@@ -31,13 +31,15 @@ pub enum YlVar {
 
 pub fn evaluate(ast: &AstNode) -> YlVar {
     let scope = YlScope::new(None);
-    evaluate_in_scope(ast, &scope, 1)
+    evaluate_in_scope(ast, &scope, true)
 }
 
 pub fn evaluate_in_scope(ast: &AstNode, scope: &YlScope,
                          evaluate_function: bool) -> YlVar {
-    // TODO
-    YlVar::False
+    match ast {
+        &AstNode::Val(ref string) => evaluate_val(string, scope),
+        &AstNode::List(ref vec) => evaluate_list(&vec, scope, evaluate_function),
+    }
 }
 
 fn print_fn(argv: Vec<&YlVar>) {
@@ -59,4 +61,14 @@ pub fn print(var: &YlVar) {
     let mut vec = Vec::<&YlVar>::new();
     vec.push(var);
     print_fn(vec)
+}
+
+
+fn evaluate_val(string: &str, scope: &YlScope) -> YlVar {
+    YlVar::False
+}
+
+fn evaluate_list(vec: &Vec<AstNode>, scope: &YlScope,
+                 evaluate_function: bool) -> YlVar {
+    YlVar::False
 }
