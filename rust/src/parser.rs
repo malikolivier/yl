@@ -190,7 +190,7 @@ impl<'a> TokenStream<'a> {
                 if is_symbol(ch) {
                     Some(self._read_symbol())
                 } else {
-                    self.croak("Can't handler character!");
+                    self.croak("Can't handle character!");
                     None
                 }
             },
