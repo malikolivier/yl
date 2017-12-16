@@ -2,9 +2,22 @@
 
 set -o errexit
 
-# INTERPRETER="node node/yl.js"
-# INTERPRETER="python3 python/yl.py"
-INTERPRETER="c/yl"
+if [ "$1" = "node" ]; then
+	echo -n "Node	"
+	INTERPRETER="node node/yl.js"
+elif [ "$1" = "python" ]; then
+	echo -n "Python3	"
+	INTERPRETER="python3 python/yl.py"
+elif [ "$1" = "c" ]; then
+	echo -n "C	"
+	INTERPRETER="c/yl"
+else
+	# Run all languages!
+	$0 node
+	$0 python
+	$0 c
+	exit
+fi
 
 runtest () {
 	CODE="$1"
