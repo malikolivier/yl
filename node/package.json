@@ -1,0 +1,11 @@
+{
+  "name": "yl-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "yl.js",
+  "scripts": {
+    "test": "cd .. && ./test.sh node"
+  },
+  "author": "",
+  "license": "ISC"
+}
