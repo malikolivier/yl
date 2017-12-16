@@ -9,30 +9,23 @@ pub enum AstNode {
 }
 
 pub fn parse(code: &str) -> AstNode {
-    let input_stream = InputStream::new(code);
-    let token_stream = TokenStream::new(input_stream);
-    parse_tokstream(token_stream)
+    let mut input_stream = InputStream::new(code);
+    let mut token_stream = TokenStream::new(&mut input_stream);
+    parse_tokstream(&mut token_stream)
 }
 
-fn parse_tokstream(mut input: TokenStream) -> AstNode {
-    let empty_list = Vec::<AstNode>::new();
-    let ast = AstNode::List(empty_list);
+fn parse_tokstream(input: &mut TokenStream) -> AstNode {
+    let mut list = Vec::<AstNode>::new();
     loop {
         let tok = input.next();
         match tok {
             None => break,
             Some(Token::Close) => break,
-            Some(Token::Sym(sym)) => match ast {
-                AstNode::List(mut vec) => vec.push(AstNode::Val(sym)),
-                _ => input.croak("I should not be here 1"),
-            },
-            Some(Token::Open) => match ast {
-                AstNode::List(mut vec) => vec.push(parse_tokstream(input)),
-                _ => input.croak("I should not be here 2"),
-            },
+            Some(Token::Sym(sym)) => list.push(AstNode::Val(sym)),
+            Some(Token::Open) => list.push(parse_tokstream(input)),
         }
     }
-    ast
+    AstNode::List(list)
 }
 
 struct InputStream<'a> {
@@ -86,7 +79,7 @@ enum Token {
 }
 
 struct TokenStream<'a> {
-    input: InputStream<'a>,
+    input: &'a mut InputStream<'a>,
     current: Option<Token>,
 }
 
@@ -107,7 +100,7 @@ fn is_not_newline(ch: char) -> bool {
 }
 
 impl<'a> TokenStream<'a> {
-    fn new(input: InputStream<'a>) -> TokenStream<'a> {
+    fn new(input: &'a mut InputStream<'a>) -> TokenStream<'a> {
         TokenStream {
             input,
             current: None
@@ -195,29 +188,12 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    fn peek(&mut self) -> Option<Token> {
-        match self.current {
-            None => {
-                self.current = self._read_next();
-                self.current.clone()
-            }
-            Some(_) => self.current.clone(),
-        }
-    }
-
     fn next(&mut self) -> Option<Token> {
         let tok = self.current.clone();
         self.current = None;
         match tok {
             None => self._read_next(),
             Some(_) => tok,
-        }
-    }
-
-    fn eof(&mut self) -> bool {
-        match self.peek() {
-            None => true,
-            Some(_) => false,
         }
     }
 }
