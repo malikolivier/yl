@@ -51,10 +51,12 @@ fn write_prompt() -> Result<(), io::Error> {
 }
 
 pub fn run_prompt() -> Result<(), Box<io::Error>> {
+    let scope = interpreter::YlScope::new(None);
     write_prompt()?;
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
-        println!("{}", line?);
+        let ast = parser::parse(&line?);
+        let ret = interpreter::evaluate_in_scope(&ast, &scope);
         write_prompt()?;
     }
     Ok(())
