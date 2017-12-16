@@ -1,7 +1,7 @@
 SOURCES=$(wildcard *.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
 EXECUTABLE=yl
-CFLAGS=-g -Wall -Wextra -Wpedantic
+CFLAGS=-O3 -Wall -Wextra -Wpedantic
 LDFLAGS=-lm
 
 .PHONY: clean
