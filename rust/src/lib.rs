@@ -4,6 +4,10 @@ use std::io::Read;
 use std::io::Write;
 use std::fs;
 
+mod interpreter;
+mod parser;
+use interpreter::YlType;
+
 
 pub fn is_interactive(args: &[String]) -> bool {
     args.len() <= 1
@@ -56,9 +60,16 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
     Ok(())
 }
 
-pub fn evaluate_code(code: String) -> i32 {
-    // TODO
-    0
+pub fn evaluate_code_with_exit_status(code: String) -> i32 {
+    let ast = parser::parse(&code);
+    let ret = interpreter::evaluate(&ast);
+    match ret.kind {
+        YlType::Number => {
+            // TODO
+            0
+        },
+        _ => 0,
+    }
 }
 
 

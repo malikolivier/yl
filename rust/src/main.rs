@@ -16,7 +16,7 @@ fn main() {
             eprintln!("Could not get code: {:?}", err);
             process::exit(1);
         });
-        let ret = yl::evaluate_code(code);
+        let ret = yl::evaluate_code_with_exit_status(code);
         process::exit(ret);
     }
 }
