@@ -14,8 +14,9 @@
   (if (> n 1) (
     ("divisible by nothing under" n (- n 1)))))
 
-(let till (argv 1))
+(let till (argv 0))
 (loop n (range till)
-  (if ("is prime" n)
-    (
-      (print n))))
+  (
+    (if ("is prime" n)
+      (
+        (print n)))))
