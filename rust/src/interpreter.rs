@@ -31,10 +31,11 @@ pub enum YlVar {
 
 pub fn evaluate(ast: &AstNode) -> YlVar {
     let scope = YlScope::new(None);
-    evaluate_in_scope(ast, &scope)
+    evaluate_in_scope(ast, &scope, 1)
 }
 
-pub fn evaluate_in_scope(ast: &AstNode, scope: &YlScope) -> YlVar {
+pub fn evaluate_in_scope(ast: &AstNode, scope: &YlScope,
+                         evaluate_function: bool) -> YlVar {
     // TODO
     YlVar::False
 }
