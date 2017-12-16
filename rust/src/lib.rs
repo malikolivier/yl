@@ -6,7 +6,7 @@ use std::fs;
 
 mod interpreter;
 mod parser;
-use interpreter::YlType;
+use interpreter::YlVar;
 
 
 pub fn is_interactive(args: &[String]) -> bool {
@@ -63,11 +63,8 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
 pub fn evaluate_code_with_exit_status(code: String) -> i32 {
     let ast = parser::parse(&code);
     let ret = interpreter::evaluate(&ast);
-    match ret.kind {
-        YlType::Number => {
-            // TODO
-            0
-        },
+    match ret {
+        YlVar::Num(n) => n as i32,
         _ => 0,
     }
 }

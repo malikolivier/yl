@@ -1,21 +1,23 @@
+use std::collections::HashMap;
 use std::collections::LinkedList;
 
 use parser::AstNode;
 
 
-pub enum YlType {
-    False,
-    Number,
-    String,
-    Function,
+struct YlFunc {
+    argv: u32,
+    arg_names: Vec<String>,
+    scope: HashMap<String, YlVar>,
 }
 
-pub struct YlVar {
-    pub kind: YlType,
+pub enum YlVar {
+    False,
+    Num(f64),
+    Str(String),
+    Func(YlFunc)
 }
 
 pub fn evaluate(ast: &LinkedList<AstNode>) -> YlVar {
-    YlVar {
-        kind: YlType::False
-    }
+    // TODO
+    YlVar::False
 }

@@ -5,6 +5,8 @@ pub enum AstNode {
     AstNode,
 }
 
+
 pub fn parse(code: &str) -> LinkedList<AstNode> {
+    // TODO
     LinkedList::<AstNode>::new()
 }
