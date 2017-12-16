@@ -1,12 +1,10 @@
-use std::collections::LinkedList;
-
 pub enum AstNode {
     String,
     AstNode,
 }
 
 
-pub fn parse(code: &str) -> LinkedList<AstNode> {
+pub fn parse(code: &str) -> Vec<AstNode> {
     // TODO
-    LinkedList::<AstNode>::new()
+    Vec::<AstNode>::new()
 }

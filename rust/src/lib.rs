@@ -57,6 +57,7 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
     for line in stdin.lock().lines() {
         let ast = parser::parse(&line?);
         let ret = interpreter::evaluate_in_scope(&ast, &scope);
+        interpreter::print(&ret);
         write_prompt()?;
     }
     Ok(())

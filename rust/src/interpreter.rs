@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::LinkedList;
 
 use parser::AstNode;
 
@@ -18,9 +17,8 @@ impl YlScope {
 }
 
 
-struct YlFunc {
-    argv: u32,
-    arg_names: Vec<String>,
+pub struct YlFunc {
+    args: Vec<String>,
     scope: YlScope,
 }
 
@@ -31,12 +29,33 @@ pub enum YlVar {
     Func(YlFunc)
 }
 
-pub fn evaluate(ast: &LinkedList<AstNode>) -> YlVar {
+pub fn evaluate(ast: &Vec<AstNode>) -> YlVar {
     let scope = YlScope::new(None);
     evaluate_in_scope(ast, &scope)
 }
 
-pub fn evaluate_in_scope(ast: &LinkedList<AstNode>, scope: &YlScope) -> YlVar {
+pub fn evaluate_in_scope(ast: &Vec<AstNode>, scope: &YlScope) -> YlVar {
     // TODO
     YlVar::False
+}
+
+fn print_fn(argv: Vec<&YlVar>) {
+    for var in argv.iter() {
+        match *var {
+            &YlVar::False => println!("()"),
+            &YlVar::Num(n) => println!("{}", n),
+            &YlVar::Str(ref s) => println!("{}", s),
+            &YlVar::Func(ref f) => {
+                print!("(def ");
+                // TODO
+                println!(")");
+            },
+        }
+    }
+}
+
+pub fn print(var: &YlVar) {
+    let mut vec = Vec::<&YlVar>::new();
+    vec.push(var);
+    print_fn(vec)
 }
