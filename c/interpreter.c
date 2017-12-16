@@ -129,6 +129,15 @@ void ast_extract_argv(struct AST* ast, struct YL_Scope* scope,
 	}
 }
 
+struct AST* ast_encapsulate(struct AST* ast)
+{
+	struct AST* capsule = malloc(sizeof(*capsule));
+	capsule->type = AST_LIST;
+	capsule->val.ast = ast;
+	capsule->tail = NULL;
+	return capsule;
+}
+
 struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope)
 {
 	struct YL_Var* fn = malloc(sizeof(*fn));
@@ -141,7 +150,7 @@ struct YL_Var* def_fn(char* identifier, struct AST* args, struct YL_Scope* scope
 	}
 	fn->u.func->argc = ast_len(args->val.ast);
 	fn->u.func->builtin = 0;
-	fn->u.func->u.ast = args->tail;
+	fn->u.func->u.ast = ast_encapsulate(args->tail);
 	fn->u.func->scope = scope;
 	fn->u.func->arg_names = malloc(sizeof(char*)*fn->u.func->argc);
 	CHECK_MEM_ALLOC(fn->u.func->arg_names);
@@ -682,7 +691,7 @@ struct YL_Var* func_run(struct YL_Func* func, int argc, struct YL_Var** argv)
 	}
 	if (!func->u.ast)
 		return &YL_FALSE;
-	return yl_evaluate_in_scope(func->u.ast, fn_scope, 1);
+	return yl_evaluate_in_scope(func->u.ast, fn_scope, 0);
 }
 
 struct YL_Var* yl_evaluate_in_scope(struct AST* ast, struct YL_Scope* scope,
