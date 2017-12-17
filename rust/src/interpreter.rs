@@ -41,6 +41,10 @@ impl<'a> YlScope<'a> {
         }
         ret
     }
+
+    fn set(&'a mut self, name: &str, value: YlVar<'a>) {
+        self.vars.insert(name.to_string(), value);
+    }
 }
 
 
@@ -91,11 +95,11 @@ pub fn print(var: &YlVar) {
 }
 
 
-fn evaluate_val<'a, 'b>(string: &str, scope: &'b YlScope) -> YlVar<'a> {
+fn evaluate_val<'a>(string: &str, scope: &YlScope) -> YlVar<'a> {
     YlVar::False
 }
 
-fn evaluate_list<'a, 'b>(vec: &Vec<AstNode>, scope: &'b YlScope,
-                         evaluate_function: bool) -> YlVar<'a> {
+fn evaluate_list<'a>(vec: &Vec<AstNode>, scope: &YlScope,
+                     evaluate_function: bool) -> YlVar<'a> {
     YlVar::False
 }
