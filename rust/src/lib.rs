@@ -66,9 +66,10 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
 
 pub fn evaluate_code_with_exit_status(code: String) -> i32 {
     let ast = parser::parse(&code);
-    let ret = interpreter::evaluate(&ast);
+    let scope = interpreter::YlScope::new(None);
+    let ret = interpreter::evaluate_in_scope(&ast, &scope, true);
     match ret {
-        YlVar::Num(n) => n as i32,
+        &YlVar::Num(n) => n as i32,
         _ => 0,
     }
 }

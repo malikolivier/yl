@@ -19,9 +19,8 @@ impl<'a> YlScope<'a> {
         Self::new(Some(self))
     }
 
-    fn get(&'a self, name: &str) -> &'a YlVar {
+    fn get(&'a self, name: &str) -> Option<&'a YlVar> {
         let mut parent = Some(self);
-        let mut ret = &YlVar::False;
         loop {
             match parent {
                 None => {
@@ -33,13 +32,12 @@ impl<'a> YlScope<'a> {
                             parent = parent.unwrap().parent;
                         },
                         Some(var) => {
-                            ret = var;
-                            break
+                            return Some(var);
                         },
                     }
             }
         }
-        ret
+        None
     }
 
     fn set(&'a mut self, name: &str, value: YlVar<'a>) {
@@ -60,13 +58,9 @@ pub enum YlVar<'a> {
     Func(YlFunc<'a>)
 }
 
-pub fn evaluate(ast: &AstNode) -> YlVar {
-    let scope = YlScope::new(None);
-    evaluate_in_scope(ast, &scope, true)
-}
 
-pub fn evaluate_in_scope<'a>(ast: &AstNode, scope: &YlScope,
-                             evaluate_function: bool) -> YlVar<'a> {
+pub fn evaluate_in_scope<'a>(ast: &AstNode, scope: &'a YlScope,
+                             evaluate_function: bool) -> &'a YlVar<'a> {
     match ast {
         &AstNode::Val(ref string) => evaluate_val(string, scope),
         &AstNode::List(ref vec) => evaluate_list(&vec, scope, evaluate_function),
@@ -95,11 +89,19 @@ pub fn print(var: &YlVar) {
 }
 
 
-fn evaluate_val<'a>(string: &str, scope: &YlScope) -> YlVar<'a> {
-    YlVar::False
+fn evaluate_val<'a>(string: &str, scope: &'a YlScope) -> &'a YlVar<'a> {
+    match scope.get(string) {
+        None => parse_to_yl_var(string),
+        Some(var) => var,
+    }
 }
 
 fn evaluate_list<'a>(vec: &Vec<AstNode>, scope: &YlScope,
-                     evaluate_function: bool) -> YlVar<'a> {
-    YlVar::False
+                     evaluate_function: bool) -> &'a YlVar<'a> {
+    &YlVar::False
+}
+
+
+fn parse_to_yl_var<'a>(string: &str) -> &'a YlVar<'a> {
+    &YlVar::False
 }
