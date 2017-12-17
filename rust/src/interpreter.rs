@@ -61,6 +61,7 @@ impl<'s, 'p> YlScope<'s, 'p> {
 #[derive(Clone)]
 pub struct UserDefinedFunc<'s, 'p: 's> {
     scope: Option<&'s YlScope<'s, 'p>>,
+    ast: &'s AstNode
 }
 
 #[derive(Clone)]
