@@ -15,8 +15,7 @@ impl<'a> YlScope<'a> {
                 let mut vars = HashMap::<String, YlVar>::new();
                 vars.insert("let".to_string(), YlVar::Func(YlFunc {
                     args: vec!["id", "rhs"],
-                    scope: None,
-                    builtin: true,
+                    kind: FuncType::LetFn,
                 }));
                 YlScope { vars, parent }
             },
@@ -58,11 +57,22 @@ impl<'a> YlScope<'a> {
     }
 }
 
+
+#[derive(Clone)]
+pub struct UserDefinedFunc<'a> {
+    scope: Option<&'a YlScope<'a>>,
+}
+
+#[derive(Clone)]
+pub enum FuncType<'a> {
+    LetFn,
+    UserDefined(UserDefinedFunc<'a>),
+}
+
 #[derive(Clone)]
 pub struct YlFunc<'a> {
+    kind: FuncType<'a>,
     args: Vec<&'a str>,
-    scope: Option<&'a YlScope<'a>>,
-    builtin: bool,
 }
 
 #[derive(Clone)]
@@ -94,10 +104,11 @@ fn print_fn(argv: Vec<&YlVar>) {
                     print!("{} ", arg);
                 }
                 print!(")");
-                if f.builtin {
-                    print!(" [native code] ");
-                } else {
-                    print!(" ... "); // TODO
+                match f.kind.clone() {
+                    FuncType::UserDefined(f) => {
+                        print!(" ... "); // TODO
+                    },
+                    _ => print!(" [native code] "),
                 }
                 println!(")");
             },
