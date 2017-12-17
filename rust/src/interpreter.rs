@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process;
 use std::str::FromStr;
 
 use parser::AstNode;
@@ -164,15 +165,22 @@ fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a, 'a> {
 }
 
 fn run_function<'s>(fn_name: &str, val: &YlVar, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
-    match fn_name {
-        "let" => {
+    match val {
+        &YlVar::Func(ref f) => {
             // TODO
             eprintln!("'let' not implemented");
             YlVar::False
         },
-        string => {
-            eprintln!("Normal function not implemented");
+        _ => {
+            let mut msg = String::from(fn_name);
+            msg.push_str(" is not a function");
+            croak(&msg);
             YlVar::False
         },
     }
+}
+
+fn croak(msg: &str) {
+    eprintln!("{}", msg);
+    process::exit(1)
 }
