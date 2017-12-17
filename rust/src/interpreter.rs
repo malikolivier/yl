@@ -15,7 +15,8 @@ impl<'a> YlScope<'a> {
                 let mut vars = HashMap::<String, YlVar>::new();
                 vars.insert("let".to_string(), YlVar::Func(YlFunc {
                     args: vec!["id", "rhs"],
-                    scope: None
+                    scope: None,
+                    builtin: true,
                 }));
                 YlScope { vars, parent }
             },
@@ -61,6 +62,7 @@ impl<'a> YlScope<'a> {
 pub struct YlFunc<'a> {
     args: Vec<&'a str>,
     scope: Option<&'a YlScope<'a>>,
+    builtin: bool,
 }
 
 #[derive(Clone)]
@@ -87,8 +89,16 @@ fn print_fn(argv: Vec<&YlVar>) {
             &YlVar::Num(n) => println!("{}", n),
             &YlVar::Str(ref s) => println!("{}", s),
             &YlVar::Func(ref f) => {
-                print!("(def ");
-                // TODO
+                print!("(def function (");
+                for arg in f.args.clone() {
+                    print!("{} ", arg);
+                }
+                print!(")");
+                if f.builtin {
+                    print!(" [native code] ");
+                } else {
+                    print!(" ... "); // TODO
+                }
                 println!(")");
             },
         }
