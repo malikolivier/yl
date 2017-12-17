@@ -2,31 +2,58 @@ use std::collections::HashMap;
 
 use parser::AstNode;
 
-pub struct YlScope {
-    vars: HashMap<String, YlVar>,
-    parent: Option<Box<YlScope>>,
+pub struct YlScope<'a> {
+    vars: HashMap<String, YlVar<'a>>,
+    parent: Option<&'a YlScope<'a>>,
 }
 
-impl YlScope {
-    pub fn new(parent: Option<Box<YlScope>>) -> YlScope {
+impl<'a> YlScope<'a> {
+    pub fn new(parent: Option<&'a YlScope>) -> YlScope<'a> {
         YlScope {
             vars: HashMap::<String, YlVar>::new(),
             parent
         }
     }
+
+    fn extend(&'a self) -> YlScope<'a> {
+        Self::new(Some(self))
+    }
+
+    fn get(&'a self, name: &str) -> &'a YlVar {
+        let mut parent = Some(self);
+        let mut ret = &YlVar::False;
+        loop {
+            match parent {
+                None => {
+                    break
+                },
+                Some(scope) =>
+                    match scope.vars.get(name) {
+                        None => {
+                            parent = parent.unwrap().parent;
+                        },
+                        Some(var) => {
+                            ret = var;
+                            break
+                        },
+                    }
+            }
+        }
+        ret
+    }
 }
 
 
-pub struct YlFunc {
+pub struct YlFunc<'a> {
     args: Vec<String>,
-    scope: YlScope,
+    scope: &'a YlScope<'a>,
 }
 
-pub enum YlVar {
+pub enum YlVar<'a> {
     False,
     Num(f64),
     Str(String),
-    Func(YlFunc)
+    Func(YlFunc<'a>)
 }
 
 pub fn evaluate(ast: &AstNode) -> YlVar {
@@ -34,8 +61,8 @@ pub fn evaluate(ast: &AstNode) -> YlVar {
     evaluate_in_scope(ast, &scope, true)
 }
 
-pub fn evaluate_in_scope(ast: &AstNode, scope: &YlScope,
-                         evaluate_function: bool) -> YlVar {
+pub fn evaluate_in_scope<'a>(ast: &AstNode, scope: &YlScope,
+                             evaluate_function: bool) -> YlVar<'a> {
     match ast {
         &AstNode::Val(ref string) => evaluate_val(string, scope),
         &AstNode::List(ref vec) => evaluate_list(&vec, scope, evaluate_function),
@@ -64,11 +91,11 @@ pub fn print(var: &YlVar) {
 }
 
 
-fn evaluate_val(string: &str, scope: &YlScope) -> YlVar {
+fn evaluate_val<'a, 'b>(string: &str, scope: &'b YlScope) -> YlVar<'a> {
     YlVar::False
 }
 
-fn evaluate_list(vec: &Vec<AstNode>, scope: &YlScope,
-                 evaluate_function: bool) -> YlVar {
+fn evaluate_list<'a, 'b>(vec: &Vec<AstNode>, scope: &'b YlScope,
+                         evaluate_function: bool) -> YlVar<'a> {
     YlVar::False
 }
