@@ -10,9 +10,21 @@ pub struct YlScope<'a> {
 
 impl<'a> YlScope<'a> {
     pub fn new(parent: Option<&'a YlScope>) -> YlScope<'a> {
-        YlScope {
-            vars: HashMap::<String, YlVar>::new(),
-            parent
+        match parent {
+            None => {
+                let mut vars = HashMap::<String, YlVar>::new();
+                vars.insert("let".to_string(), YlVar::Func(YlFunc {
+                    args: vec!["id", "rhs"],
+                    scope: None
+                }));
+                YlScope { vars, parent }
+            },
+            Some(scope) => {
+                YlScope {
+                    vars: HashMap::<String, YlVar>::new(),
+                    parent
+                }
+            },
         }
     }
 
@@ -25,7 +37,7 @@ impl<'a> YlScope<'a> {
         loop {
             match parent {
                 None => {
-                    return get_global_object(name);
+                    return None;
                 },
                 Some(scope) =>
                     match scope.vars.get(name) {
@@ -45,23 +57,9 @@ impl<'a> YlScope<'a> {
     }
 }
 
-
-static LET_FN_VAR: YlVar = YlVar::Func(YlFunc {
-    args: vec!["id".to_string(), "rhs".to_string()],
-    scope: None,
-});
-
-fn get_global_object(name: &str) -> Option<&'static YlVar<'static>> {
-    match name {
-        "let" => Some(&LET_FN_VAR),
-        _ => None,
-    }
-}
-
-
 #[derive(Clone)]
 pub struct YlFunc<'a> {
-    args: Vec<String>,
+    args: Vec<&'a str>,
     scope: Option<&'a YlScope<'a>>,
 }
 
