@@ -3,13 +3,13 @@ use std::str::FromStr;
 
 use parser::AstNode;
 
-pub struct YlScope<'a> {
-    vars: HashMap<String, YlVar<'a>>,
-    parent: Option<&'a YlScope<'a>>,
+pub struct YlScope<'s, 'p: 's> {
+    vars: HashMap<String, YlVar<'s, 's, 's>>,
+    parent: Option<&'s YlScope<'p, 'p>>,
 }
 
-impl<'a> YlScope<'a> {
-    pub fn new(parent: Option<&'a YlScope>) -> YlScope<'a> {
+impl<'s, 'p> YlScope<'s, 'p> {
+    pub fn new(parent: Option<&'p YlScope>) -> YlScope<'s, 'p> {
         match parent {
             None => {
                 let mut vars = HashMap::<String, YlVar>::new();
@@ -28,11 +28,11 @@ impl<'a> YlScope<'a> {
         }
     }
 
-    fn extend(&'a self) -> YlScope<'a> {
+    fn extend(&'p self) -> YlScope<'s, 'p> {
         Self::new(Some(self))
     }
 
-    fn get(&'a self, name: &str) -> Option<&'a YlVar> {
+    fn get(&'s self, name: &str) -> Option<&'s YlVar> {
         let mut parent = Some(self);
         loop {
             match parent {
@@ -52,40 +52,40 @@ impl<'a> YlScope<'a> {
         }
     }
 
-    fn set(&'a mut self, name: &str, value: YlVar<'a>) {
+    fn set(&'s mut self, name: &str, value: YlVar<'s, 's, 's>) {
         self.vars.insert(name.to_string(), value);
     }
 }
 
 
 #[derive(Clone)]
-pub struct UserDefinedFunc<'a> {
-    scope: Option<&'a YlScope<'a>>,
+pub struct UserDefinedFunc<'s, 'p: 's> {
+    scope: Option<&'s YlScope<'s, 'p>>,
 }
 
 #[derive(Clone)]
-pub enum FuncType<'a> {
+pub enum FuncType<'s, 'p: 's> {
     LetFn,
-    UserDefined(UserDefinedFunc<'a>),
+    UserDefined(UserDefinedFunc<'s, 'p>),
 }
 
 #[derive(Clone)]
-pub struct YlFunc<'a> {
-    kind: FuncType<'a>,
+pub struct YlFunc<'a, 's: 'a, 'p: 's> {
+    kind: FuncType<'s, 'p>,
     args: Vec<&'a str>,
 }
 
 #[derive(Clone)]
-pub enum YlVar<'a> {
+pub enum YlVar<'a, 's: 'a, 'p: 's> {
     False,
     Num(f64),
     Str(String),
-    Func(YlFunc<'a>)
+    Func(YlFunc<'a, 's, 'p>)
 }
 
 
-pub fn evaluate_in_scope<'a>(ast: &AstNode, scope: &'a YlScope,
-                             evaluate_function: bool) -> YlVar<'a> {
+pub fn evaluate_in_scope<'s>(ast: &AstNode, scope: &'s YlScope,
+                             evaluate_function: bool) -> YlVar<'s, 's, 's> {
     match ast {
         &AstNode::Val(ref string) => evaluate_val(string, scope),
         &AstNode::List(ref vec) => evaluate_list(&vec, scope, evaluate_function),
@@ -123,15 +123,15 @@ pub fn print(var: &YlVar) {
 }
 
 
-fn evaluate_val<'a>(string: &str, scope: &'a YlScope) -> YlVar<'a> {
+fn evaluate_val<'s>(string: &str, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
     match scope.get(string) {
         None => parse_to_yl_var(string),
         Some(var) => var.clone(),
     }
 }
 
-fn evaluate_list<'a>(vec: &Vec<AstNode>, scope: &'a YlScope,
-                     evaluate_function: bool) -> YlVar<'a> {
+fn evaluate_list<'s>(vec: &Vec<AstNode>, scope: &'s YlScope,
+                     evaluate_function: bool) -> YlVar<'s, 's, 's> {
     if evaluate_function && vec.len() > 0 {
         match vec[0] {
             AstNode::List(_) => {},
@@ -152,7 +152,7 @@ fn evaluate_list<'a>(vec: &Vec<AstNode>, scope: &'a YlScope,
 }
 
 
-fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a> {
+fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a, 'a> {
     match f64::from_str(string) {
         Err(_) => {
             let s = string.to_string();
@@ -162,7 +162,7 @@ fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a> {
     }
 }
 
-fn run_function<'a>(fn_name: &str, val: &YlVar, scope: &YlScope) -> YlVar<'a> {
+fn run_function<'s>(fn_name: &str, val: &YlVar, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
     match fn_name {
         "let" => {
             // TODO
