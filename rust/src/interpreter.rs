@@ -141,7 +141,7 @@ fn evaluate_list<'s>(vec: &Vec<AstNode>, scope: &'s YlScope,
                 match scope.get(&fn_name) {
                     None => {},
                     Some(func) => {
-                        return run_function(&fn_name, func, scope);
+                        return check_and_run_function(&fn_name, func, scope);
                     },
                 },
         }
@@ -164,12 +164,10 @@ fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a, 'a> {
     }
 }
 
-fn run_function<'s>(fn_name: &str, val: &YlVar, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+fn check_and_run_function<'s>(fn_name: &str, val: &YlVar, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
     match val {
         &YlVar::Func(ref f) => {
-            // TODO
-            eprintln!("'let' not implemented");
-            YlVar::False
+            run_function(f, scope)
         },
         _ => {
             let mut msg = String::from(fn_name);
@@ -183,4 +181,9 @@ fn run_function<'s>(fn_name: &str, val: &YlVar, scope: &'s YlScope) -> YlVar<'s,
 fn croak(msg: &str) {
     eprintln!("{}", msg);
     process::exit(1)
+}
+
+fn run_function<'s>(f: &YlFunc, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+    // TODO
+    YlVar::False
 }
