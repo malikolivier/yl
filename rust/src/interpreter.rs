@@ -25,7 +25,7 @@ impl<'a> YlScope<'a> {
         loop {
             match parent {
                 None => {
-                    break
+                    return get_global_object(name);
                 },
                 Some(scope) =>
                     match scope.vars.get(name) {
@@ -38,7 +38,6 @@ impl<'a> YlScope<'a> {
                     }
             }
         }
-        None
     }
 
     fn set(&'a mut self, name: &str, value: YlVar<'a>) {
@@ -47,10 +46,23 @@ impl<'a> YlScope<'a> {
 }
 
 
+static LET_FN_VAR: YlVar = YlVar::Func(YlFunc {
+    args: vec!["id".to_string(), "rhs".to_string()],
+    scope: None,
+});
+
+fn get_global_object(name: &str) -> Option<&'static YlVar<'static>> {
+    match name {
+        "let" => Some(&LET_FN_VAR),
+        _ => None,
+    }
+}
+
+
 #[derive(Clone)]
 pub struct YlFunc<'a> {
     args: Vec<String>,
-    scope: &'a YlScope<'a>,
+    scope: Option<&'a YlScope<'a>>,
 }
 
 #[derive(Clone)]
@@ -132,6 +144,15 @@ fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a> {
 }
 
 fn run_function<'a>(fn_name: &str, val: &YlVar, scope: &YlScope) -> YlVar<'a> {
-    // TODO
-    YlVar::False
+    match fn_name {
+        "let" => {
+            // TODO
+            eprintln!("'let' not implemented");
+            YlVar::False
+        },
+        string => {
+            eprintln!("Normal function not implemented");
+            YlVar::False
+        },
+    }
 }
