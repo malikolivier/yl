@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use parser::AstNode;
 
@@ -46,11 +47,13 @@ impl<'a> YlScope<'a> {
 }
 
 
+#[derive(Clone)]
 pub struct YlFunc<'a> {
     args: Vec<String>,
     scope: &'a YlScope<'a>,
 }
 
+#[derive(Clone)]
 pub enum YlVar<'a> {
     False,
     Num(f64),
@@ -60,7 +63,7 @@ pub enum YlVar<'a> {
 
 
 pub fn evaluate_in_scope<'a>(ast: &AstNode, scope: &'a YlScope,
-                             evaluate_function: bool) -> &'a YlVar<'a> {
+                             evaluate_function: bool) -> YlVar<'a> {
     match ast {
         &AstNode::Val(ref string) => evaluate_val(string, scope),
         &AstNode::List(ref vec) => evaluate_list(&vec, scope, evaluate_function),
@@ -89,19 +92,46 @@ pub fn print(var: &YlVar) {
 }
 
 
-fn evaluate_val<'a>(string: &str, scope: &'a YlScope) -> &'a YlVar<'a> {
+fn evaluate_val<'a>(string: &str, scope: &'a YlScope) -> YlVar<'a> {
     match scope.get(string) {
         None => parse_to_yl_var(string),
-        Some(var) => var,
+        Some(var) => var.clone(),
     }
 }
 
-fn evaluate_list<'a>(vec: &Vec<AstNode>, scope: &YlScope,
-                     evaluate_function: bool) -> &'a YlVar<'a> {
-    &YlVar::False
+fn evaluate_list<'a>(vec: &Vec<AstNode>, scope: &'a YlScope,
+                     evaluate_function: bool) -> YlVar<'a> {
+    if evaluate_function && vec.len() > 0 {
+        match vec[0] {
+            AstNode::List(_) => {},
+            AstNode::Val(ref fn_name) =>
+                match scope.get(&fn_name) {
+                    None => {},
+                    Some(func) => {
+                        return run_function(&fn_name, func, scope);
+                    },
+                },
+        }
+    }
+    let mut ret = YlVar::False;
+    for node in vec {
+        ret = evaluate_in_scope(node, scope, true);
+    }
+    ret
 }
 
 
-fn parse_to_yl_var<'a>(string: &str) -> &'a YlVar<'a> {
-    &YlVar::False
+fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a> {
+    match f64::from_str(string) {
+        Err(_) => {
+            let s = string.to_string();
+            YlVar::Str(s)
+        },
+        Ok(n) => YlVar::Num(n),
+    }
+}
+
+fn run_function<'a>(fn_name: &str, val: &YlVar, scope: &YlScope) -> YlVar<'a> {
+    // TODO
+    YlVar::False
 }

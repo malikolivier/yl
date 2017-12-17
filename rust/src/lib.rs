@@ -69,7 +69,7 @@ pub fn evaluate_code_with_exit_status(code: String) -> i32 {
     let scope = interpreter::YlScope::new(None);
     let ret = interpreter::evaluate_in_scope(&ast, &scope, true);
     match ret {
-        &YlVar::Num(n) => n as i32,
+        YlVar::Num(n) => n as i32,
         _ => 0,
     }
 }
