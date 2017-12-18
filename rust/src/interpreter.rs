@@ -187,8 +187,7 @@ fn croak(msg: &str) {
 fn run_function<'s>(f: &YlFunc, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
     match f.kind {
         FuncType::LetFn => {
-            println!("{:?}", ast);
-            let args = func_get_args(&ast[0]);
+            let args = func_get_args(ast, scope);
             println!("{:?}", args);
             YlVar::False
         },
@@ -200,11 +199,17 @@ fn run_function<'s>(f: &YlFunc, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar
     }
 }
 
-fn func_get_args(ast: &AstNode) -> Vec<YlVar> {
+fn func_get_args<'s>(ast: &Vec<AstNode>, scope: &'s YlScope)
+                     -> Vec<YlVar<'s, 's, 's>> {
     let mut args = Vec::<YlVar>::new();
-    loop {
-        match ast {
+    let mut i = 0;
+    while i < ast.len() {
+        if i == 0 {
+            i += 1;
+            continue
         }
+        args.push(evaluate_in_scope(&ast[i], scope, true));
+        i += 1;
     }
     args
 }
