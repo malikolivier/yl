@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use parser::AstNode;
 
+#[derive(Debug)]
 pub struct YlScope<'s, 'p: 's> {
     vars: HashMap<String, YlVar<'s, 's, 's>>,
     parent: Option<&'s YlScope<'p, 'p>>,
@@ -59,25 +60,25 @@ impl<'s, 'p> YlScope<'s, 'p> {
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UserDefinedFunc<'s, 'p: 's> {
     scope: Option<&'s YlScope<'s, 'p>>,
     ast: &'s AstNode
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum FuncType<'s, 'p: 's> {
     LetFn,
     UserDefined(UserDefinedFunc<'s, 'p>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct YlFunc<'a, 's: 'a, 'p: 's> {
     kind: FuncType<'s, 'p>,
     args: Vec<&'a str>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum YlVar<'a, 's: 'a, 'p: 's> {
     False,
     Num(f64),
@@ -141,7 +142,7 @@ fn evaluate_list<'s>(vec: &Vec<AstNode>, scope: &'s YlScope,
                 match scope.get(&fn_name) {
                     None => {},
                     Some(func) => {
-                        return check_and_run_function(&fn_name, func, scope);
+                        return check_and_run_function(&fn_name, func, vec, scope);
                     },
                 },
         }
@@ -164,10 +165,10 @@ fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a, 'a> {
     }
 }
 
-fn check_and_run_function<'s>(fn_name: &str, val: &YlVar, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+fn check_and_run_function<'s>(fn_name: &str, val: &YlVar, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
     match val {
         &YlVar::Func(ref f) => {
-            run_function(f, scope)
+            run_function(f, ast, scope)
         },
         _ => {
             let mut msg = String::from(fn_name);
@@ -183,7 +184,22 @@ fn croak(msg: &str) {
     process::exit(1)
 }
 
-fn run_function<'s>(f: &YlFunc, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+fn run_function<'s>(f: &YlFunc, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+    match f.kind {
+        FuncType::LetFn => {
+            let args = func_get_argv(ast);
+            println!("{:?}", args);
+            YlVar::False
+        },
+        FuncType::UserDefined(ref func) => {
+            // TODO
+            croak("UserDefined functions not implemented");
+            YlVar::False
+        },
+    }
+}
+
+fn func_get_argv(ast: &Vec<AstNode>) -> Vec<&YlVar> {
     // TODO
-    YlVar::False
+    vec![&YlVar::False]
 }
