@@ -6,7 +6,7 @@ use parser::AstNode;
 
 #[derive(Debug)]
 pub struct YlScope<'s, 'p: 's> {
-    vars: HashMap<String, YlVar<'s, 's, 's>>,
+    vars: HashMap<String, YlVar<'s, 's>>,
     parent: Option<&'s YlScope<'p, 'p>>,
 }
 
@@ -16,7 +16,7 @@ impl<'s, 'p> YlScope<'s, 'p> {
             None => {
                 let mut vars = HashMap::<String, YlVar>::new();
                 vars.insert("let".to_string(), YlVar::Func(YlFunc {
-                    args: vec!["id", "rhs"],
+                    args: vec!["id".to_string(), "rhs".to_string()],
                     kind: FuncType::LetFn,
                 }));
                 YlScope { vars, parent }
@@ -54,7 +54,7 @@ impl<'s, 'p> YlScope<'s, 'p> {
         }
     }
 
-    fn set(&'s mut self, name: &str, value: YlVar<'s, 's, 's>) {
+    fn set(&'s mut self, name: &str, value: YlVar<'s, 's>) {
         self.vars.insert(name.to_string(), value);
     }
 }
@@ -73,22 +73,22 @@ pub enum FuncType<'s, 'p: 's> {
 }
 
 #[derive(Clone, Debug)]
-pub struct YlFunc<'a, 's: 'a, 'p: 's> {
+pub struct YlFunc<'s, 'p: 's> {
     kind: FuncType<'s, 'p>,
-    args: Vec<&'a str>,
+    args: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
-pub enum YlVar<'a, 's: 'a, 'p: 's> {
+pub enum YlVar<'s, 'p: 's> {
     False,
     Num(f64),
     Str(String),
-    Func(YlFunc<'a, 's, 'p>)
+    Func(YlFunc<'s, 'p>)
 }
 
 
 pub fn evaluate_in_scope<'s>(ast: &AstNode, scope: &'s YlScope,
-                             evaluate_function: bool) -> YlVar<'s, 's, 's> {
+                             evaluate_function: bool) -> YlVar<'s, 's> {
     match ast {
         &AstNode::Val(ref string) => evaluate_val(string, scope),
         &AstNode::List(ref vec) => evaluate_list(&vec, scope, evaluate_function),
@@ -126,7 +126,7 @@ pub fn print(var: &YlVar) {
 }
 
 
-fn evaluate_val<'s>(string: &str, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+fn evaluate_val<'s>(string: &str, scope: &'s YlScope) -> YlVar<'s, 's> {
     match scope.get(string) {
         None => parse_to_yl_var(string),
         Some(var) => var.clone(),
@@ -134,7 +134,7 @@ fn evaluate_val<'s>(string: &str, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
 }
 
 fn evaluate_list<'s>(vec: &Vec<AstNode>, scope: &'s YlScope,
-                     evaluate_function: bool) -> YlVar<'s, 's, 's> {
+                     evaluate_function: bool) -> YlVar<'s, 's> {
     if evaluate_function && vec.len() > 0 {
         match vec[0] {
             AstNode::List(_) => {},
@@ -155,7 +155,7 @@ fn evaluate_list<'s>(vec: &Vec<AstNode>, scope: &'s YlScope,
 }
 
 
-fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a, 'a> {
+fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a> {
     match f64::from_str(string) {
         Err(_) => {
             let s = string.to_string();
@@ -165,7 +165,7 @@ fn parse_to_yl_var<'a>(string: &str) -> YlVar<'a, 'a, 'a> {
     }
 }
 
-fn check_and_run_function<'s>(fn_name: &str, val: &YlVar, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+fn check_and_run_function<'s>(fn_name: &str, val: &YlVar, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's> {
     match val {
         &YlVar::Func(ref f) => {
             run_function(f, ast, scope)
@@ -184,7 +184,7 @@ fn croak(msg: &str) {
     process::exit(1)
 }
 
-fn run_function<'s>(f: &YlFunc, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's, 's> {
+fn run_function<'s>(f: &YlFunc, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar<'s, 's> {
     match f.kind {
         FuncType::LetFn => {
             let args = func_get_args(ast, scope);
@@ -200,7 +200,7 @@ fn run_function<'s>(f: &YlFunc, ast: &Vec<AstNode>, scope: &'s YlScope) -> YlVar
 }
 
 fn func_get_args<'s>(ast: &Vec<AstNode>, scope: &'s YlScope)
-                     -> Vec<YlVar<'s, 's, 's>> {
+                     -> Vec<YlVar<'s, 's>> {
     let mut args = Vec::<YlVar>::new();
     let mut i = 0;
     while i < ast.len() {
