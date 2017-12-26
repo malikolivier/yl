@@ -104,6 +104,27 @@ GLOBAL_VARS = {
     else
       AST.new(args[1]).evaluate(scope, false)
     end
+  },
+  'loop' => lambda { |args, scope|
+    ret = YL_FALSE
+    identifier, values, exp = args
+    loop_ast = AST.new(exp)
+    if values[0] == 'range'
+      if values.length == 2
+        mini = 0
+        maxi = AST.new(values[1]).evaluate(scope)
+      else
+        mini = AST.new(values[1]).evaluate(scope)
+        maxi = AST.new(values[2]).evaluate(scope)
+      end
+      values = mini.to_i..(maxi.to_i - 1)
+    end
+    loop_scope = scope.extend
+    values.each do |value|
+      loop_scope.set(identifier, value)
+      ret = loop_ast.evaluate(loop_scope)
+    end
+    ret
   }
 }.freeze
 
@@ -156,6 +177,8 @@ class AST
           args.push(subast)
         end
         scope.get('if').call(args, scope)
+      when 'loop'
+        scope.get('loop').call(@ast.drop(1), scope)
       else
         args = @ast.drop(1).map do |subast|
           AST.new(subast).evaluate(scope)
