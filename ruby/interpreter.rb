@@ -1,4 +1,11 @@
-YL_FALSE = nil
+# YlFalse
+class YlFalse
+  def to_i
+    0
+  end
+end
+
+YL_FALSE = YlFalse.new
 YL_TRUE = 1
 
 GLOBAL_VARS = {
@@ -71,6 +78,32 @@ GLOBAL_VARS = {
   'let' => lambda { |args, scope|
     scope.set(args[0], args[1])
     args[1]
+  },
+  'def' => lambda { |args, scope|
+    rhs = lambda { |argv, _scope|
+      fn_scope = scope.extend
+      args[1].each_with_index do |name, i|
+        if i < argv.length
+          fn_scope.set(name, argv[i])
+        else
+          fn_scope.set(name, YL_FALSE)
+        end
+      end
+      AST.new(args.drop(2)).evaluate(fn_scope, false)
+    }
+    scope.set(args[0], rhs)
+    rhs
+  },
+  'if' => lambda { |args, scope|
+    if args[0] == YL_FALSE
+      if args.length > 2
+        AST.new(args[2]).evaluate(scope, false)
+      else
+        YL_FALSE
+      end
+    else
+      AST.new(args[1]).evaluate(scope, false)
+    end
   }
 }.freeze
 
@@ -116,6 +149,13 @@ class AST
       case @ast[0]
       when 'def'
         scope.get('def').call(@ast.drop(1), scope)
+      when 'if'
+        cond = AST.new(@ast[1]).evaluate(scope)
+        args = [cond]
+        @ast.drop(2).each do |subast|
+          args.push(subast)
+        end
+        scope.get('if').call(args, scope)
       else
         args = @ast.drop(1).map do |subast|
           AST.new(subast).evaluate(scope)
