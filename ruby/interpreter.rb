@@ -164,7 +164,7 @@ class Scope
   end
 
   def extend
-    Scope.new(@parent)
+    Scope.new(self)
   end
 end
 
