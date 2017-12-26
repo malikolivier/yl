@@ -11,11 +11,15 @@ elif [ "$1" = "python" ]; then
 elif [ "$1" = "c" ]; then
 	echo -n "C	"
 	INTERPRETER="c/yl"
+elif [ "$1" = "ruby" ]; then
+	echo -n "Ruby	"
+	INTERPRETER="ruby ruby/yl.rb"
 else
 	# Run all languages!
 	$0 node
 	$0 python
 	$0 c
+	$0 ruby
 	exit
 fi
 
