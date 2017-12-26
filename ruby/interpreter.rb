@@ -122,7 +122,7 @@ GLOBAL_VARS = {
     loop_scope = scope.extend
     values.each do |value|
       loop_scope.set(identifier, value)
-      ret = loop_ast.evaluate(loop_scope)
+      ret = loop_ast.evaluate(loop_scope, false)
     end
     ret
   },
