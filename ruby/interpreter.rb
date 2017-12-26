@@ -125,6 +125,18 @@ GLOBAL_VARS = {
       ret = loop_ast.evaluate(loop_scope)
     end
     ret
+  },
+  'argv' => lambda { |args, _scope|
+    n = args[0].to_i + 1
+    if n < ARGV.length
+      if /^[0-9]+\.?[0-9]*$/ =~ ARGV[n]
+        ARGV[n].to_f
+      else
+        ARGV[n]
+      end
+    else
+      YL_FALSE
+    end
   }
 }.freeze
 
