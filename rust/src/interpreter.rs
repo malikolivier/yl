@@ -1,9 +1,15 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::process;
 use std::str::FromStr;
 
 use parser::AstNode;
 
+
+fn croak(msg: &str) {
+    eprintln!("{}", msg);
+    process::exit(1)
+}
 
 #[derive(Debug, Clone)]
 pub struct UserDefinedFunc<'s> {
@@ -35,6 +41,33 @@ pub enum Var<'s> {
 pub struct Scope<'s> {
     parent: Option<&'s Scope<'s>>,
     vars: HashMap<String, Var<'s>>,
+}
+
+#[derive(Debug, Clone)]
+struct CallContext<'s> {
+    scope: &'s Scope<'s>,
+    func: &'s Func<'s>,
+}
+
+impl<'s> CallContext<'s> {
+    fn new<'a>(scope: &'a mut Scope, vec: &Vec<AstNode>) -> CallContext<'a> {
+        match vec[0] {
+            AstNode::List(_) => unreachable!(),
+            AstNode::Val(ref fn_name) =>
+                match scope.get(&fn_name) {
+                    None => unreachable!(),
+                    Some(func) => {
+                        match func {
+                            &Var::Func(ref f) => CallContext { scope, func: f },
+                            _ => {
+                                croak("Not callable");
+                                unreachable!()
+                            }
+                        }
+                    },
+                },
+        }
+    }
 }
 
 impl<'s> Scope<'s> {
@@ -119,6 +152,8 @@ impl<'s> Scope<'s> {
     }
 
     fn call<'a>(&'a mut self, vec: &Vec<AstNode>) -> Var<'a> {
+        let context = CallContext::new(self, vec);
+        println!("{:?}", context);
         Var::False
     }
 }
