@@ -6,7 +6,6 @@ use std::fs;
 
 mod interpreter;
 mod parser;
-use interpreter::YlVar;
 
 
 pub fn is_interactive(args: &[String]) -> bool {
@@ -51,13 +50,13 @@ fn write_prompt() -> Result<(), io::Error> {
 }
 
 pub fn run_prompt() -> Result<(), Box<io::Error>> {
-    let scope = interpreter::YlScope::new(None);
+    let mut scope = interpreter::Scope::new(None);
     write_prompt()?;
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let ast = parser::parse(&line?);
         println!("{:?}", ast);
-        let ret = interpreter::evaluate_in_scope(&ast, &scope, false);
+        let ret = scope.evaluate(&ast, false);
         interpreter::print(&ret);
         write_prompt()?;
     }
@@ -66,10 +65,10 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
 
 pub fn evaluate_code_with_exit_status(code: String) -> i32 {
     let ast = parser::parse(&code);
-    let scope = interpreter::YlScope::new(None);
-    let ret = interpreter::evaluate_in_scope(&ast, &scope, true);
+    let mut scope = interpreter::Scope::new(None);
+    let ret = scope.evaluate(&ast, true);
     match ret {
-        YlVar::Num(n) => n as i32,
+        interpreter::Var::Num(n) => n as i32,
         _ => 0,
     }
 }
