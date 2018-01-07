@@ -3,39 +3,50 @@ use std::collections::HashMap;
 use parser::AstNode;
 
 
-pub struct UserDefinedFunc {
-    scope: Box<Scope>,
+pub struct UserDefinedFunc<'s> {
+    scope: &'s Scope<'s>,
     ast: Box<AstNode>,
 }
 
-pub enum FuncType {
+pub enum FuncType<'s> {
     LetFn,
-    UserDefined(UserDefinedFunc),
+    UserDefined(UserDefinedFunc<'s>),
 }
 
-pub struct Func {
-    kind: FuncType,
+pub struct Func<'s> {
+    kind: FuncType<'s>,
     args: Vec<String>,
 }
 
-pub enum Var {
+pub enum Var<'s> {
     False,
     Num(f64),
     Str(String),
-    Func(Func)
+    Func(Func<'s>)
 }
 
-pub struct Scope {
-    parent: Option<Box<Scope>>,
-    vars: HashMap<String, Var>,
+pub struct Scope<'s> {
+    parent: Option<&'s Scope<'s>>,
+    vars: HashMap<String, Var<'s>>,
 }
 
-impl Scope {
-    pub fn global() -> Scope {
+impl<'s> Scope<'s> {
+    pub fn global() -> Scope<'s> {
         let mut vars = HashMap::<String, Var>::new();
+        vars.insert("let".to_string(), Var::Func(Func {
+            kind: FuncType::LetFn,
+            args: vec!["id".to_string(), "rhs".to_string()],
+        }));
         Scope {
             parent: None,
             vars,
+        }
+    }
+
+    fn extend(&self) -> Scope {
+        Scope {
+            parent: Some(self),
+            vars: HashMap::<String, Var>::new(),
         }
     }
 
