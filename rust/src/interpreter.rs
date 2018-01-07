@@ -1,23 +1,28 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use parser::AstNode;
 
 
+#[derive(Debug, Clone)]
 pub struct UserDefinedFunc<'s> {
     scope: &'s Scope<'s>,
-    ast: Box<AstNode>,
+    ast: &'s AstNode,
 }
 
+#[derive(Debug, Clone)]
 pub enum FuncType<'s> {
     LetFn,
     UserDefined(UserDefinedFunc<'s>),
 }
 
+#[derive(Debug, Clone)]
 pub struct Func<'s> {
     kind: FuncType<'s>,
     args: Vec<String>,
 }
 
+#[derive(Debug, Clone)]
 pub enum Var<'s> {
     False,
     Num(f64),
@@ -25,6 +30,7 @@ pub enum Var<'s> {
     Func(Func<'s>)
 }
 
+#[derive(Debug, Clone)]
 pub struct Scope<'s> {
     parent: Option<&'s Scope<'s>>,
     vars: HashMap<String, Var<'s>>,
@@ -64,11 +70,34 @@ impl<'s> Scope<'s> {
         self.vars.insert(name.to_string(), value);
     }
 
-    pub fn evaluate(&mut self, ast: &AstNode, evaluate_function: bool) -> Var {
+    pub fn evaluate<'a>(&'a mut self, ast: &AstNode, evaluate_function: bool) -> Var<'a> {
+        match ast {
+            &AstNode::Val(ref string) => self.evaluate_val(string),
+            &AstNode::List(ref vec) => self.evaluate_list(&vec, evaluate_function),
+        }
+    }
+
+    fn evaluate_val<'a>(&'a self, string: &str) -> Var<'a> {
+        match self.get(string) {
+            None => parse_to_yl_var(string),
+            Some(var) => var.clone(),
+        }
+    }
+
+    fn evaluate_list<'a>(&mut self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var<'a> {
         Var::False
     }
 }
 
+fn parse_to_yl_var<'a>(string: &str) -> Var<'a> {
+    match f64::from_str(string) {
+        Err(_) => {
+            let s = string.to_string();
+            Var::Str(s)
+        },
+        Ok(n) => Var::Num(n),
+    }
+}
 
 fn print_fn(argv: Vec<&Var>) {
     for var in argv.iter() {
