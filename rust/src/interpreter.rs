@@ -50,6 +50,20 @@ impl<'s> Scope<'s> {
         }
     }
 
+    fn get(&'s self, name: &str) -> Option<&'s Var> {
+        match self.vars.get(name) {
+            None => match self.parent {
+                None => None,
+                Some(p) => p.get(name),
+            },
+            Some(v) => Some(v),
+        }
+    }
+
+    fn set(&'s mut self, name: &str, value: Var<'s>) {
+        self.vars.insert(name.to_string(), value);
+    }
+
     pub fn evaluate(&mut self, ast: &AstNode, evaluate_function: bool) -> Var {
         Var::False
     }
