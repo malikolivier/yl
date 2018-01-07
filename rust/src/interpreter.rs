@@ -78,14 +78,35 @@ impl<'s> Scope<'s> {
     }
 
     fn evaluate_val<'a>(&'a self, string: &str) -> Var<'a> {
-        match self.get(string) {
+        let ret = self.get(string);
+        match ret {
             None => parse_to_yl_var(string),
             Some(var) => var.clone(),
         }
     }
 
-    fn evaluate_list<'a>(&mut self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var<'a> {
-        Var::False
+    fn evaluate_list<'a>(&'a mut self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var<'a> {
+        if evaluate_function && vec.len() > 0 {
+            match vec[0] {
+                AstNode::List(_) => {},
+                AstNode::Val(ref fn_name) =>
+                    match self.get(&fn_name) {
+                        None => {},
+                        Some(func) => {
+                            return Var::False; // check_and_run_function(&fn_name, func, vec, scope);
+                        },
+                    },
+            }
+        }
+        if vec.len() <= 0 {
+            return Var::False;
+        }
+        let mut i = 0;
+        while i < vec.len() - 1 {
+            self.evaluate(&vec[i], true);
+            i += 1;
+        }
+        self.evaluate(&vec[i], true)
     }
 }
 
