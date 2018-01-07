@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::str::FromStr;
 
 use parser::AstNode;
@@ -6,8 +7,8 @@ use parser::AstNode;
 
 #[derive(Debug, Clone)]
 pub struct UserDefinedFunc<'s> {
-    scope: &'s Scope<'s>,
-    ast: &'s AstNode,
+    scope: Rc<Scope<'s>>,
+    ast: Rc<AstNode>,
 }
 
 #[derive(Debug, Clone)]
@@ -87,17 +88,25 @@ impl<'s> Scope<'s> {
 
     fn evaluate_list<'a>(&'a mut self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var<'a> {
         if evaluate_function && vec.len() > 0 {
+            let mut call_func = false;
             match vec[0] {
                 AstNode::List(_) => {},
                 AstNode::Val(ref fn_name) =>
                     match self.get(&fn_name) {
                         None => {},
-                        Some(func) => {
-                            return Var::False; // check_and_run_function(&fn_name, func, vec, scope);
+                        Some(_func) => {
+                            call_func = true;
                         },
                     },
             }
+            if call_func {
+                return self.call(vec);
+            }
         }
+        self.evaluate_list_fallback(vec)
+    }
+
+    fn evaluate_list_fallback<'a>(&'a mut self, vec: &Vec<AstNode>) -> Var<'a> {
         if vec.len() <= 0 {
             return Var::False;
         }
@@ -107,6 +116,10 @@ impl<'s> Scope<'s> {
             i += 1;
         }
         self.evaluate(&vec[i], true)
+    }
+
+    fn call<'a>(&'a mut self, vec: &Vec<AstNode>) -> Var<'a> {
+        Var::False
     }
 }
 
