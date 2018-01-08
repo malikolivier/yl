@@ -96,12 +96,12 @@ impl<'a> From<&'a Var> for f64 {
 
 impl PartialEq for UserDefinedFunc {
     fn eq(&self, other: &UserDefinedFunc) -> bool {
-        true // TODO
+        self.ast.eq(&other.ast) /* TODO: Take Scope into account? */
     }
 }
 
 impl PartialOrd for UserDefinedFunc {
-     fn partial_cmp(&self, other: &UserDefinedFunc) -> Option<Ordering> {
+     fn partial_cmp(&self, _other: &UserDefinedFunc) -> Option<Ordering> {
          /* No way to compare user defined functions! */
          None
      }
