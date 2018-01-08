@@ -22,6 +22,7 @@ pub struct UserDefinedFunc {
 #[derive(Debug, Clone)]
 pub enum FuncType {
     LetFn,
+    PrintFn,
     UserDefined(UserDefinedFunc),
 }
 
@@ -66,6 +67,10 @@ impl Scope {
         vars.insert("let".to_string(), Var::Func(Func {
             kind: FuncType::LetFn,
             args: vec!["id".to_string(), "rhs".to_string()],
+        }));
+        vars.insert("print".to_string(), Var::Func(Func {
+            kind: FuncType::PrintFn,
+            args: vec!["var".to_string()],
         }));
         ScopeContainer {
             scope: Rc::new(Scope {
@@ -154,6 +159,9 @@ impl ScopeContainer {
                 let args = self.get_args(ast);
                 FuncType::let_fn(&args, self)
             },
+            FuncType::PrintFn => {
+                FuncType::print_fn(&self.get_args(ast))
+            }
             FuncType::UserDefined(ref func) => {
                 // TODO
                 croak("UserDefined functions not implemented");
@@ -255,5 +263,11 @@ impl FuncType {
         let ret = rhs.clone();
         scope_container.scope.set(&identifier, rhs);
         ret
+    }
+
+    fn print_fn(args: &[Var]) -> Var {
+        let refs = args.into_iter().map(|var| var).collect();
+        print_fn(refs);
+        Var::False
     }
 }

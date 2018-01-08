@@ -13,7 +13,7 @@ elif [ "$1" = "c" ]; then
 	INTERPRETER="c/yl"
 elif [ "$1" = "rust" ]; then
 	echo -n "Rust	"
-	INTERPRETER="rust/target/release/yl"
+	INTERPRETER="rust/target/debug/yl"
 else
 	# Run all languages!
 	$0 node
