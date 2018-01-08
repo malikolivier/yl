@@ -1,3 +1,4 @@
+use std::env;
 use std::f64;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -32,6 +33,7 @@ pub enum FuncType {
     IfFn,
     LoopFn,
     PrintFn,
+    ArgvFn,
     NotOp,
     EqOp,
     GtOp,
@@ -295,6 +297,10 @@ impl Scope {
             kind: FuncType::LoopFn,
             args: vec!["identifier".to_string(), "(list ...)".to_string(), "(exp ...)".to_string()],
         }));
+        vars.insert("argv".to_string(), Var::Func(Func {
+            kind: FuncType::ArgvFn,
+            args: vec!["n".to_string()],
+        }));
         ScopeContainer {
             scope: Rc::new(Scope {
                 parent: None,
@@ -408,6 +414,9 @@ impl ScopeContainer {
             },
             FuncType::PrintFn => {
                 FuncType::print_fn(&self.get_args(ast))
+            },
+            FuncType::ArgvFn => {
+                FuncType::argv_fn(&self.get_args(ast))
             },
             FuncType::NotOp => {
                 FuncType::not_op(&self.get_args(ast))
@@ -694,6 +703,20 @@ impl FuncType {
         let refs = args.into_iter().map(|var| var).collect();
         print_fn(refs);
         Var::False
+    }
+
+    fn argv_fn(args: &[Var]) -> Var {
+        if args.len() < 1 {
+            croak("'argv' function requires 1 argument!");
+            unreachable!()
+        }
+        let n = 2 + (f64::from(&args[0]) as usize);
+        let app_args: Vec<String> = env::args().collect();
+        if n < app_args.len() {
+            parse_to_yl_var(&app_args[n])
+        } else {
+            Var::False
+        }
     }
 
     fn not_op(args: &[Var]) -> Var {
