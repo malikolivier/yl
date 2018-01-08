@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
+use std::rc::Weak;
 use std::process;
 use std::str::FromStr;
 
@@ -12,120 +14,101 @@ fn croak(msg: &str) {
 }
 
 #[derive(Debug, Clone)]
-pub struct UserDefinedFunc<'s> {
-    scope: Rc<Scope<'s>>,
-    ast: Rc<AstNode>,
+pub struct UserDefinedFunc {
+    scope: Weak<Scope>,
+    ast: Weak<AstNode>,
 }
 
 #[derive(Debug, Clone)]
-pub enum FuncType<'s> {
+pub enum FuncType {
     LetFn,
-    UserDefined(UserDefinedFunc<'s>),
+    UserDefined(UserDefinedFunc),
 }
 
 #[derive(Debug, Clone)]
-pub struct Func<'s> {
-    kind: FuncType<'s>,
+pub struct Func {
+    kind: FuncType,
     args: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub enum Var<'s> {
+pub enum Var {
     False,
     Num(f64),
     Str(String),
-    Func(Func<'s>)
+    Func(Func)
 }
 
 #[derive(Debug, Clone)]
-pub struct Scope<'s> {
-    parent: Option<&'s Scope<'s>>,
-    vars: HashMap<String, Var<'s>>,
+pub struct Scope {
+    parent: Option<Rc<Scope>>,
+    vars: RefCell<HashMap<String, Var>>,
 }
 
-#[derive(Debug, Clone)]
-struct CallContext<'s> {
-    scope: &'s Scope<'s>,
-    func: &'s Func<'s>,
+pub struct ScopeContainer {
+    scope: Rc<Scope>,
 }
 
-impl<'s> CallContext<'s> {
-    fn new<'a>(scope: &'a mut Scope, vec: &Vec<AstNode>) -> CallContext<'a> {
-        match vec[0] {
-            AstNode::List(_) => unreachable!(),
-            AstNode::Val(ref fn_name) =>
-                match scope.get(&fn_name) {
-                    None => unreachable!(),
-                    Some(func) => {
-                        match func {
-                            &Var::Func(ref f) => CallContext { scope, func: f },
-                            _ => {
-                                croak("Not callable");
-                                unreachable!()
-                            }
-                        }
-                    },
-                },
-        }
-    }
-}
-
-impl<'s> Scope<'s> {
-    pub fn global() -> Scope<'s> {
+impl Scope {
+    pub fn global() -> ScopeContainer {
         let mut vars = HashMap::<String, Var>::new();
         vars.insert("let".to_string(), Var::Func(Func {
             kind: FuncType::LetFn,
             args: vec!["id".to_string(), "rhs".to_string()],
         }));
-        Scope {
-            parent: None,
-            vars,
+        ScopeContainer {
+            scope: Rc::new(Scope {
+                parent: None,
+                vars: RefCell::new(vars),
+            })
         }
     }
 
-    fn extend(&self) -> Scope {
+    fn extend(scope_ref: Rc<Scope>) -> Scope {
         Scope {
-            parent: Some(self),
-            vars: HashMap::<String, Var>::new(),
+            parent: Some(scope_ref.clone()),
+            vars: RefCell::new(HashMap::<String, Var>::new()),
         }
     }
 
-    fn get(&'s self, name: &str) -> Option<&'s Var> {
-        match self.vars.get(name) {
+    fn get(&self, name: &str) -> Option<Var> {
+        match self.vars.borrow().get(name) {
             None => match self.parent {
                 None => None,
-                Some(p) => p.get(name),
+                Some(ref p) => p.get(name),
             },
-            Some(v) => Some(v),
+            Some(v) => Some(v.clone()),
         }
     }
 
-    fn set(&'s mut self, name: &str, value: Var<'s>) {
-        self.vars.insert(name.to_string(), value);
+    fn set(&self, name: &str, value: Var) {
+        self.vars.borrow_mut().insert(name.to_string(), value);
     }
+}
 
-    pub fn evaluate<'a>(&'a mut self, ast: &AstNode, evaluate_function: bool) -> Var<'a> {
+impl ScopeContainer {
+    pub fn evaluate(&self, ast: &AstNode, evaluate_function: bool) -> Var {
         match ast {
             &AstNode::Val(ref string) => self.evaluate_val(string),
             &AstNode::List(ref vec) => self.evaluate_list(&vec, evaluate_function),
         }
     }
 
-    fn evaluate_val<'a>(&'a self, string: &str) -> Var<'a> {
-        let ret = self.get(string);
+    fn evaluate_val(&self, string: &str) -> Var {
+        let ret = self.scope.get(string);
         match ret {
             None => parse_to_yl_var(string),
             Some(var) => var.clone(),
         }
     }
 
-    fn evaluate_list<'a>(&'a mut self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var<'a> {
+    fn evaluate_list(&self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var {
         if evaluate_function && vec.len() > 0 {
             let mut call_func = false;
             match vec[0] {
                 AstNode::List(_) => {},
                 AstNode::Val(ref fn_name) =>
-                    match self.get(&fn_name) {
+                    match self.scope.get(&fn_name) {
                         None => {},
                         Some(_func) => {
                             call_func = true;
@@ -139,7 +122,7 @@ impl<'s> Scope<'s> {
         self.evaluate_list_fallback(vec)
     }
 
-    fn evaluate_list_fallback<'a>(&'a mut self, vec: &Vec<AstNode>) -> Var<'a> {
+    fn evaluate_list_fallback(&self, vec: &Vec<AstNode>) -> Var {
         if vec.len() <= 0 {
             return Var::False;
         }
@@ -151,14 +134,14 @@ impl<'s> Scope<'s> {
         self.evaluate(&vec[i], true)
     }
 
-    fn call<'a>(&'a mut self, vec: &Vec<AstNode>) -> Var<'a> {
-        let context = CallContext::new(self, vec);
-        println!("{:?}", context);
+    fn call(&self, vec: &Vec<AstNode>) -> Var {
+        // let mut context = CallContext::new(self, vec);
+        // context.call(vec)
         Var::False
     }
 }
 
-fn parse_to_yl_var<'a>(string: &str) -> Var<'a> {
+fn parse_to_yl_var(string: &str) -> Var {
     match f64::from_str(string) {
         Err(_) => {
             let s = string.to_string();

@@ -50,7 +50,7 @@ fn write_prompt() -> Result<(), io::Error> {
 }
 
 pub fn run_prompt() -> Result<(), Box<io::Error>> {
-    let mut scope = interpreter::Scope::global();
+    let scope = interpreter::Scope::global();
     write_prompt()?;
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
@@ -65,7 +65,7 @@ pub fn run_prompt() -> Result<(), Box<io::Error>> {
 
 pub fn evaluate_code_with_exit_status(code: String) -> i32 {
     let ast = parser::parse(&code);
-    let mut scope = interpreter::Scope::global();
+    let scope = interpreter::Scope::global();
     let ret = scope.evaluate(&ast, true);
     match ret {
         interpreter::Var::Num(n) => n as i32,
