@@ -4,6 +4,9 @@ use std::io::Read;
 use std::io::Write;
 use std::fs;
 
+mod interpreter;
+mod parser;
+
 
 pub fn is_interactive(args: &[String]) -> bool {
     args.len() <= 1
@@ -47,18 +50,27 @@ fn write_prompt() -> Result<(), io::Error> {
 }
 
 pub fn run_prompt() -> Result<(), Box<io::Error>> {
+    let scope = interpreter::Scope::global();
     write_prompt()?;
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
-        println!("{}", line?);
+        let ast = parser::parse(&line?);
+        println!("{:?}", ast);
+        let ret = scope.evaluate(&ast, false);
+        interpreter::print(&ret);
         write_prompt()?;
     }
     Ok(())
 }
 
-pub fn evaluate_code(code: String) -> i32 {
-    // TODO
-    0
+pub fn evaluate_code_with_exit_status(code: String) -> i32 {
+    let ast = parser::parse(&code);
+    let scope = interpreter::Scope::global();
+    let ret = scope.evaluate(&ast, true);
+    match ret {
+        interpreter::Var::Num(n) => n as i32,
+        _ => 0,
+    }
 }
 
 

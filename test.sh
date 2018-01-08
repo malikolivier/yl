@@ -14,12 +14,16 @@ elif [ "$1" = "c" ]; then
 elif [ "$1" = "ruby" ]; then
 	echo -n "Ruby	"
 	INTERPRETER="ruby ruby/yl.rb"
+elif [ "$1" = "rust" ]; then
+	echo -n "Rust	"
+	INTERPRETER="rust/target/release/yl"
 else
 	# Run all languages!
 	$0 node
 	$0 python
 	$0 c
 	$0 ruby
+	$0 rust
 	exit
 fi
 
