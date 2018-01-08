@@ -102,7 +102,7 @@ impl ScopeContainer {
         }
     }
 
-    fn evaluate_list(&self, vec: &Vec<AstNode>, evaluate_function: bool) -> Var {
+    fn evaluate_list(&self, vec: &[AstNode], evaluate_function: bool) -> Var {
         if evaluate_function && vec.len() > 0 {
             let mut call_func = false;
             match vec[0] {
@@ -122,7 +122,7 @@ impl ScopeContainer {
         self.evaluate_list_fallback(vec)
     }
 
-    fn evaluate_list_fallback(&self, vec: &Vec<AstNode>) -> Var {
+    fn evaluate_list_fallback(&self, vec: &[AstNode]) -> Var {
         if vec.len() <= 0 {
             return Var::False;
         }
@@ -134,7 +134,7 @@ impl ScopeContainer {
         self.evaluate(&vec[i], true)
     }
 
-    fn call(&self, vec: &Vec<AstNode>) -> Var {
+    fn call(&self, vec: &[AstNode]) -> Var {
         // let mut context = CallContext::new(self, vec);
         // context.call(vec)
         Var::False
