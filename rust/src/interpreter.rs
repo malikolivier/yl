@@ -19,21 +19,22 @@ pub struct UserDefinedFunc {
     ast: Weak<AstNode>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FuncType {
     LetFn,
     PrintFn,
     NotOp,
+    EqOp,
     UserDefined(UserDefinedFunc),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Func {
     kind: FuncType,
     args: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Var {
     False,
     Num(f64),
@@ -66,6 +67,12 @@ impl Var {
     }
 }
 
+impl PartialEq for UserDefinedFunc {
+    fn eq(&self, other: &UserDefinedFunc) -> bool {
+        true // TODO
+    }
+}
+
 trait ToVar {
     fn to_var(&self) -> Var;
 }
@@ -93,6 +100,10 @@ impl Scope {
         vars.insert("!".to_string(), Var::Func(Func {
             kind: FuncType::NotOp,
             args: vec!["var".to_string()],
+        }));
+        vars.insert("=".to_string(), Var::Func(Func {
+            kind: FuncType::EqOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
         }));
         ScopeContainer {
             scope: Rc::new(Scope {
@@ -186,6 +197,9 @@ impl ScopeContainer {
             },
             FuncType::NotOp => {
                 FuncType::not_op(&self.get_args(ast))
+            },
+            FuncType::EqOp => {
+                FuncType::eq_op(&self.get_args(ast))
             },
             FuncType::UserDefined(ref func) => {
                 // TODO
@@ -305,5 +319,13 @@ impl FuncType {
                 _ => false,
             }.to_var()
         }
+    }
+
+    fn eq_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'=' function requires 2 arguments!");
+            unreachable!()
+        }
+        args[0].eq(&args[1]).to_var()
     }
 }
