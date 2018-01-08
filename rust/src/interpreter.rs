@@ -136,14 +136,24 @@ impl ScopeContainer {
         self.evaluate(&vec[i], true)
     }
 
-    fn call(&self, vec: &[AstNode]) -> Var {
-        let f = self.check_and_return_function(vec);
-        println!("{:?}", f);
-        Var::False
+    fn call(&self, ast: &[AstNode]) -> Var {
+        let f = self.check_and_return_function(ast);
+        match f.kind {
+            FuncType::LetFn => {
+                let args = self.get_args(ast);
+                println!("{:?}", args);
+                Var::False
+            },
+            FuncType::UserDefined(ref func) => {
+                // TODO
+                croak("UserDefined functions not implemented");
+                Var::False
+            }
+        }
     }
 
-    fn check_and_return_function(&self, vec: &[AstNode]) -> Func {
-        match vec[0] {
+    fn check_and_return_function(&self, ast: &[AstNode]) -> Func {
+        match ast[0] {
             AstNode::List(_) => unreachable!(),
             AstNode::Val(ref fn_name) =>
                 match self.scope.get(&fn_name) {
@@ -159,6 +169,20 @@ impl ScopeContainer {
                     },
                 },
         }
+    }
+
+    fn get_args(&self, ast: &[AstNode]) -> Vec<Var>{
+        let mut args = Vec::<Var>::new();
+        let mut i = 0;
+        while i < ast.len() {
+            if i == 0 {
+                i += 1;
+                continue
+            }
+            args.push(self.evaluate(&ast[i], true));
+            i += 1;
+        }
+        args
     }
 }
 
