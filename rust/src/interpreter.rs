@@ -30,6 +30,7 @@ pub enum FuncType {
     LetFn,
     DefFn,
     IfFn,
+    LoopFn,
     PrintFn,
     NotOp,
     EqOp,
@@ -281,6 +282,10 @@ impl Scope {
             kind: FuncType::IfFn,
             args: vec!["condition".to_string(), "(exp1...)".to_string(), "(exp2...)".to_string()],
         }));
+        vars.insert("loop".to_string(), Var::Func(Func {
+            kind: FuncType::LoopFn,
+            args: vec!["identifier".to_string(), "(list ...)".to_string(), "(exp ...)".to_string()],
+        }));
         ScopeContainer {
             scope: Rc::new(Scope {
                 parent: None,
@@ -383,6 +388,14 @@ impl ScopeContainer {
                 }
                 let condition = &self.get_args(&ast[..2])[0];
                 FuncType::if_fn(condition, &ast[2..], self)
+            },
+            FuncType::LoopFn => {
+                if ast.len() < 2 {
+                    croak("To use the 'loop' function, do: '(loop id (list ...) (loop exp ))'");
+                    unreachable!();
+                }
+                let identifier = self.get_args(&ast[..2])[0].to_string();
+                FuncType::loop_fn(identifier, &ast[2..], self)
             },
             FuncType::PrintFn => {
                 FuncType::print_fn(&self.get_args(ast))
@@ -505,6 +518,67 @@ pub fn print(var: &Var) {
     print_fn(vec)
 }
 
+struct MinMax {
+    min: f64,
+    max: f64,
+}
+
+enum LoopValues<'a> {
+    ValueList(&'a AstNode),
+    MinMax(MinMax)
+}
+
+impl<'a> LoopValues<'a> {
+    fn new(values: &'a AstNode) -> LoopValues<'a> {
+        LoopValues::ValueList(values)
+    }
+
+    fn iter(self, scope_container: &'a ScopeContainer) -> LoopIterator<'a> {
+        LoopIterator {
+            values: self,
+            cur: 0,
+            scope_container,
+        }
+    }
+}
+
+struct LoopIterator<'a> {
+    values: LoopValues<'a>,
+    cur: usize,
+    scope_container: &'a ScopeContainer
+}
+
+impl<'a> Iterator for LoopIterator<'a> {
+    type Item = Var;
+    fn next(&mut self) -> Option<Var> {
+        let ret = match self.values {
+            LoopValues::ValueList(ast) =>
+                match ast {
+                    &AstNode::Val(_) => {
+                        if self.cur > 0 {
+                            None
+                        } else {
+                            Some(self.scope_container.evaluate(ast, true))
+                        }
+                    },
+                    &AstNode::List(ref node_list) => {
+                        if self.cur < node_list.len() {
+                            Some(self.scope_container.evaluate(&node_list[self.cur], true))
+                        } else {
+                            None
+                        }
+                    }
+                },
+            LoopValues::MinMax(_) => {
+                // TODO
+                unreachable!()
+            }
+        };
+        self.cur += 1;
+        ret
+    }
+}
+
 impl FuncType {
     fn let_fn(args: &[Var], scope_container: &ScopeContainer) -> Var {
         if args.len() < 1 {
@@ -568,6 +642,19 @@ impl FuncType {
                      Var::False
                  },
         }
+    }
+
+    fn loop_fn(identifier: String, exps: &[AstNode], scope_container: &ScopeContainer) -> Var {
+        let loop_scope_container = Scope::extend(&scope_container.scope);
+        let mut ret = Var::False;
+        if exps.len() < 1 {
+            return ret;
+        }
+        for value in LoopValues::new(&exps[0]).iter(scope_container) {
+            loop_scope_container.scope.set(&identifier, value);
+            ret = loop_scope_container.evaluate(&AstNode::List(exps[1..].to_vec()), true);
+        }
+        ret
     }
 
     fn print_fn(args: &[Var]) -> Var {
