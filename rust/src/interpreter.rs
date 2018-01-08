@@ -12,6 +12,8 @@ use std::ops::Mul;
 use std::ops::Div;
 use std::ops::Rem;
 
+extern crate rand;
+
 use parser::AstNode;
 
 
@@ -34,6 +36,7 @@ pub enum FuncType {
     LoopFn,
     PrintFn,
     ArgvFn,
+    RandFn,
     NotOp,
     EqOp,
     GtOp,
@@ -301,6 +304,10 @@ impl Scope {
             kind: FuncType::ArgvFn,
             args: vec!["n".to_string()],
         }));
+        vars.insert("rand".to_string(), Var::Func(Func {
+            kind: FuncType::RandFn,
+            args: Vec::<String>::new(),
+        }));
         ScopeContainer {
             scope: Rc::new(Scope {
                 parent: None,
@@ -417,6 +424,9 @@ impl ScopeContainer {
             },
             FuncType::ArgvFn => {
                 FuncType::argv_fn(&self.get_args(ast))
+            },
+            FuncType::RandFn => {
+                FuncType::rand_fn(&self.get_args(ast))
             },
             FuncType::NotOp => {
                 FuncType::not_op(&self.get_args(ast))
@@ -717,6 +727,10 @@ impl FuncType {
         } else {
             Var::False
         }
+    }
+
+    fn rand_fn(_args: &[Var]) -> Var {
+        Var::Num(rand::random::<f64>())
     }
 
     fn not_op(args: &[Var]) -> Var {
