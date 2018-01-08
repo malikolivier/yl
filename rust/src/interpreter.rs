@@ -6,6 +6,7 @@ use std::rc::Weak;
 use std::process;
 use std::str::FromStr;
 use std::ops::Add;
+use std::ops::Sub;
 
 use parser::AstNode;
 
@@ -32,6 +33,7 @@ pub enum FuncType {
     LtOp,
     LeOp,
     PlusOp,
+    MinusOp,
     UserDefined(UserDefinedFunc),
 }
 
@@ -104,6 +106,23 @@ impl<'a> Add<&'a Var> for &'a Var {
     }
 }
 
+impl<'a> Sub<&'a Var> for &'a Var {
+    type Output = Var;
+    fn sub(self, other: &Var) -> Var {
+        match (self, other) {
+            (&Var::False, &Var::False) => Var::Num(0 as f64),
+            (&Var::False, &Var::Num(n)) => Var::Num(-n),
+            (&Var::Num(n), &Var::False) => Var::Num(n),
+            (&Var::Num(n1), &Var::Num(n2)) => Var::Num(n1 - n2),
+            _ => {
+                croak("Cannot substract non-numbers!");
+                unreachable!()
+            },
+        }
+    }
+}
+
+
 trait ToVar {
     fn to_var(&self) -> Var;
 }
@@ -155,6 +174,10 @@ impl Scope {
         vars.insert("+".to_string(), Var::Func(Func {
             kind: FuncType::PlusOp,
             args: vec!["var1".to_string(), "var2".to_string(), "...".to_string()],
+        }));
+        vars.insert("-".to_string(), Var::Func(Func {
+            kind: FuncType::MinusOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
         }));
         ScopeContainer {
             scope: Rc::new(Scope {
@@ -266,6 +289,9 @@ impl ScopeContainer {
             },
             FuncType::PlusOp => {
                 FuncType::plus_op(&self.get_args(ast))
+            },
+            FuncType::MinusOp => {
+                FuncType::minus_op(&self.get_args(ast))
             },
             FuncType::UserDefined(ref func) => {
                 // TODO
@@ -433,5 +459,13 @@ impl FuncType {
             out = &out + &var;
         }
         out
+    }
+
+    fn minus_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'-' function requires 2 arguments!");
+            unreachable!()
+        }
+        &args[0] - &args[1]
     }
 }
