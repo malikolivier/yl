@@ -3,7 +3,7 @@ use std::str;
 use std::iter;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AstNode {
     Val(String),
     List(Vec<AstNode>),

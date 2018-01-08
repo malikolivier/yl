@@ -3,7 +3,6 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::rc::Weak;
 use std::process;
 use std::str::FromStr;
 use std::ops::Add;
@@ -22,13 +21,14 @@ fn croak(msg: &str) {
 
 #[derive(Debug, Clone)]
 pub struct UserDefinedFunc {
-    scope: Weak<Scope>,
-    ast: Weak<AstNode>,
+    scope: Rc<Scope>,
+    ast: AstNode,
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum FuncType {
     LetFn,
+    DefFn,
     PrintFn,
     NotOp,
     EqOp,
@@ -193,6 +193,30 @@ impl ToVar for bool {
     }
 }
 
+impl Func {
+    fn call(&self, args: &[Var]) -> Var {
+        /* Assumes self is of type UserDefined */
+        let func = self.unwrap();
+        let fn_scope_container = Scope::extend(&func.scope);
+        for (i, arg_name) in self.args.iter().enumerate() {
+            if i < args.len() {
+                fn_scope_container.scope.set(arg_name, args[i].clone());
+            } else {
+                fn_scope_container.scope.set(arg_name, Var::False);
+            }
+        }
+        fn_scope_container.evaluate(&func.ast, false)
+    }
+
+    fn unwrap(&self) -> &UserDefinedFunc {
+        if let FuncType::UserDefined(ref func) = self.kind {
+            func
+        } else {
+            unreachable!()
+        }
+    }
+}
+
 impl Scope {
     pub fn global() -> ScopeContainer {
         let mut vars = HashMap::<String, Var>::new();
@@ -248,6 +272,10 @@ impl Scope {
             kind: FuncType::ModuloOp,
             args: vec!["var1".to_string(), "var2".to_string()],
         }));
+        vars.insert("def".to_string(), Var::Func(Func {
+            kind: FuncType::DefFn,
+            args: vec!["id".to_string(), "(args...)".to_string(), "...".to_string()],
+        }));
         ScopeContainer {
             scope: Rc::new(Scope {
                 parent: None,
@@ -269,18 +297,18 @@ impl Scope {
     fn set(&self, name: &str, value: Var) {
         self.vars.borrow_mut().insert(name.to_string(), value);
     }
-}
 
-impl ScopeContainer {
-    fn extend(&self) -> ScopeContainer {
+    fn extend(parent: &Rc<Scope>) -> ScopeContainer {
         ScopeContainer {
             scope: Rc::new(Scope {
-                parent: Some(self.scope.clone()),
+                parent: Some(parent.clone()),
                 vars: RefCell::new(HashMap::<String, Var>::new()),
             })
         }
     }
+}
 
+impl ScopeContainer {
     pub fn evaluate(&self, ast: &AstNode, evaluate_function: bool) -> Var {
         match ast {
             &AstNode::Val(ref string) => self.evaluate_val(string),
@@ -335,6 +363,14 @@ impl ScopeContainer {
                 let args = self.get_args(ast);
                 FuncType::let_fn(&args, self)
             },
+            FuncType::DefFn => {
+                if ast.len() < 2 {
+                    croak("To define a function, do: '(def identifier (arg1 arg2 ...) do_something)'");
+                    unreachable!();
+                }
+                let identifier = self.get_args(&ast[..2])[0].to_string();
+                FuncType::def_fn(identifier, &ast[2..], self)
+            },
             FuncType::PrintFn => {
                 FuncType::print_fn(&self.get_args(ast))
             },
@@ -371,10 +407,9 @@ impl ScopeContainer {
             FuncType::ModuloOp => {
                 FuncType::modulo_op(&self.get_args(ast))
             },
-            FuncType::UserDefined(ref func) => {
-                // TODO
-                croak("UserDefined functions not implemented");
-                Var::False
+            FuncType::UserDefined(_) => {
+                let args = self.get_args(ast);
+                f.call(&args)
             }
         }
     }
@@ -469,6 +504,39 @@ impl FuncType {
         } else {
             Var::False
         };
+        let ret = rhs.clone();
+        scope_container.scope.set(&identifier, rhs);
+        ret
+    }
+
+    fn def_fn(identifier: String, args: &[AstNode], scope_container: &ScopeContainer) -> Var {
+        let mut fn_args = Vec::<String>::new();
+        if args.len() > 0 {
+            match args[0] {
+                AstNode::Val(ref string) => fn_args.push(string.to_string()),
+                AstNode::List(ref arg_names) => {
+                    for name in arg_names {
+                        match name {
+                            &AstNode::Val(ref string) => fn_args.push(string.to_string()),
+                            &AstNode::List(_) => fn_args.push(
+                                scope_container.evaluate(&name, true).to_string()
+                            ),
+                        }
+                    }
+                },
+            }
+        }
+        let rhs = Var::Func(Func {
+            kind: FuncType::UserDefined(UserDefinedFunc {
+                scope: scope_container.scope.clone(),
+                ast: AstNode::List(if args.len() > 1 {
+                                       args[1..].to_vec()
+                                   } else {
+                                       Vec::<AstNode>::new()
+                                   }),
+            }),
+            args: fn_args
+        });
         let ret = rhs.clone();
         scope_container.scope.set(&identifier, rhs);
         ret
