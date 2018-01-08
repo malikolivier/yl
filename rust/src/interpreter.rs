@@ -49,6 +49,17 @@ pub struct ScopeContainer {
     scope: Rc<Scope>,
 }
 
+impl Var {
+    fn to_string(&self) -> String {
+        match self {
+            &Var::False => "".to_string(),
+            &Var::Num(n) => n.to_string(),
+            &Var::Str(ref s) => s.clone(),
+            &Var::Func(_) => "(def function (args ...) ...)".to_string(), // TODO
+        }
+    }
+}
+
 impl Scope {
     pub fn global() -> ScopeContainer {
         let mut vars = HashMap::<String, Var>::new();
@@ -141,8 +152,7 @@ impl ScopeContainer {
         match f.kind {
             FuncType::LetFn => {
                 let args = self.get_args(ast);
-                println!("{:?}", args);
-                Var::False
+                FuncType::let_fn(&args, self)
             },
             FuncType::UserDefined(ref func) => {
                 // TODO
@@ -228,4 +238,22 @@ pub fn print(var: &Var) {
     let mut vec = Vec::<&Var>::new();
     vec.push(var);
     print_fn(vec)
+}
+
+impl FuncType {
+    fn let_fn(args: &[Var], scope_container: &ScopeContainer) -> Var {
+        if args.len() < 1 {
+            croak("'let' function requires at least 1 argument!");
+            unreachable!()
+        }
+        let identifier = args[0].to_string();
+        let rhs = if args.len() > 1 {
+            args[1].clone()
+        } else {
+            Var::False
+        };
+        let ret = rhs.clone();
+        scope_container.scope.set(&identifier, rhs);
+        ret
+    }
 }
