@@ -66,6 +66,19 @@ impl Var {
     }
 }
 
+trait ToVar {
+    fn to_var(&self) -> Var;
+}
+
+impl ToVar for bool {
+    fn to_var(&self) -> Var {
+        match self {
+            &false => Var::False,
+            &true => Var::get_true(),
+        }
+    }
+}
+
 impl Scope {
     pub fn global() -> ScopeContainer {
         let mut vars = HashMap::<String, Var>::new();
@@ -288,9 +301,9 @@ impl FuncType {
             Var::get_true()
         } else {
             match args[0] {
-                Var::False => Var::get_true(),
-                _ => Var::False,
-            }
+                Var::False => true,
+                _ => false,
+            }.to_var()
         }
     }
 }
