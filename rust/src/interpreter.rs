@@ -85,6 +85,15 @@ impl Var {
     }
 }
 
+impl<'a> From<&'a Var> for f64 {
+    fn from(var: &Var) -> Self {
+        match var {
+            &Var::Num(n) => n,
+            _ => 0.,
+        }
+    }
+}
+
 impl PartialEq for UserDefinedFunc {
     fn eq(&self, other: &UserDefinedFunc) -> bool {
         true // TODO
@@ -529,8 +538,28 @@ enum LoopValues<'a> {
 }
 
 impl<'a> LoopValues<'a> {
-    fn new(values: &'a AstNode) -> LoopValues<'a> {
+    fn new(values: &'a AstNode, scope_container: &ScopeContainer) -> LoopValues<'a> {
+        if let &AstNode::List(ref nodes) = values {
+            if nodes.len() > 1 {
+                let first_node = &nodes[0];
+                if let &AstNode::Val(ref val) = first_node {
+                    if val == "range" {
+                        let second_node = &nodes[1];
+                        let (min, max) = if nodes.len() > 2 {
+                            let third_node = &nodes[2];
+                            (f64::from(&scope_container.evaluate(second_node, true)),
+                             f64::from(&scope_container.evaluate(third_node, true)))
+                        } else {
+                            (0.,
+                             f64::from(&scope_container.evaluate(second_node, true)))
+                        };
+                        return LoopValues::MinMax(MinMax { min, max })
+                    }
+                }
+            }
+        }
         LoopValues::ValueList(values)
+
     }
 
     fn iter(self, scope_container: &'a ScopeContainer) -> LoopIterator<'a> {
@@ -569,9 +598,13 @@ impl<'a> Iterator for LoopIterator<'a> {
                         }
                     }
                 },
-            LoopValues::MinMax(_) => {
-                // TODO
-                unreachable!()
+            LoopValues::MinMax(ref minmax) => {
+                let next = minmax.min + (self.cur as f64);
+                if next < minmax.max {
+                    Some(Var::Num(next))
+                } else {
+                    None
+                }
             }
         };
         self.cur += 1;
@@ -650,7 +683,7 @@ impl FuncType {
         if exps.len() < 1 {
             return ret;
         }
-        for value in LoopValues::new(&exps[0]).iter(scope_container) {
+        for value in LoopValues::new(&exps[0], scope_container).iter(scope_container) {
             loop_scope_container.scope.set(&identifier, value);
             ret = loop_scope_container.evaluate(&AstNode::List(exps[1..].to_vec()), true);
         }
