@@ -64,13 +64,6 @@ impl Scope {
         }
     }
 
-    fn extend(scope_ref: Rc<Scope>) -> Scope {
-        Scope {
-            parent: Some(scope_ref.clone()),
-            vars: RefCell::new(HashMap::<String, Var>::new()),
-        }
-    }
-
     fn get(&self, name: &str) -> Option<Var> {
         match self.vars.borrow().get(name) {
             None => match self.parent {
@@ -87,6 +80,15 @@ impl Scope {
 }
 
 impl ScopeContainer {
+    fn extend(&self) -> ScopeContainer {
+        ScopeContainer {
+            scope: Rc::new(Scope {
+                parent: Some(self.scope.clone()),
+                vars: RefCell::new(HashMap::<String, Var>::new()),
+            })
+        }
+    }
+
     pub fn evaluate(&self, ast: &AstNode, evaluate_function: bool) -> Var {
         match ast {
             &AstNode::Val(ref string) => self.evaluate_val(string),
