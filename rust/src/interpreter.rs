@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::rc::Weak;
 use std::process;
 use std::str::FromStr;
+use std::ops::Add;
 
 use parser::AstNode;
 
@@ -30,6 +31,7 @@ pub enum FuncType {
     GeOp,
     LtOp,
     LeOp,
+    PlusOp,
     UserDefined(UserDefinedFunc),
 }
 
@@ -85,6 +87,23 @@ impl PartialOrd for UserDefinedFunc {
      }
 }
 
+impl<'a> Add<&'a Var> for &'a Var {
+    type Output = Var;
+    fn add(self, other: &Var) -> Var {
+        match (self, other) {
+            (&Var::False, &Var::False) => Var::False,
+            (&Var::False, &Var::Num(n)) => Var::Num(n),
+            (&Var::Num(n), &Var::False) => Var::Num(n),
+            (&Var::Num(n1), &Var::Num(n2)) => Var::Num(n1 + n2),
+            _ => {
+                let mut ret = self.to_string();
+                ret.push_str(&other.to_string());
+                Var::Str(ret)
+            },
+        }
+    }
+}
+
 trait ToVar {
     fn to_var(&self) -> Var;
 }
@@ -132,6 +151,10 @@ impl Scope {
         vars.insert("<=".to_string(), Var::Func(Func {
             kind: FuncType::LeOp,
             args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert("+".to_string(), Var::Func(Func {
+            kind: FuncType::PlusOp,
+            args: vec!["var1".to_string(), "var2".to_string(), "...".to_string()],
         }));
         ScopeContainer {
             scope: Rc::new(Scope {
@@ -240,6 +263,9 @@ impl ScopeContainer {
             },
             FuncType::LeOp => {
                 FuncType::le_op(&self.get_args(ast))
+            },
+            FuncType::PlusOp => {
+                FuncType::plus_op(&self.get_args(ast))
             },
             FuncType::UserDefined(ref func) => {
                 // TODO
@@ -399,5 +425,13 @@ impl FuncType {
             unreachable!()
         }
         args[0].le(&args[1]).to_var()
+    }
+
+    fn plus_op(args: &[Var]) -> Var {
+        let mut out = Var::False;
+        for var in args {
+            out = &out + &var;
+        }
+        out
     }
 }
