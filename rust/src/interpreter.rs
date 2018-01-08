@@ -23,6 +23,7 @@ pub struct UserDefinedFunc {
 pub enum FuncType {
     LetFn,
     PrintFn,
+    NotOp,
     UserDefined(UserDefinedFunc),
 }
 
@@ -59,6 +60,10 @@ impl Var {
             &Var::Func(_) => "(def function (args ...) ...)".to_string(), // TODO
         }
     }
+
+    fn get_true() -> Var {
+        Var::Num(1 as f64)
+    }
 }
 
 impl Scope {
@@ -70,6 +75,10 @@ impl Scope {
         }));
         vars.insert("print".to_string(), Var::Func(Func {
             kind: FuncType::PrintFn,
+            args: vec!["var".to_string()],
+        }));
+        vars.insert("!".to_string(), Var::Func(Func {
+            kind: FuncType::NotOp,
             args: vec!["var".to_string()],
         }));
         ScopeContainer {
@@ -161,7 +170,10 @@ impl ScopeContainer {
             },
             FuncType::PrintFn => {
                 FuncType::print_fn(&self.get_args(ast))
-            }
+            },
+            FuncType::NotOp => {
+                FuncType::not_op(&self.get_args(ast))
+            },
             FuncType::UserDefined(ref func) => {
                 // TODO
                 croak("UserDefined functions not implemented");
@@ -269,5 +281,16 @@ impl FuncType {
         let refs = args.into_iter().map(|var| var).collect();
         print_fn(refs);
         Var::False
+    }
+
+    fn not_op(args: &[Var]) -> Var {
+        if args.len() < 1 {
+            Var::get_true()
+        } else {
+            match args[0] {
+                Var::False => Var::get_true(),
+                _ => Var::False,
+            }
+        }
     }
 }
