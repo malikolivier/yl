@@ -137,9 +137,28 @@ impl ScopeContainer {
     }
 
     fn call(&self, vec: &[AstNode]) -> Var {
-        // let mut context = CallContext::new(self, vec);
-        // context.call(vec)
+        let f = self.check_and_return_function(vec);
+        println!("{:?}", f);
         Var::False
+    }
+
+    fn check_and_return_function(&self, vec: &[AstNode]) -> Func {
+        match vec[0] {
+            AstNode::List(_) => unreachable!(),
+            AstNode::Val(ref fn_name) =>
+                match self.scope.get(&fn_name) {
+                    None => unreachable!(),
+                    Some(var) => {
+                        match var {
+                            Var::Func(f) => f,
+                            _ => {
+                                croak("Not callable!");
+                                unreachable!()
+                            }
+                        }
+                    },
+                },
+        }
     }
 }
 
