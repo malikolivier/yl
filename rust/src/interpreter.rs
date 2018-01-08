@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -19,22 +20,26 @@ pub struct UserDefinedFunc {
     ast: Weak<AstNode>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum FuncType {
     LetFn,
     PrintFn,
     NotOp,
     EqOp,
+    GtOp,
+    GeOp,
+    LtOp,
+    LeOp,
     UserDefined(UserDefinedFunc),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Func {
     kind: FuncType,
     args: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Var {
     False,
     Num(f64),
@@ -73,6 +78,13 @@ impl PartialEq for UserDefinedFunc {
     }
 }
 
+impl PartialOrd for UserDefinedFunc {
+     fn partial_cmp(&self, other: &UserDefinedFunc) -> Option<Ordering> {
+         /* No way to compare user defined functions! */
+         None
+     }
+}
+
 trait ToVar {
     fn to_var(&self) -> Var;
 }
@@ -103,6 +115,22 @@ impl Scope {
         }));
         vars.insert("=".to_string(), Var::Func(Func {
             kind: FuncType::EqOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert(">".to_string(), Var::Func(Func {
+            kind: FuncType::GtOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert(">=".to_string(), Var::Func(Func {
+            kind: FuncType::GeOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert("<".to_string(), Var::Func(Func {
+            kind: FuncType::LtOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert("<=".to_string(), Var::Func(Func {
+            kind: FuncType::LeOp,
             args: vec!["var1".to_string(), "var2".to_string()],
         }));
         ScopeContainer {
@@ -200,6 +228,18 @@ impl ScopeContainer {
             },
             FuncType::EqOp => {
                 FuncType::eq_op(&self.get_args(ast))
+            },
+            FuncType::GtOp => {
+                FuncType::gt_op(&self.get_args(ast))
+            },
+            FuncType::GeOp => {
+                FuncType::ge_op(&self.get_args(ast))
+            },
+            FuncType::LtOp => {
+                FuncType::lt_op(&self.get_args(ast))
+            },
+            FuncType::LeOp => {
+                FuncType::le_op(&self.get_args(ast))
             },
             FuncType::UserDefined(ref func) => {
                 // TODO
@@ -327,5 +367,37 @@ impl FuncType {
             unreachable!()
         }
         args[0].eq(&args[1]).to_var()
+    }
+
+    fn gt_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'>' function requires 2 arguments!");
+            unreachable!()
+        }
+        args[0].gt(&args[1]).to_var()
+    }
+
+    fn ge_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'>=' function requires 2 arguments!");
+            unreachable!()
+        }
+        args[0].ge(&args[1]).to_var()
+    }
+
+    fn lt_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'<' function requires 2 arguments!");
+            unreachable!()
+        }
+        args[0].lt(&args[1]).to_var()
+    }
+
+    fn le_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'<=' function requires 2 arguments!");
+            unreachable!()
+        }
+        args[0].le(&args[1]).to_var()
     }
 }
