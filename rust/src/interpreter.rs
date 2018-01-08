@@ -1,3 +1,4 @@
+use std::f64;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -7,6 +8,9 @@ use std::process;
 use std::str::FromStr;
 use std::ops::Add;
 use std::ops::Sub;
+use std::ops::Mul;
+use std::ops::Div;
+use std::ops::Rem;
 
 use parser::AstNode;
 
@@ -34,6 +38,9 @@ pub enum FuncType {
     LeOp,
     PlusOp,
     MinusOp,
+    MultiplyOp,
+    DivideOp,
+    ModuloOp,
     UserDefined(UserDefinedFunc),
 }
 
@@ -122,6 +129,56 @@ impl<'a> Sub<&'a Var> for &'a Var {
     }
 }
 
+impl<'a> Mul<&'a Var> for &'a Var {
+    type Output = Var;
+    fn mul(self, other: &Var) -> Var {
+        match (self, other) {
+            (&Var::False, _) => Var::Num(0 as f64),
+            (_, &Var::False) => Var::Num(0 as f64),
+            (&Var::Num(n1), &Var::Num(n2)) => Var::Num(n1 * n2),
+            _ => {
+                croak("Cannot multiply non-numbers!");
+                unreachable!()
+            },
+        }
+    }
+}
+
+impl<'a> Div<&'a Var> for &'a Var {
+    type Output = Var;
+    fn div(self, other: &Var) -> Var {
+        match (self, other) {
+            (&Var::False, _) => Var::Num(0.),
+            (&Var::Num(n), &Var::False) => if n > 0. {
+                                               Var::Num(f64::INFINITY)
+                                           } else if n < 0. {
+                                               Var::Num(f64::NEG_INFINITY)
+                                           } else {
+                                               Var::Num(f64::NAN)
+                                           }
+            (&Var::Num(n1), &Var::Num(n2)) => Var::Num(n1 / n2),
+            _ => {
+                croak("Cannot divide non-numbers!");
+                unreachable!()
+            },
+        }
+    }
+}
+
+impl<'a> Rem<&'a Var> for &'a Var {
+    type Output = Var;
+    fn rem(self, other: &Var) -> Var {
+        match (self, other) {
+            (&Var::False, _) => Var::Num(0.),
+            (&Var::Num(n), &Var::Num(modulo)) => Var::Num(n % modulo),
+            _ => {
+                croak("Cannot do modulo on non-numbers!");
+                unreachable!()
+            },
+        }
+    }
+}
+
 
 trait ToVar {
     fn to_var(&self) -> Var;
@@ -177,6 +234,18 @@ impl Scope {
         }));
         vars.insert("-".to_string(), Var::Func(Func {
             kind: FuncType::MinusOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert("*".to_string(), Var::Func(Func {
+            kind: FuncType::MultiplyOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert("/".to_string(), Var::Func(Func {
+            kind: FuncType::DivideOp,
+            args: vec!["var1".to_string(), "var2".to_string()],
+        }));
+        vars.insert("%".to_string(), Var::Func(Func {
+            kind: FuncType::ModuloOp,
             args: vec!["var1".to_string(), "var2".to_string()],
         }));
         ScopeContainer {
@@ -292,6 +361,15 @@ impl ScopeContainer {
             },
             FuncType::MinusOp => {
                 FuncType::minus_op(&self.get_args(ast))
+            },
+            FuncType::MultiplyOp => {
+                FuncType::multiply_op(&self.get_args(ast))
+            },
+            FuncType::DivideOp => {
+                FuncType::divide_op(&self.get_args(ast))
+            },
+            FuncType::ModuloOp => {
+                FuncType::modulo_op(&self.get_args(ast))
             },
             FuncType::UserDefined(ref func) => {
                 // TODO
@@ -467,5 +545,29 @@ impl FuncType {
             unreachable!()
         }
         &args[0] - &args[1]
+    }
+
+    fn multiply_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'-' function requires 2 arguments!");
+            unreachable!()
+        }
+        &args[0] * &args[1]
+    }
+
+    fn divide_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'-' function requires 2 arguments!");
+            unreachable!()
+        }
+        &args[0] / &args[1]
+    }
+
+    fn modulo_op(args: &[Var]) -> Var {
+        if args.len() != 2 {
+            croak("'-' function requires 2 arguments!");
+            unreachable!()
+        }
+        &args[0] % &args[1]
     }
 }
