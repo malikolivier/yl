@@ -29,6 +29,7 @@ pub struct UserDefinedFunc {
 pub enum FuncType {
     LetFn,
     DefFn,
+    IfFn,
     PrintFn,
     NotOp,
     EqOp,
@@ -276,6 +277,10 @@ impl Scope {
             kind: FuncType::DefFn,
             args: vec!["id".to_string(), "(args...)".to_string(), "...".to_string()],
         }));
+        vars.insert("if".to_string(), Var::Func(Func {
+            kind: FuncType::IfFn,
+            args: vec!["condition".to_string(), "(exp1...)".to_string(), "(exp2...)".to_string()],
+        }));
         ScopeContainer {
             scope: Rc::new(Scope {
                 parent: None,
@@ -370,6 +375,14 @@ impl ScopeContainer {
                 }
                 let identifier = self.get_args(&ast[..2])[0].to_string();
                 FuncType::def_fn(identifier, &ast[2..], self)
+            },
+            FuncType::IfFn => {
+                if ast.len() < 2 {
+                    croak("To use the 'if' function, do: '(if cond (exp1 ) (exp2 ))'");
+                    unreachable!();
+                }
+                let condition = &self.get_args(&ast[..2])[0];
+                FuncType::if_fn(condition, &ast[2..], self)
             },
             FuncType::PrintFn => {
                 FuncType::print_fn(&self.get_args(ast))
@@ -540,6 +553,21 @@ impl FuncType {
         let ret = rhs.clone();
         scope_container.scope.set(&identifier, rhs);
         ret
+    }
+
+    fn if_fn(condition: &Var, exps: &[AstNode], scope_container: &ScopeContainer) -> Var {
+        match condition {
+            &Var::False => if exps.len() > 1 {
+                               scope_container.evaluate(&exps[1], false)
+                           } else {
+                               Var::False
+                           },
+            _ => if exps.len() > 0 {
+                    scope_container.evaluate(&exps[0], false)
+                 } else {
+                     Var::False
+                 },
+        }
     }
 
     fn print_fn(args: &[Var]) -> Var {
