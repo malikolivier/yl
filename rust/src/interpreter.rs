@@ -720,8 +720,12 @@ impl FuncType {
             croak("'argv' function requires 1 argument!");
             unreachable!()
         }
-        let n = 2 + (f64::from(&args[0]) as usize);
         let app_args: Vec<String> = env::args().collect();
+        let n = if app_args.len() > 1 && &app_args[1] == "-e" {
+                    3
+                } else {
+                    2
+                } + (f64::from(&args[0]) as usize);
         if n < app_args.len() {
             parse_to_yl_var(&app_args[n])
         } else {
