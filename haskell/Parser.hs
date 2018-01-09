@@ -47,14 +47,15 @@ readSymbolTokenValue result all@(c:next)
     | otherwise = readSymbolTokenValue (result ++ [c]) next
 
 parse :: [Token] -> Ast
-parse tokens = AstList $ parseInner [] tokens
+parse tokens = AstList $ parseInner tokens
 
-parseInner :: [Ast] -> [Token] -> [Ast]
-parseInner result [] = result
-parseInner result (Symbol string:next) = parseInner (result ++ [AstNode string]) next
-parseInner result (Close:next) = result ++ parseInner [] next
-parseInner result (Open:next) = let (context, after) = splitAt (countUntilCorrespondingClose next) next in
-    result ++ ((AstList (parseInner [] context)) : parseInner [] after)
+parseInner :: [Token] -> [Ast]
+parseInner [] = []
+parseInner (Symbol string:next) = AstNode string : parseInner next
+-- Tokens after closing parenthesis are handled in (Open:next) pattern
+parseInner (Close:_) = []
+parseInner (Open:next) = let (context, after) = splitAt (countUntilCorrespondingClose next) next in
+    (AstList (parseInner context)) : parseInner after
 
 countUntilCorrespondingClose :: [Token] -> Int
 countUntilCorrespondingClose = countUntilCorrespondingCloseIn 1
