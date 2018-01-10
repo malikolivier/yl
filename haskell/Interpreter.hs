@@ -25,6 +25,16 @@ instance Show Var where
     show (YlStr str) = str
     show (YlFunc func) = "(def function (args...) ...)"
 
+instance Eq Var where
+    YlFalse == YlFalse   = True
+    YlFalse == _         = False
+    YlInt n1 == YlInt n2 = n1 == n2
+    YlNum n1 == YlNum n2 = n1 == n2
+    YlInt n1 == YlNum n2 = fromIntegral n1 == n2
+    YlNum n1 == YlInt n2 = n1 == fromIntegral n2
+    YlStr s1 == YlStr s2 = s1 == s2
+    YlFunc _ == YlFunc _ = False
+
 data Context = Context { var :: Var
                        , io :: IO ()
                        , scope :: Scope
@@ -45,6 +55,7 @@ globalScope = Scope {
         , ("!",     YlFunc notOp)
         , ("let",   YlFunc letFn)
         , ("def",   YlFunc defFn)
+        , ("=",     YlFunc eqOp)
         ]
 }
 
@@ -165,5 +176,17 @@ makeFuncScope ((var, name):next) scope =
 defFn :: [Var] -> Scope -> Context
 defFn = dummyFn
 
+eqOp :: [Var] -> Scope -> Context
+eqOp = dummyCtx . eqOp'
+
+eqOp' :: [Var] -> Var
+eqOp' (var1:var2:_)
+    | var1 == var2 = ylTrue
+    | otherwise    = YlFalse
+eqOp' _ = error "'=' requires 2 arguments!"
+
 dummyFn :: [Var] -> Scope -> Context
-dummyFn _ scope = Context {var=YlFalse, io=return (), scope=scope}
+dummyFn _ = dummyCtx YlFalse
+
+dummyCtx :: Var -> Scope -> Context
+dummyCtx var scope = Context {var=var, io=return (), scope=scope}
