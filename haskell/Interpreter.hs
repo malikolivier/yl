@@ -293,6 +293,15 @@ getRange :: Ast -> Scope -> ([Var], IO (), Scope)
 getRange (AstNode string) scope =
     let Context {var=val, io=io, scope=scope'} = evaluateVal string scope in
         ([val], io, scope')
+getRange (AstList ((AstNode "range"):maxi:[])) scope =
+    getRange (AstList [AstNode "range", AstNode "0", maxi]) scope
+getRange (AstList ((AstNode "range"):mini:maxi:_)) scope =
+    let Context{var=mini', io=io, scope=scope'} = evaluate mini scope True
+        Context{var=maxi', io=io', scope=scope''} = evaluate maxi scope' True in
+        case (mini', maxi') of
+            (YlInt mIN, YlInt mAX) -> ( map YlInt [mIN,(mIN + 1)..(mAX - 1)]
+                                      , do {io; io'}
+                                      , scope'' )
 getRange (AstList []) scope = ([], return (), scope)
 getRange (AstList (h:next)) scope =
     let Context {var=val, io=io, scope=scope'} = evaluate h scope True in
