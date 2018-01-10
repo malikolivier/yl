@@ -153,8 +153,14 @@ callFn :: [Var]     -- ^ Variable given as argument
        -> Scope     -- ^ Scope in which the function was called (unused)
        -> [Ast]     -- ^ Body of the function
        -> Context   -- ^ Result of the call
-callFn args argNames scope _ exps = dummyFn args scope -- TODO
+callFn args argNames scope _ exps =
+    let fnScope = makeFuncScope (zip args argNames) scope in
+        evaluate (AstList exps) fnScope False
 
+makeFuncScope :: [(Var, [Char])] -> Scope -> Scope
+makeFuncScope [] scope = scope
+makeFuncScope ((var, name):next) scope =
+    makeFuncScope next (scopeSet scope name var)
 
 defFn :: [Var] -> Scope -> Context
 defFn = dummyFn
