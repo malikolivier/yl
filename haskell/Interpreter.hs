@@ -44,6 +44,7 @@ globalScope = Scope {
    vars=[ ("print", YlFunc printFn)
         , ("!",     YlFunc notOp)
         , ("let",   YlFunc letFn)
+        , ("def",   YlFunc defFn)
         ]
 }
 
@@ -88,6 +89,7 @@ evaluateList (h:next) scope False =
 evaluateList all@(h:next) scope True =
     case h of
         AstList list       -> evaluateList all scope False
+        AstNode "def"      -> callDefFn next scope
         AstNode identifier -> let var = scopeGet scope identifier in
             case var of
                 Nothing    -> evaluateList all scope False
@@ -124,3 +126,38 @@ letFn (identifier:val:next) scope =
     let identifierStr = show identifier in
         Context {var=val, io=return (), scope=scopeSet scope identifierStr val}
 letFn _ _ = error "'let' requires at least 1 argument!"
+
+callDefFn :: [Ast] -> Scope -> Context
+callDefFn (identifier:argNames:next) scope =
+    let Context {var=idVal, io=io, scope=newScope} = evaluate identifier scope True in
+        let idStr = show idVal
+            (argNamesStr, nextIo, newScope') = getArgNames argNames newScope in
+            let func           = YlFunc (\args scope' -> callFn args argNamesStr funcOuterScope scope' next)
+                funcOuterScope = scopeSet newScope' idStr func in
+                    Context {var=func, io=do {io; nextIo}, scope=funcOuterScope}
+callDefFn _ _ = error "'def' should be used like this: '(def name (args...) do something...)'!"
+
+getArgNames :: Ast -> Scope -> ([[Char]], IO (), Scope)
+getArgNames (AstNode string) scope =
+    let Context {var=v, io=io, scope=scope'} = evaluateVal string scope in
+        ([show v], io, scope')
+getArgNames (AstList []) scope = ([], return (), scope)
+getArgNames (AstList (h:next)) scope =
+    let Context {var=v, io=io, scope=scope'} = evaluate h scope True in
+        let (nextArgNames, nextIo, nextScope) = getArgNames (AstList next) scope' in
+            ((show v):nextArgNames, do {io; nextIo}, nextScope)
+
+callFn :: [Var]     -- ^ Variable given as argument
+       -> [[Char]]  -- ^ List of argument names for the function
+       -> Scope     -- ^ Scope where the function was defined
+       -> Scope     -- ^ Scope in which the function was called (unused)
+       -> [Ast]     -- ^ Body of the function
+       -> Context   -- ^ Result of the call
+callFn args argNames scope _ exps = dummyFn args scope -- TODO
+
+
+defFn :: [Var] -> Scope -> Context
+defFn = dummyFn
+
+dummyFn :: [Var] -> Scope -> Context
+dummyFn _ scope = Context {var=YlFalse, io=return (), scope=scope}
