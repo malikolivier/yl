@@ -9,17 +9,19 @@ import Parser
 main = do
     args <- getArgs
     program <- getProgram args
-    putStr $ runProgram program
+    runProgram program
 
 -- Interactive mode
 getProgram [] = forever $ do
-  hSetBuffering stdout NoBuffering
-  putStr "> "
-  program <- getLine
-  putStrLn $ runProgram program
+    hSetBuffering stdout NoBuffering
+    putStr "> "
+    program <- getLine
+    runProgram program
 getProgram ("-e":program:[]) = return program
 getProgram (file:[]) = do
     handle <- openFile file ReadMode
     hGetContents handle
 
-runProgram = evaluate . parse
+runProgram :: [Char] -> IO ()
+runProgram program = let Context {var=_, io=io, scope=_} = evaluateGlobal $ parse program in
+    io

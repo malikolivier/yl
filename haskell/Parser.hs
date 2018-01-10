@@ -1,5 +1,6 @@
 module Parser
 ( parse
+, Ast(..)
 ) where
 
 data Ast = AstNode [Char]
@@ -46,16 +47,16 @@ readSymbolTokenValue result all@(c:next)
     | c `elem` " \n\t()" = (result, all)
     | otherwise = readSymbolTokenValue (result ++ [c]) next
 
-parse :: [Token] -> Ast
-parse tokens = AstList $ parseInner tokens
+_parse :: [Token] -> Ast
+_parse tokens = AstList $ _parseInner tokens
 
-parseInner :: [Token] -> [Ast]
-parseInner [] = []
-parseInner (Symbol string:next) = AstNode string : parseInner next
+_parseInner :: [Token] -> [Ast]
+_parseInner [] = []
+_parseInner (Symbol string:next) = AstNode string : _parseInner next
 -- Tokens after closing parenthesis are handled in (Open:next) pattern
-parseInner (Close:_) = []
-parseInner (Open:next) = let (context, after) = splitAt (countUntilCorrespondingClose next) next in
-    (AstList (parseInner context)) : parseInner after
+_parseInner (Close:_) = []
+_parseInner (Open:next) = let (context, after) = splitAt (countUntilCorrespondingClose next) next in
+    (AstList (_parseInner context)) : _parseInner after
 
 countUntilCorrespondingClose :: [Token] -> Int
 countUntilCorrespondingClose = countUntilCorrespondingCloseIn 1
@@ -66,3 +67,7 @@ countUntilCorrespondingCloseIn depthCounter [] = 0
 countUntilCorrespondingCloseIn depthCounter (Open:next) = 1 + countUntilCorrespondingCloseIn (depthCounter + 1) next
 countUntilCorrespondingCloseIn depthCounter (Close:next) = 1 + countUntilCorrespondingCloseIn (depthCounter - 1) next
 countUntilCorrespondingCloseIn depthCounter (Symbol _:next) = 1 + countUntilCorrespondingCloseIn depthCounter next
+
+
+parse :: [Char] -> Ast
+parse = _parse . tokenize
