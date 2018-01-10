@@ -17,6 +17,9 @@ elif [ "$1" = "ruby" ]; then
 elif [ "$1" = "rust" ]; then
 	echo -n "Rust	"
 	INTERPRETER="rust/target/release/yl"
+elif [ "$1" = "haskell" ]; then
+	echo -n "Haskell	"
+	INTERPRETER="haskell/yl"
 else
 	# Run all languages!
 	$0 node
@@ -24,6 +27,7 @@ else
 	$0 c
 	$0 ruby
 	$0 rust
+	$0 haskell
 	exit
 fi
 
