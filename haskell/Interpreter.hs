@@ -260,7 +260,8 @@ multiplyOp = dummyCtx . (binOp ylMul)
 divideOp   = dummyCtx . (binOp ylDiv)
 
 binOp ::  (Var -> Var -> Var) -> [Var] -> Var
-binOp op (var1:var2:_) = op var1 var2
+binOp op (var1:[]) = var1
+binOp op (var1:next) = op var1 (binOp op next)
 binOp _ _ = error "Binary operator requires 2 arguments!"
 
 dummyFn :: [Var] -> Scope -> Context
