@@ -12,12 +12,14 @@ import Parser
 
 
 data Var = YlFalse
+         | YlInt Integer
          | YlNum Double
          | YlStr [Char]
          | YlFunc ([Var] -> Scope -> Context)
 
 instance Show Var where
     show YlFalse = "()"
+    show (YlInt n) = show n
     show (YlNum n) = show n
     show (YlStr str) = str
     show (YlFunc func) = "(def function (args...) ...)"
@@ -61,10 +63,12 @@ scopeGet Scope {parent=p, vars=vars} identifier =
                         ScopeHasParent parent -> scopeGet parent identifier
 
 parseToVar :: [Char] -> Var
-parseToVar string = let result = readMaybe string :: Maybe Double in
-    case result of
-        Just num -> YlNum num
-        _        -> YlStr string
+parseToVar string =
+    case (readMaybe string :: Maybe Integer) of
+        Just int -> YlInt int
+        Nothing  -> case (readMaybe string :: Maybe Double) of
+            Just num -> YlNum num
+            Nothing  -> YlStr string
 
 evaluateList :: [Ast] -> Scope -> Bool -> Context
 evaluateList [] scope _ = Context { var=YlFalse, io=return (), scope=scope }
