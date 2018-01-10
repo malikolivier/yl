@@ -121,6 +121,7 @@ globalScope = Scope {
         , ("*",     YlFunc multiplyOp)
         , ("/",     YlFunc divideOp)
         , ("if",    YlFunc ifFn)
+        , ("loop",  YlFunc loopFn)
         ]
 }
 
@@ -167,6 +168,7 @@ evaluateList all@(h:next) scope True =
         AstList list       -> evaluateList all scope False
         AstNode "def"      -> callDefFn next scope
         AstNode "if"       -> callIfFn next scope
+        AstNode "loop"     -> callLoopFn next scope
         AstNode identifier -> let var = scopeGet scope identifier in
             case var of
                 Nothing    -> evaluateList all scope False
@@ -279,6 +281,33 @@ callIfFn _ _ = error "'if' should be used as follows: (if cond (then...) (else..
 
 ifFn :: [Var] -> Scope -> Context
 ifFn = dummyFn
+
+callLoopFn :: [Ast] -> Scope -> Context
+callLoopFn (identifier:rangeExp:loopAst) scope =
+    let Context {var=idVal, io=io, scope=scope'} = evaluate identifier scope True in
+        let idStr = show idVal
+            (range, io', scope'') = getRange rangeExp scope' in
+            runLoop (AstList loopAst) idStr range (do {io; io'}) scope'' YlFalse
+
+getRange :: Ast -> Scope -> ([Var], IO (), Scope)
+getRange (AstNode string) scope =
+    let Context {var=val, io=io, scope=scope'} = evaluateVal string scope in
+        ([val], io, scope')
+getRange (AstList []) scope = ([], return (), scope)
+getRange (AstList (h:next)) scope =
+    let Context {var=val, io=io, scope=scope'} = evaluate h scope True in
+        let (vals, io', scope'') = getRange (AstList next) scope' in
+            (val:vals, do {io; io'}, scope'')
+
+runLoop :: Ast -> [Char] -> [Var] -> IO () -> Scope -> Var -> Context
+runLoop loopAst idStr [] io scope ret = Context {var=ret, io=io, scope=scope}
+runLoop loopAst idStr (v:next) io scope ret =
+    let scope' = scopeSet scope idStr v in
+        let Context {var=ret', io=io', scope=_} = evaluate loopAst scope' True in
+            runLoop loopAst idStr next (do {io; io'}) scope ret'
+
+loopFn :: [Var] -> Scope -> Context
+loopFn = dummyFn
 
 dummyFn :: [Var] -> Scope -> Context
 dummyFn _ = dummyCtx YlFalse
