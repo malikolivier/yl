@@ -75,5 +75,7 @@ runtest '(loop x (range 1 3) ( (print x) ))' '1
 runtest '(def noop ()) (print (noop))' '()'
 runtest '(def print_let () (let x 1) (print x)) (print_let)' '1'
 runtest '(def "is prime" (n) (print n))  (loop n (0) ( ("is prime" n) ))' '0'
+runtest '(def echo (n) (print n)) (print (echo 4))' '4
+()'
 
 echo
