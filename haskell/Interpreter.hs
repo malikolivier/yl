@@ -28,12 +28,34 @@ instance Show Var where
 instance Eq Var where
     YlFalse == YlFalse   = True
     YlFalse == _         = False
+    _       == YlFalse   = False
     YlInt n1 == YlInt n2 = n1 == n2
     YlNum n1 == YlNum n2 = n1 == n2
     YlInt n1 == YlNum n2 = fromIntegral n1 == n2
     YlNum n1 == YlInt n2 = n1 == fromIntegral n2
     YlStr s1 == YlStr s2 = s1 == s2
-    YlFunc _ == YlFunc _ = False
+    YlInt n1 == YlStr s2 = show n1 == s2
+    YlStr s1 == YlInt n2 = s1 == show n2
+    YlNum n1 == YlStr s2 = show n1 == s2
+    YlStr s1 == YlNum n2 = s1 == show n2
+    YlFunc _ == _        = False
+    _        == YlFunc _ = False
+
+instance Ord Var where
+    compare YlFalse YlFalse = EQ
+    compare YlFalse _       = LT
+    compare _ YlFalse       = GT
+    compare (YlInt n1) (YlInt n2) = compare n1 n2
+    compare (YlNum n1) (YlNum n2) = compare n1 n2
+    compare (YlInt n1) (YlNum n2) = compare (fromIntegral n1) n2
+    compare (YlNum n1) (YlInt n2) = compare n1 (fromIntegral n2)
+    compare (YlStr s1) (YlStr s2) = compare s1 s2
+    compare (YlInt n1) (YlStr s2) = compare (show n1) s2
+    compare (YlStr s1) (YlInt n2) = compare s1 (show n2)
+    compare (YlNum n1) (YlStr s2) = compare (show n1) s2
+    compare (YlStr s1) (YlNum n2) = compare s1 (show n2)
+    compare (YlFunc _) _          = GT
+    compare (_       ) (YlFunc _) = LT
 
 data Context = Context { var :: Var
                        , io :: IO ()
@@ -56,6 +78,10 @@ globalScope = Scope {
         , ("let",   YlFunc letFn)
         , ("def",   YlFunc defFn)
         , ("=",     YlFunc eqOp)
+        , (">",     YlFunc gtOp)
+        , (">=",    YlFunc geOp)
+        , ("<",     YlFunc ltOp)
+        , ("<=",    YlFunc leOp)
         ]
 }
 
@@ -177,13 +203,17 @@ defFn :: [Var] -> Scope -> Context
 defFn = dummyFn
 
 eqOp :: [Var] -> Scope -> Context
-eqOp = dummyCtx . eqOp'
+eqOp = dummyCtx . (cmpOp (==))
+gtOp = dummyCtx . (cmpOp (>))
+geOp = dummyCtx . (cmpOp (>=))
+ltOp = dummyCtx . (cmpOp (<))
+leOp = dummyCtx . (cmpOp (<=))
 
-eqOp' :: [Var] -> Var
-eqOp' (var1:var2:_)
-    | var1 == var2 = ylTrue
+cmpOp :: (Var -> Var -> Bool) -> [Var] -> Var
+cmpOp op (var1:var2:_)
+    | op var1 var2 = ylTrue
     | otherwise    = YlFalse
-eqOp' _ = error "'=' requires 2 arguments!"
+cmpOp _ _ = error "Comparison operator requires 2 arguments!"
 
 dummyFn :: [Var] -> Scope -> Context
 dummyFn _ = dummyCtx YlFalse
