@@ -57,6 +57,40 @@ instance Ord Var where
     compare (YlFunc _) _          = GT
     compare (_       ) (YlFunc _) = LT
 
+ylPlus :: Var -> Var -> Var
+ylPlus YlFalse    YlFalse    = YlFalse
+ylPlus YlFalse    (YlInt n)  = YlInt n
+ylPlus (YlInt n)  YlFalse    = YlInt n
+ylPlus YlFalse    (YlNum n)  = YlNum n
+ylPlus (YlNum n)  YlFalse    = YlNum n
+ylPlus (YlInt n1) (YlInt n2) = YlInt $ n1 + n2
+ylPlus (YlInt n1) (YlNum n2) = YlNum $ fromIntegral n1 + n2
+ylPlus (YlNum n1) (YlInt n2) = YlNum $ n1 + fromIntegral n2
+ylPlus (YlNum n1) (YlNum n2) = YlNum $ n1 + n2
+ylPlus var1        var2      = YlStr $ show var1 ++ show var2
+
+ylMinus :: Var -> Var -> Var
+ylMinus (YlInt n1) (YlInt n2) = YlInt $ n1 - n2
+ylMinus (YlInt n1) (YlNum n2) = YlNum $ fromIntegral n1 - n2
+ylMinus (YlNum n1) (YlInt n2) = YlNum $ n1 - fromIntegral n2
+ylMinus (YlNum n1) (YlNum n2) = YlNum $ n1 - n2
+ylMinus _           _         = error "Cannot substract non-numbers"
+
+ylMul :: Var -> Var -> Var
+ylMul (YlInt n1)  (YlInt n2) = YlInt $ n1 * n2
+ylMul (YlInt n1)  (YlNum n2) = YlNum $ fromIntegral n1 * n2
+ylMul (YlNum n1)  (YlInt n2) = YlNum $ n1 * fromIntegral n2
+ylMul (YlNum n1)  (YlNum n2) = YlNum $ n1 * n2
+ylMul _           _          = error "Cannot multiply non-numbers"
+
+ylDiv :: Var -> Var -> Var
+ylDiv (YlInt n1) (YlInt n2) = YlNum $ fromIntegral n1 / fromIntegral n2
+ylDiv (YlInt n1) (YlNum n2) = YlNum $ fromIntegral n1 / n2
+ylDiv (YlNum n1) (YlInt n2) = YlNum $ n1 / fromIntegral n2
+ylDiv (YlNum n1) (YlNum n2) = YlNum $ n1 / n2
+ylDiv _           _         = error "Cannot divide non-numbers"
+
+
 data Context = Context { var :: Var
                        , io :: IO ()
                        , scope :: Scope
@@ -82,6 +116,10 @@ globalScope = Scope {
         , (">=",    YlFunc geOp)
         , ("<",     YlFunc ltOp)
         , ("<=",    YlFunc leOp)
+        , ("+",     YlFunc plusOp)
+        , ("-",     YlFunc minusOp)
+        , ("*",     YlFunc multiplyOp)
+        , ("/",     YlFunc divideOp)
         ]
 }
 
@@ -214,6 +252,16 @@ cmpOp op (var1:var2:_)
     | op var1 var2 = ylTrue
     | otherwise    = YlFalse
 cmpOp _ _ = error "Comparison operator requires 2 arguments!"
+
+plusOp :: [Var] -> Scope -> Context
+plusOp     = dummyCtx . (binOp ylPlus)
+minusOp    = dummyCtx . (binOp ylMinus)
+multiplyOp = dummyCtx . (binOp ylMul)
+divideOp   = dummyCtx . (binOp ylDiv)
+
+binOp ::  (Var -> Var -> Var) -> [Var] -> Var
+binOp op (var1:var2:_) = op var1 var2
+binOp _ _ = error "Binary operator requires 2 arguments!"
 
 dummyFn :: [Var] -> Scope -> Context
 dummyFn _ = dummyCtx YlFalse
