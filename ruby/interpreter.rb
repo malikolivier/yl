@@ -17,6 +17,7 @@ GLOBAL_VARS = {
     else
       puts args[0]
     end
+    YL_FALSE
   },
   '!' => lambda { |args, _scope|
     if args[0] == YL_FALSE
