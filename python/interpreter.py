@@ -225,7 +225,6 @@ def is_number(string):
 
 
 def evaluate(exp, scope=Scope(), evaluate_function=True):
-    #print(exp)
     if type(exp) is not list:
         try:
             return scope.get(exp)
