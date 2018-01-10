@@ -29,7 +29,8 @@ interativeMode :: Scope -> IO ()
 interativeMode scope = do
     putStr "> "
     program <- getLine
-    let Context {var=output, io=_, scope=newScope} = evaluate (parse program) scope False in
+    let Context {var=output, io=io, scope=newScope} = evaluate (parse program) scope False in
         do
+            io
             print output
             interativeMode newScope

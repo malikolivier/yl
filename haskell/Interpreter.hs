@@ -40,7 +40,8 @@ evaluateGlobal ast = evaluate ast globalScope True
 
 globalScope = Scope {
    parent=ScopeHasNoParent,
-   vars=[]
+   vars=[ ("print", YlFunc printFn)
+        ]
 }
 
 evaluate :: Ast -> Scope -> Bool -> Context
@@ -95,3 +96,11 @@ getArgs scope (a:next) =
 callVar :: Var -> [Var] -> Scope -> Context
 callVar (YlFunc func) args scope = func args scope
 callVar _ _ _ = error "Cannot call uncallable object"
+
+
+-- Built-in functions
+printFn :: [Var] -> Scope -> Context
+printFn [] scope = Context {var=YlFalse, io=return (), scope=scope}
+printFn (var:next) scope =
+    let Context {var=v, io=io, scope=s} = printFn next scope in
+        Context {var=v, io=do { print var; io }, scope=s}
