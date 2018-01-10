@@ -75,8 +75,9 @@ evaluateList :: [Ast] -> Scope -> Bool -> Context
 evaluateList [] scope _ = Context { var=YlFalse, io=return (), scope=scope }
 evaluateList (h:[]) scope False = evaluate h scope True
 evaluateList (h:next) scope False =
-    let Context {var=_, io=_, scope=s} = evaluate h scope True in
-        evaluateList next s False
+    let Context {var=_, io=io, scope=s} = evaluate h scope True in
+        let Context {var=v, io=nextIo, scope=nextScope} = evaluateList next s False in
+            Context {var=v, io=do {io; nextIo}, scope=nextScope}
 evaluateList all@(h:next) scope True =
     case h of
         AstList list       -> evaluateList all scope False
@@ -89,9 +90,9 @@ evaluateList all@(h:next) scope True =
 getArgs :: Scope -> [Ast] -> ([Var], IO (), Scope)
 getArgs scope [] = ([], return (), scope)
 getArgs scope (a:next) =
-    let Context{var=var, io=_, scope=newScope} = evaluate a scope True in
-        let (vars, _, newNewScope) = getArgs newScope next in
-            (var:vars, return (), newNewScope)
+    let Context{var=var, io=io, scope=newScope} = evaluate a scope True in
+        let (vars, nextIo, newNewScope) = getArgs newScope next in
+            (var:vars, do {io; nextIo}, newNewScope)
 
 callVar :: Var -> [Var] -> Scope -> Context
 callVar (YlFunc func) args scope = func args scope
