@@ -16,6 +16,7 @@ data Var = YlFalse
          | YlNum Double
          | YlStr [Char]
          | YlFunc ([Var] -> Scope -> Context)
+ylTrue = YlInt 1
 
 instance Show Var where
     show YlFalse = "()"
@@ -41,6 +42,7 @@ evaluateGlobal ast = evaluate ast globalScope True
 globalScope = Scope {
    parent=ScopeHasNoParent,
    vars=[ ("print", YlFunc printFn)
+        , ("!",     YlFunc notOp)
         ]
 }
 
@@ -105,3 +107,8 @@ printFn [] scope = Context {var=YlFalse, io=return (), scope=scope}
 printFn (var:next) scope =
     let Context {var=v, io=io, scope=s} = printFn next scope in
         Context {var=v, io=do { print var; io }, scope=s}
+
+notOp :: [Var] -> Scope -> Context
+notOp [] scope = Context {var=ylTrue, io=return (), scope=scope}
+notOp (YlFalse:_) scope = Context {var=ylTrue, io=return (), scope=scope}
+notOp _ scope = Context {var=YlFalse, io=return (), scope=scope}
