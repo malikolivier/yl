@@ -43,6 +43,7 @@ globalScope = Scope {
    parent=ScopeHasNoParent,
    vars=[ ("print", YlFunc printFn)
         , ("!",     YlFunc notOp)
+        , ("let",   YlFunc letFn)
         ]
 }
 
@@ -64,6 +65,10 @@ scopeGet Scope {parent=p, vars=vars} identifier =
             _      -> case p of
                         ScopeHasNoParent      -> Nothing
                         ScopeHasParent parent -> scopeGet parent identifier
+
+scopeSet :: Scope -> [Char] -> Var -> Scope
+scopeSet Scope {parent=p, vars=vars} identifier val =
+    Scope {parent=p, vars=(identifier, val):vars}
 
 parseToVar :: [Char] -> Var
 parseToVar string =
@@ -112,3 +117,10 @@ notOp :: [Var] -> Scope -> Context
 notOp [] scope = Context {var=ylTrue, io=return (), scope=scope}
 notOp (YlFalse:_) scope = Context {var=ylTrue, io=return (), scope=scope}
 notOp _ scope = Context {var=YlFalse, io=return (), scope=scope}
+
+letFn :: [Var] -> Scope -> Context
+letFn (identifier:[]) scope = letFn [identifier, YlFalse] scope
+letFn (identifier:val:next) scope =
+    let identifierStr = show identifier in
+        Context {var=val, io=return (), scope=scopeSet scope identifierStr val}
+letFn _ _ = error "'let' requires at least 1 argument!"
