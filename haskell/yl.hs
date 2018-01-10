@@ -12,11 +12,10 @@ main = do
     runProgram program
 
 -- Interactive mode
-getProgram [] = forever $ do
+getProgram [] = do
     hSetBuffering stdout NoBuffering
-    putStr "> "
-    program <- getLine
-    runProgram program
+    interativeMode globalScope
+    error "Interactive mode is a loop!"
 getProgram ("-e":program:[]) = return program
 getProgram (file:[]) = do
     handle <- openFile file ReadMode
@@ -25,3 +24,12 @@ getProgram (file:[]) = do
 runProgram :: [Char] -> IO ()
 runProgram program = let Context {var=_, io=io, scope=_} = evaluateGlobal $ parse program in
     io
+
+interativeMode :: Scope -> IO ()
+interativeMode scope = do
+    putStr "> "
+    program <- getLine
+    let Context {var=output, io=_, scope=newScope} = evaluate (parse program) scope False in
+        do
+            print output
+            interativeMode newScope
