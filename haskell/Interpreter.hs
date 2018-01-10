@@ -120,6 +120,7 @@ globalScope = Scope {
         , ("-",     YlFunc minusOp)
         , ("*",     YlFunc multiplyOp)
         , ("/",     YlFunc divideOp)
+        , ("if",    YlFunc ifFn)
         ]
 }
 
@@ -165,6 +166,7 @@ evaluateList all@(h:next) scope True =
     case h of
         AstList list       -> evaluateList all scope False
         AstNode "def"      -> callDefFn next scope
+        AstNode "if"       -> callIfFn next scope
         AstNode identifier -> let var = scopeGet scope identifier in
             case var of
                 Nothing    -> evaluateList all scope False
@@ -263,6 +265,20 @@ binOp ::  (Var -> Var -> Var) -> [Var] -> Var
 binOp op (var1:[]) = var1
 binOp op (var1:next) = op var1 (binOp op next)
 binOp _ _ = error "Binary operator requires 2 arguments!"
+
+callIfFn :: [Ast] -> Scope -> Context
+callIfFn (cond:then':[]) scope = callIfFn [cond, then', AstList []] scope
+callIfFn (cond:then':else':_) scope =
+    let Context {var=result, io=io, scope=scope'} = evaluate cond scope True in
+        case result of
+            YlFalse -> let Context {var=ifResult, io=io', scope=scope''} = evaluate else' scope' False in
+                        Context {var=ifResult, io=do{io; io'}, scope=scope''}
+            _       -> let Context {var=ifResult, io=io', scope=scope''} = evaluate then' scope' False in
+                        Context {var=ifResult, io=do{io; io'}, scope=scope''}
+callIfFn _ _ = error "'if' should be used as follows: (if cond (then...) (else...))"
+
+ifFn :: [Var] -> Scope -> Context
+ifFn = dummyFn
 
 dummyFn :: [Var] -> Scope -> Context
 dummyFn _ = dummyCtx YlFalse
