@@ -172,8 +172,9 @@ evaluateList all@(h:next) scope True =
         AstNode identifier -> let var = scopeGet scope identifier in
             case var of
                 Nothing    -> evaluateList all scope False
-                Just func  -> let (args, _, newScope) = getArgs scope next in
-                    callVar func args newScope
+                Just func  -> let (args, io, newScope) = getArgs scope next in
+                    let Context {var=v, io=io', scope=newScope'} = callVar func args newScope in
+                        Context {var=v, io=do {io; io'}, scope=newScope'}
 
 getArgs :: Scope -> [Ast] -> ([Var], IO (), Scope)
 getArgs scope [] = ([], return (), scope)
