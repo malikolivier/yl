@@ -6,6 +6,7 @@ module Interpreter
 , globalScope
 ) where
 
+import Data.Fixed
 import Text.Read
 
 import Parser
@@ -90,6 +91,11 @@ ylDiv (YlNum n1) (YlInt n2) = YlNum $ n1 / fromIntegral n2
 ylDiv (YlNum n1) (YlNum n2) = YlNum $ n1 / n2
 ylDiv _           _         = error "Cannot divide non-numbers"
 
+ylRem :: Var -> Var -> Var
+ylRem (YlInt n1) (YlInt n2) = YlInt $ n1 `mod` n2
+ylRem (YlNum n1) (YlNum n2) = YlNum $ n1 `mod'` n2
+ylRem (YlInt n1) (YlNum n2) = ylRem (YlNum (fromIntegral n1)) $ YlNum n2
+ylRem (YlNum n1) (YlInt n2) = ylRem (YlNum n1) $ YlNum (fromIntegral n2)
 
 data Context = Context { var :: Var
                        , io :: IO ()
@@ -120,6 +126,7 @@ globalScope = Scope {
         , ("-",     YlFunc minusOp)
         , ("*",     YlFunc multiplyOp)
         , ("/",     YlFunc divideOp)
+        , ("%",     YlFunc moduloOp)
         , ("if",    YlFunc ifFn)
         , ("loop",  YlFunc loopFn)
         ]
@@ -264,6 +271,7 @@ plusOp     = dummyCtx . (binOp ylPlus)
 minusOp    = dummyCtx . (binOp ylMinus)
 multiplyOp = dummyCtx . (binOp ylMul)
 divideOp   = dummyCtx . (binOp ylDiv)
+moduloOp   = dummyCtx . (binOp ylRem)
 
 binOp ::  (Var -> Var -> Var) -> [Var] -> Var
 binOp op (var1:[]) = var1
