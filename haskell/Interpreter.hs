@@ -330,7 +330,7 @@ loopFn :: [Var] -> Scope -> Context
 loopFn = dummyFn
 
 randFn :: [Var] -> Scope -> Context
-randFn = error "Not implemented! Who asked for andomness in haskell???"
+randFn = error "Not implemented! Who asked for randomness in haskell???"
 
 dummyFn :: [Var] -> Scope -> Context
 dummyFn _ = dummyCtx YlFalse
