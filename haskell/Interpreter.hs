@@ -129,6 +129,7 @@ globalScope = Scope {
         , ("%",     YlFunc moduloOp)
         , ("if",    YlFunc ifFn)
         , ("loop",  YlFunc loopFn)
+        , ("rand",  YlFunc randFn)
         ]
 }
 
@@ -327,6 +328,9 @@ runLoop loopAst idStr (v:next) io scope ret =
 
 loopFn :: [Var] -> Scope -> Context
 loopFn = dummyFn
+
+randFn :: [Var] -> Scope -> Context
+randFn = error "Not implemented! Who asked for andomness in haskell???"
 
 dummyFn :: [Var] -> Scope -> Context
 dummyFn _ = dummyCtx YlFalse
