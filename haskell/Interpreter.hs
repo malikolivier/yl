@@ -230,12 +230,13 @@ getArgNames (AstList (h:next)) scope =
 callFn :: [Var]     -- ^ Variable given as argument
        -> [[Char]]  -- ^ List of argument names for the function
        -> Scope     -- ^ Scope where the function was defined
-       -> Scope     -- ^ Scope in which the function was called (unused)
+       -> Scope     -- ^ Scope in which the function was called
        -> [Ast]     -- ^ Body of the function
        -> Context   -- ^ Result of the call
-callFn args argNames scope _ exps =
+callFn args argNames scope callScope exps =
     let fnScope = makeFuncScope (zip args argNames) scope in
-        evaluate (AstList exps) fnScope False
+        let Context {var=v, io=io, scope=_} = evaluate (AstList exps) fnScope False in
+            Context {var=v, io=io, scope=callScope}
 
 makeFuncScope :: [(Var, [Char])] -> Scope -> Scope
 makeFuncScope [] scope = scope
