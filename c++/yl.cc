@@ -8,8 +8,21 @@
 
 using namespace std;
 
+#define PROMPT_MAXLEN 65536
+
 int interactiveMode()
 {
+	char codeInput[PROMPT_MAXLEN];
+	Scope scope = Scope::generateGlobalScope();
+	do {
+		stringstream codeStream;
+		cout << "> ";
+		cin.getline(codeInput, PROMPT_MAXLEN);
+		codeStream << codeInput;
+		Ast program(codeStream);
+		Var ret = scope.evaluate(program, false);
+		cout << ret << endl;
+	} while (true);
 	return 0;
 }
 
