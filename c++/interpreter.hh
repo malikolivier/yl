@@ -27,6 +27,7 @@ public:
 	Var(std::string);
 	Var(Var (*)(std::vector<Var&>, Scope*));
 
+	static Var fromStringToVar(std::string);
 	int toInt() const;
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);
@@ -45,6 +46,8 @@ public:
 	Var& set(std::string, Var&);
 
 	Var evaluate(Ast&, bool = true);
+	Var evaluateVar(std::string);
+	Var evaluateList(std::vector<Ast>*, bool);
 
 	static Scope generateGlobalScope();
 };

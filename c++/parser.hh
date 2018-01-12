@@ -8,13 +8,14 @@
 
 class Ast
 {
+public:
 	enum {
 		VAR,
 		LIST
 	} type;
 	std::string var;
 	std::vector<Ast>* list;
-public:
+
 	Ast(std::stringstream& code);
 	Ast(std::string symbol);
 	Ast(std::vector<Ast>* list);

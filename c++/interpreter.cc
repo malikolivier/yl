@@ -1,5 +1,7 @@
 #include "interpreter.hh"
 
+const char* UNHANDLED_TYPE_ERROR = "Unhandled type!";
+
 Var::Var()
 {
 	type = FALSE;
@@ -23,6 +25,16 @@ Var::Var(Var (*f)(std::vector<Var&>, Scope*))
 	func = f;
 }
 
+Var Var::fromStringToVar(std::string str)
+{
+	try {
+		double n = std::stod(str);
+		return Var(n);
+	} catch (std::invalid_argument _) {
+		return Var(str);
+	}
+}
+
 int Var::toInt() const
 {
 	if (type == NUMBER) {
@@ -44,7 +56,7 @@ std::string Var::toString() const
 	case FUNCTION:
 		return "(def function (args...) do...)";
 	default:
-		throw "Unhandled type!";
+		throw UNHANDLED_TYPE_ERROR;
 	}
 }
 
@@ -86,10 +98,36 @@ Var& Scope::set(std::string name, Var& val)
 
 Var Scope::evaluate(Ast& ast, bool evaluateFunction /* = true */)
 {
-	// TODO
-	(void) ast;
-	(void) evaluateFunction;
-	return Var();
+	switch (ast.type) {
+	case Ast::VAR:
+		return Scope::evaluateVar(ast.var);
+	case Ast::LIST:
+		return Scope::evaluateList(ast.list, evaluateFunction);
+	default:
+		throw UNHANDLED_TYPE_ERROR;
+	}
+}
+
+Var Scope::evaluateVar(std::string str)
+{
+	try {
+		Var var = get(str);
+		return var;
+	} catch (std::out_of_range _) {
+		return Var::fromStringToVar(str);
+	}
+}
+
+Var Scope::evaluateList(std::vector<Ast>* ast, bool evaluateFunction)
+{
+	if (evaluateFunction && ast->size() > 0) {
+
+	}
+	Var ret = Var();
+	for (auto& expr: *ast) {
+		ret = evaluate(expr);
+	}
+	return ret;
 }
 
 Scope Scope::generateGlobalScope() {
