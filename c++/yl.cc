@@ -2,6 +2,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#include "parser.hh"
+
 using namespace std;
 
 void usage()
@@ -32,8 +35,8 @@ stringstream getCode(int argc, char** argv)
 int runProgram(int argc, char** argv)
 {
 	stringstream code = getCode(argc, argv);
-	// TODO
-	cout << code.rdbuf() << endl;
+	Ast program(code);
+	cout << program << endl;
 	return 0;
 }
 
@@ -47,5 +50,3 @@ int main(int argc, char** argv)
 	}
 	return ret;
 }
-
-
