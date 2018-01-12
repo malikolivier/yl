@@ -17,7 +17,7 @@ Var::Var(std::string s)
 	str = s;
 }
 
-Var::Var(Var (*f)(std::vector<Var*>, Scope*))
+Var::Var(Var (*f)(std::vector<Var&>, Scope*))
 {
 	type = FUNCTION;
 	func = f;
@@ -58,6 +58,30 @@ Scope::Scope(Scope* p /* = NULL */)
 {
 	parent = p;
 	std::unordered_map<std::string, Var> vars();
+}
+
+Scope Scope::extend()
+{
+	return Scope(this);
+}
+
+Var& Scope::get(std::string name)
+{
+	try {
+		return vars.at(name);
+	} catch (std::out_of_range e) {
+		if (parent) {
+			return parent->get(name);
+		} else {
+			throw e;
+		}
+	}
+}
+
+Var& Scope::set(std::string name, Var& val)
+{
+	vars.insert({name, val});
+	return val;
 }
 
 Var Scope::evaluate(Ast& ast, bool evaluateFunction /* = true */)

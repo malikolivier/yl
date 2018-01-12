@@ -20,12 +20,12 @@ public:
 	} type;
 	double num;
 	std::string str;
-	Var (*func)(std::vector<Var*>, Scope*);
+	Var (*func)(std::vector<Var&>, Scope*);
 
 	Var();
 	Var(double);
 	Var(std::string);
-	Var(Var (*)(std::vector<Var*>, Scope*));
+	Var(Var (*)(std::vector<Var&>, Scope*));
 
 	int toInt() const;
 	std::string toString() const;
@@ -40,9 +40,9 @@ public:
 
 	Scope(Scope* = NULL);
 
-	Scope extend() const;
-	Var* get(std::string) const;
-	Var* set(std::string, Var);
+	Scope extend();
+	Var& get(std::string);
+	Var& set(std::string, Var&);
 
 	Var evaluate(Ast&, bool = true);
 
