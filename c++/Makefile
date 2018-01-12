@@ -1,4 +1,5 @@
 SOURCES=$(wildcard *.cc)
+HEADERS=$(wildcard *.hh)
 OBJECTS=$(patsubst %.cc, %.o, $(SOURCES))
 EXECUTABLE=yl
 CXXFLAGS=-g -Wall -Wextra -Wpedantic
@@ -6,10 +7,10 @@ LDFLAGS=
 
 .PHONY: clean
 
-$(EXECUTABLE): $(OBJECTS)
+$(EXECUTABLE): $(OBJECTS) $(HEADERS)
 	$(CXX) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) -o $@
 
-$(OBJECTS): %.o : %.cc
+$(OBJECTS): %.o : %.cc $(HEADERS)
 	$(CXX) $< $(CXXFLAGS) $(LDFLAGS) -c -o $@
 
 clean:

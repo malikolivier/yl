@@ -12,12 +12,12 @@ class Ast
 		VAR,
 		LIST
 	} type;
-	union {
-		std::string* var;
-		std::vector<Ast>* list;
-	};
+	std::string var;
+	std::vector<Ast>* list;
 public:
-	Ast(const std::stringstream& code);
+	Ast(std::stringstream& code);
+	Ast(std::string symbol);
+	Ast(std::vector<Ast>* list);
 	~Ast();
 	friend std::ostream& operator<<(std::ostream& os, const Ast& ast);
 };
