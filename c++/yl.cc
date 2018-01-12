@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 
+#include "interpreter.hh"
 #include "parser.hh"
 
 using namespace std;
@@ -38,8 +39,8 @@ int runProgram(int argc, char** argv)
 {
 	stringstream code = getCode(argc, argv);
 	Ast program(code);
-	cout << program << endl;
-	return 0;
+	Var ret = evaluate(program);
+	return ret.toInt();
 }
 
 int main(int argc, char** argv)
