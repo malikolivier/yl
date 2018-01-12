@@ -7,11 +7,6 @@
 
 using namespace std;
 
-void usage()
-{
-	cout << "yl [-e \"Inline code\"] [file]" << endl;
-}
-
 int interactiveMode()
 {
 	return 0;
@@ -25,7 +20,14 @@ stringstream getCode(int argc, char** argv)
 	if (argc > 1 && argv[0] == CLI_FLAG_INLINE_CODE) {
 		code << argv[1];
 	} else {
-		ifstream file(argv[0]);
+		ifstream file(argv[0], ifstream::in);
+		if (!file.good()) {
+			string err;
+			err += "Could not open file '";
+			err += argv[0];
+			err += "'!";
+			throw err;
+		}
 		code << file.rdbuf();
 		file.close();
 	}
@@ -46,7 +48,12 @@ int main(int argc, char** argv)
 	if (argc < 2) {
 		ret = interactiveMode();
 	} else {
-		ret = runProgram(argc - 1, &argv[1]);
+		try {
+			ret = runProgram(argc - 1, &argv[1]);
+		} catch (string e) {
+			cout << e << endl;
+			ret = 1;
+		}
 	}
 	return ret;
 }
