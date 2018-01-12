@@ -20,17 +20,19 @@ public:
 	} type;
 	double num;
 	std::string str;
-	Var (*func)(std::vector<Var&>, Scope*);
+	Var (*func)(std::vector<Var>, Scope*);
 
 	Var();
 	Var(double);
 	Var(std::string);
-	Var(Var (*)(std::vector<Var&>, Scope*));
+	Var(Var (*)(std::vector<Var>, Scope*));
 
 	static Var fromStringToVar(std::string);
 	int toInt() const;
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);
+
+	Var call(Scope*, std::vector<Ast>& args);
 };
 
 class Scope
@@ -50,6 +52,8 @@ public:
 	Var evaluateList(std::vector<Ast>*, bool);
 
 	static Scope generateGlobalScope();
+
+	std::vector<Var> getArgs(std::vector<Ast>& args);
 };
 
 Var evaluate(Ast&);

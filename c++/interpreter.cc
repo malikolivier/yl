@@ -1,6 +1,20 @@
 #include "interpreter.hh"
 
+#include <cmath>
+
 const char* UNHANDLED_TYPE_ERROR = "Unhandled type!";
+
+namespace builtins {
+	Var printFn(std::vector<Var> args, Scope* _scope)
+	{
+		(void) _scope;
+		for (const Var& arg: args) {
+			std::cout << arg << std::endl;
+		}
+		return Var();
+	}
+}
+
 
 Var::Var()
 {
@@ -19,7 +33,7 @@ Var::Var(std::string s)
 	str = s;
 }
 
-Var::Var(Var (*f)(std::vector<Var&>, Scope*))
+Var::Var(Var (*f)(std::vector<Var>, Scope*))
 {
 	type = FUNCTION;
 	func = f;
@@ -50,7 +64,14 @@ std::string Var::toString() const
 	case FALSE:
 		return "()";
 	case NUMBER:
-		return std::to_string(num);
+		{
+			double floored = std::floor(num);
+			if (std::abs(floored - num) < 0.000001) {
+				return std::to_string((int) floored);
+			} else {
+				return std::to_string(num);
+			}
+		}
 	case STRING:
 		return str;
 	case FUNCTION:
@@ -66,10 +87,29 @@ std::ostream& operator<<(std::ostream& os, const Var& var)
 	return os;
 }
 
+Var Var::call(Scope* scope, std::vector<Ast>& args)
+{
+	std::vector<Var> fnArgs = scope->getArgs(args);
+	switch (type) {
+	case FUNCTION:
+		return func(fnArgs, scope);
+	default:
+		throw "Cannot call an uncallable object!";
+	}
+}
+
 Scope::Scope(Scope* p /* = NULL */)
 {
 	parent = p;
-	std::unordered_map<std::string, Var> vars();
+	if (p)
+		vars = std::unordered_map<std::string, Var>({});
+	else {
+		vars = std::unordered_map<std::string, Var>({
+			{
+				"print", Var(builtins::printFn)
+			}
+		});
+	}
 }
 
 Scope Scope::extend()
@@ -121,7 +161,16 @@ Var Scope::evaluateVar(std::string str)
 Var Scope::evaluateList(std::vector<Ast>* ast, bool evaluateFunction)
 {
 	if (evaluateFunction && ast->size() > 0) {
-
+		if ((*ast)[0].type == Ast::VAR) {
+			std::string identifier = (*ast)[0].var;
+			try {
+				Var var = get(identifier);
+				std::vector<Ast> args(ast->begin() + 1, ast->end());
+				return var.call(this, args);
+			} catch (std::out_of_range _) {
+				// Fall back to behaviour below
+			}
+		}
 	}
 	Var ret = Var();
 	for (auto& expr: *ast) {
@@ -131,9 +180,17 @@ Var Scope::evaluateList(std::vector<Ast>* ast, bool evaluateFunction)
 }
 
 Scope Scope::generateGlobalScope() {
-	Scope scope;
-	return scope;
+	return Scope();
 }
+
+std::vector<Var> Scope::getArgs(std::vector<Ast>& args) {
+	std::vector<Var> fnArgs;
+	for (Ast& expr: args) {
+		fnArgs.push_back(evaluate(expr));
+	}
+	return fnArgs;
+}
+
 
 Var evaluate(Ast& ast)
 {
