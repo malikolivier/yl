@@ -604,7 +604,7 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 {
 	if (evaluateFunction && ast.size() > 0) {
 		if (ast[0].type == Ast::VAR) {
-			std::string identifier = ast[0].var;
+			const std::string& identifier = ast[0].var;
 			if (identifier == "def") {
 				std::vector<Ast> args(ast.begin() + 1, ast.end());
 				return builtins::defFnCall(args, *this);
