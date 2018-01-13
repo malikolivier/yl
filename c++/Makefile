@@ -2,7 +2,7 @@ SOURCES=$(wildcard *.cc)
 HEADERS=$(wildcard *.hh)
 OBJECTS=$(patsubst %.cc, %.o, $(SOURCES))
 EXECUTABLE=yl
-CXXFLAGS=-g -Wall -Wextra -Wpedantic
+CXXFLAGS=-O3 -Wall -Wextra -Wpedantic
 LDFLAGS=
 
 .PHONY: clean
