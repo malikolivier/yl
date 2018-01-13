@@ -70,11 +70,16 @@ namespace builtins {
 		if (args.size() < 1) {
 			throw "'!' function expects 1 argument";
 		}
-		if (args[0].type == Var::FALSE) {
-			return Var(1);
-		} else {
-			return Var();
+		return Var::fromBool(args[0].type == Var::FALSE);
+	}
+
+	Var eqOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'=' function expects 2 argument";
 		}
+		return Var::fromBool(args[0] == args[1]);
 	}
 }
 
@@ -99,6 +104,15 @@ Var::Var(std::function<Var (std::vector<Var>&, ScopeContainer)> f)
 {
 	type = FUNCTION;
 	func = f;
+}
+
+Var Var::fromBool(bool b)
+{
+	if (b) {
+		return Var(1);
+	} else {
+		return Var();
+	}
 }
 
 Var Var::fromStringToVar(std::string str)
@@ -149,6 +163,33 @@ std::ostream& operator<<(std::ostream& os, const Var& var)
 	return os;
 }
 
+bool operator==(const Var& var1, const Var& var2)
+{
+	switch (var1.type) {
+	case Var::FALSE:
+		return var2.type == Var::FALSE;
+	case Var::NUMBER:
+		if (var2.type == Var::NUMBER)
+			return std::abs(var1.num - var2.num) < 0.000001;
+		else
+			return false;
+	case Var::STRING:
+		if (var2.type == Var::STRING)
+			return var1.str == var2.str;
+		else
+			return false;
+	case Var::FUNCTION:
+		if (var2.type == Var::FUNCTION) {
+			Var (*const* funcPtr1)(std::vector<Var>&, ScopeContainer) = var1.func.target<Var(*)(std::vector<Var>&, ScopeContainer)>();
+			Var (*const* funcPtr2)(std::vector<Var>&, ScopeContainer) = var2.func.target<Var(*)(std::vector<Var>&, ScopeContainer)>();
+			return funcPtr1 == funcPtr2;
+		} else
+			return false;
+	default:
+		return UNHANDLED_TYPE_ERROR;
+	}
+}
+
 Var Var::call(ScopeContainer scope, std::vector<Ast>& args)
 {
 	std::vector<Var> fnArgs = scope.getArgs(args);
@@ -166,6 +207,7 @@ Scope::Scope()
 		{ "print",  Var(builtins::printFn) },
 		{ "def",    Var(builtins::defFn) },
 		{ "!",      Var(builtins::notOp) },
+		{ "=",      Var(builtins::eqOp) }
 	});
 }
 

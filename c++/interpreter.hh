@@ -30,10 +30,12 @@ public:
 	Var(std::string);
 	Var(std::function<Var (std::vector<Var>&, ScopeContainer)>);
 
+	static Var fromBool(bool);
 	static Var fromStringToVar(std::string);
 	int toInt() const;
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);
+	friend bool operator==(const Var&, const Var&);
 
 	Var call(ScopeContainer, std::vector<Ast>& args);
 };
