@@ -31,7 +31,7 @@ public:
 	Var(std::function<Var (std::vector<Var>&, ScopeContainer)>);
 
 	static Var fromBool(bool);
-	static Var fromStringToVar(std::string);
+	static Var fromString(std::string);
 	int toInt() const;
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);

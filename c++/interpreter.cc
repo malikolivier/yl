@@ -115,7 +115,7 @@ Var Var::fromBool(bool b)
 	}
 }
 
-Var Var::fromStringToVar(std::string str)
+Var Var::fromString(std::string str)
 {
 	try {
 		double n = std::stod(str);
@@ -267,7 +267,7 @@ Var ScopeContainer::evaluateVar(const std::string& str)
 		Var var = (*scopePtr).get(str);
 		return var;
 	} catch (std::out_of_range _) {
-		return Var::fromStringToVar(str);
+		return Var::fromString(str);
 	}
 }
 
