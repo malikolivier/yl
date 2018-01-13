@@ -8,7 +8,7 @@ const char* UNHANDLED_TYPE_ERROR = "Unhandled type!";
 std::vector<Var> ARGS;
 
 namespace builtins {
-	Var printFn(std::vector<Var>& args, ScopeContainer _scope)
+	Var printFn(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		for (const Var& arg: args) {
@@ -17,7 +17,7 @@ namespace builtins {
 		return Var();
 	}
 
-	Var letFn(std::vector<Var>& args, ScopeContainer scope)
+	Var letFn(std::vector<Var>& args, ScopeContainer& scope)
 	{
 		if (args.size() < 1) {
 			throw "'let' function should be used as: '(let name val)'";
@@ -31,14 +31,14 @@ namespace builtins {
 		return rhs;
 	}
 
-	Var defFn(std::vector<Var>& args, ScopeContainer _scope)
+	Var defFn(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) args;
 		(void) _scope;
 		return Var();
 	}
 
-	std::vector<std::string> getArgNames(const Ast& args, ScopeContainer scope)
+	std::vector<std::string> getArgNames(const Ast& args, ScopeContainer& scope)
 	{
 		std::vector<std::string> argNames;
 		if (args.type == Ast::VAR) {
@@ -53,7 +53,7 @@ namespace builtins {
 		return argNames;
 	}
 
-	Var defFnCall(const std::vector<Ast>& args, ScopeContainer scope)
+	Var defFnCall(const std::vector<Ast>& args, ScopeContainer& scope)
 	{
 		if (args.size() < 2) {
 			throw "Function should be used as: '(def name (args...) do...)'";
@@ -62,7 +62,7 @@ namespace builtins {
 		std::vector<std::string> argNames = getArgNames(args[1], scope);
 		std::vector<Ast> expr(args.begin() + 2, args.end());
 		Ast ast(expr);
-		Var func([argNames, scope, ast](std::vector<Var>& fnArgs, ScopeContainer callScope) -> Var {
+		Var func([argNames, scope, ast](std::vector<Var>& fnArgs, ScopeContainer& callScope) -> Var {
 			(void) callScope;
 			ScopeContainer fnScope = scope.extend();
 			unsigned int i = 0;
@@ -80,7 +80,7 @@ namespace builtins {
 		return func;
 	}
 
-	Var notOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var notOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 1) {
@@ -89,7 +89,7 @@ namespace builtins {
 		return Var::fromBool(args[0].type == Var::FALSE);
 	}
 
-	Var eqOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var eqOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -98,7 +98,7 @@ namespace builtins {
 		return Var::fromBool(args[0] == args[1]);
 	}
 
-	Var gtOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var gtOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -107,7 +107,7 @@ namespace builtins {
 		return Var::fromBool(args[0] > args[1]);
 	}
 
-	Var geOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var geOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -116,7 +116,7 @@ namespace builtins {
 		return Var::fromBool(args[0] >= args[1]);
 	}
 
-	Var ltOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var ltOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -125,7 +125,7 @@ namespace builtins {
 		return Var::fromBool(args[0] < args[1]);
 	}
 
-	Var leOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var leOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -134,7 +134,7 @@ namespace builtins {
 		return Var::fromBool(args[0] <= args[1]);
 	}
 
-	Var plusOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var plusOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 1) {
@@ -148,7 +148,7 @@ namespace builtins {
 		return var;
 	}
 
-	Var minusOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var minusOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -157,7 +157,7 @@ namespace builtins {
 		return args[0] - args[1];
 	}
 
-	Var multiplyOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var multiplyOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -166,7 +166,7 @@ namespace builtins {
 		return args[0] * args[1];
 	}
 
-	Var divideOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var divideOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -175,7 +175,7 @@ namespace builtins {
 		return args[0] / args[1];
 	}
 
-	Var moduloOp(std::vector<Var>& args, ScopeContainer _scope)
+	Var moduloOp(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 2) {
@@ -184,14 +184,14 @@ namespace builtins {
 		return args[0] % args[1];
 	}
 
-	Var ifFn(std::vector<Var>& args, ScopeContainer _scope)
+	Var ifFn(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) args;
 		(void) _scope;
 		return Var();
 	}
 
-	Var ifFnCall(const std::vector<Ast>& args, ScopeContainer scope)
+	Var ifFnCall(const std::vector<Ast>& args, ScopeContainer& scope)
 	{
 		if (args.size() < 2) {
 			throw "'if' function should be used as: '(if cond (then) (else))'";
@@ -207,14 +207,14 @@ namespace builtins {
 		}
 	}
 
-	Var loopFn(std::vector<Var>& args, ScopeContainer _scope)
+	Var loopFn(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) args;
 		(void) _scope;
 		return Var();
 	}
 
-	std::vector<Var> getLoopList(const Ast& ast, ScopeContainer scope)
+	std::vector<Var> getLoopList(const Ast& ast, ScopeContainer& scope)
 	{
 		std::vector<Var> list;
 		switch (ast.type) {
@@ -247,7 +247,7 @@ namespace builtins {
 		return list;
 	}
 
-	Var loopFnCall(const std::vector<Ast>& args, ScopeContainer scope)
+	Var loopFnCall(const std::vector<Ast>& args, ScopeContainer& scope)
 	{
 		if (args.size() < 3) {
 			throw "'loop' function should be used as: '(loop id (list...) (do...))'";
@@ -263,7 +263,7 @@ namespace builtins {
 		return ret;
 	}
 
-	Var argvFn(std::vector<Var>& args, ScopeContainer _scope)
+	Var argvFn(std::vector<Var>& args, ScopeContainer& _scope)
 	{
 		(void) _scope;
 		if (args.size() < 1) {
@@ -278,7 +278,7 @@ namespace builtins {
 
 	bool rngSeeded = false;
 
-	Var randFn(std::vector<Var>& _args, ScopeContainer _scope)
+	Var randFn(std::vector<Var>& _args, ScopeContainer& _scope)
 	{
 		(void) _args;
 		(void) _scope;
@@ -308,7 +308,7 @@ Var::Var(std::string s)
 	str = s;
 }
 
-Var::Var(std::function<Var (std::vector<Var>&, ScopeContainer)> f)
+Var::Var(std::function<Var (std::vector<Var>&, ScopeContainer&)> f)
 {
 	type = FUNCTION;
 	func = f;
@@ -397,8 +397,8 @@ bool operator==(const Var& var1, const Var& var2)
 			return false;
 	case Var::FUNCTION:
 		if (var2.type == Var::FUNCTION) {
-			Var (*const* funcPtr1)(std::vector<Var>&, ScopeContainer) = var1.func.target<Var(*)(std::vector<Var>&, ScopeContainer)>();
-			Var (*const* funcPtr2)(std::vector<Var>&, ScopeContainer) = var2.func.target<Var(*)(std::vector<Var>&, ScopeContainer)>();
+			Var (*const* funcPtr1)(std::vector<Var>&, ScopeContainer&) = var1.func.target<Var(*)(std::vector<Var>&, ScopeContainer&)>();
+			Var (*const* funcPtr2)(std::vector<Var>&, ScopeContainer&) = var2.func.target<Var(*)(std::vector<Var>&, ScopeContainer&)>();
 			return funcPtr1 == funcPtr2;
 		} else
 			return false;
@@ -505,7 +505,7 @@ Var operator%(const Var& var1, const Var& var2)
 	}
 }
 
-Var Var::call(ScopeContainer scope, std::vector<Ast>& args)
+Var Var::call(ScopeContainer& scope, std::vector<Ast>& args)
 {
 	std::vector<Var> fnArgs = scope.getArgs(args);
 	switch (type) {

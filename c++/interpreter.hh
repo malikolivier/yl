@@ -23,12 +23,12 @@ public:
 	} type;
 	double num;
 	std::string str;
-	std::function<Var (std::vector<Var>&, ScopeContainer)> func;
+	std::function<Var (std::vector<Var>&, ScopeContainer&)> func;
 
 	Var();
 	Var(double);
 	Var(std::string);
-	Var(std::function<Var (std::vector<Var>&, ScopeContainer)>);
+	Var(std::function<Var (std::vector<Var>&, ScopeContainer&)>);
 
 	static Var fromBool(bool);
 	static Var fromString(std::string);
@@ -47,7 +47,7 @@ public:
 	friend Var operator/(const Var&, const Var&);
 	friend Var operator%(const Var&, const Var&);
 
-	Var call(ScopeContainer, std::vector<Ast>& args);
+	Var call(ScopeContainer&, std::vector<Ast>& args);
 };
 
 class Scope
