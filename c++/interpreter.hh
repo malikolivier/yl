@@ -47,7 +47,7 @@ public:
 	friend Var operator/(const Var&, const Var&);
 	friend Var operator%(const Var&, const Var&);
 
-	Var call(ScopeContainer&, std::vector<Ast>& args);
+	Var call(ScopeContainer&, const std::vector<Ast>& args);
 };
 
 class Scope

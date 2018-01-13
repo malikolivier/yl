@@ -55,12 +55,12 @@ namespace builtins {
 
 	Var defFnCall(const std::vector<Ast>& args, ScopeContainer& scope)
 	{
-		if (args.size() < 2) {
+		if (args.size() < 3) {
 			throw "Function should be used as: '(def name (args...) do...)'";
 		}
-		std::string identifier = scope.evaluate(args[0]).toString();
-		std::vector<std::string> argNames = getArgNames(args[1], scope);
-		std::vector<Ast> expr(args.begin() + 2, args.end());
+		std::string identifier = scope.evaluate(args[1]).toString();
+		std::vector<std::string> argNames = getArgNames(args[2], scope);
+		std::vector<Ast> expr(args.begin() + 3, args.end());
 		Ast ast(expr);
 		Var func([argNames, scope, ast](std::vector<Var>& fnArgs, ScopeContainer& callScope) -> Var {
 			(void) callScope;
@@ -193,17 +193,17 @@ namespace builtins {
 
 	Var ifFnCall(const std::vector<Ast>& args, ScopeContainer& scope)
 	{
-		if (args.size() < 2) {
+		if (args.size() < 3) {
 			throw "'if' function should be used as: '(if cond (then) (else))'";
 		}
-		Var cond = scope.evaluate(args[0]);
+		Var cond = scope.evaluate(args[1]);
 		if (cond.type == Var::FALSE) {
-			if (args.size() > 2)
-				return scope.evaluate(args[2]);
+			if (args.size() > 3)
+				return scope.evaluate(args[3]);
 			else
 				return Var();
 		} else {
-			return scope.evaluate(args[1]);
+			return scope.evaluate(args[2]);
 		}
 	}
 
@@ -249,16 +249,16 @@ namespace builtins {
 
 	Var loopFnCall(const std::vector<Ast>& args, ScopeContainer& scope)
 	{
-		if (args.size() < 3) {
+		if (args.size() < 4) {
 			throw "'loop' function should be used as: '(loop id (list...) (do...))'";
 		}
-		std::string identifier = scope.evaluate(args[0]).toString();
-		std::vector<Var> varList = getLoopList(args[1], scope);
+		std::string identifier = scope.evaluate(args[1]).toString();
+		std::vector<Var> varList = getLoopList(args[2], scope);
 		Var ret;
 		for (Var& var: varList) {
 			ScopeContainer loopScope = scope.extend();
 			loopScope.scopePtr->set(identifier, var);
-			ret = loopScope.evaluate(args[2], false);
+			ret = loopScope.evaluate(args[3], false);
 		}
 		return ret;
 	}
@@ -505,7 +505,7 @@ Var operator%(const Var& var1, const Var& var2)
 	}
 }
 
-Var Var::call(ScopeContainer& scope, std::vector<Ast>& args)
+Var Var::call(ScopeContainer& scope, const std::vector<Ast>& args)
 {
 	std::vector<Var> fnArgs = scope.getArgs(args);
 	switch (type) {
@@ -606,21 +606,17 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 		if (ast[0].type == Ast::VAR) {
 			const std::string& identifier = ast[0].var;
 			if (identifier == "def") {
-				std::vector<Ast> args(ast.begin() + 1, ast.end());
-				return builtins::defFnCall(args, *this);
+				return builtins::defFnCall(ast, *this);
 			}
 			if (identifier == "if") {
-				std::vector<Ast> args(ast.begin() + 1, ast.end());
-				return builtins::ifFnCall(args, *this);
+				return builtins::ifFnCall(ast, *this);
 			}
 			if (identifier == "loop") {
-				std::vector<Ast> args(ast.begin() + 1, ast.end());
-				return builtins::loopFnCall(args, *this);
+				return builtins::loopFnCall(ast, *this);
 			}
 			try {
 				Var var = scopePtr->get(identifier);
-				std::vector<Ast> args(ast.begin() + 1, ast.end());
-				return var.call(*this, args);
+				return var.call(*this, ast);
 			} catch (std::out_of_range _) {
 				// Fall back to behaviour below
 			}
@@ -635,8 +631,8 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 
 std::vector<Var> ScopeContainer::getArgs(const std::vector<Ast>& args) {
 	std::vector<Var> fnArgs;
-	for (const Ast& expr: args) {
-		fnArgs.push_back(evaluate(expr));
+	for (std::vector<Ast>::size_type i = 1; i < args.size() ; i++) {
+		fnArgs.push_back(evaluate(args[i]));
 	}
 	return fnArgs;
 }
