@@ -283,9 +283,9 @@ Scope::Scope()
 		{ "!",      Var(builtins::notOp) },
 		{ "=",      Var(builtins::eqOp) },
 		{ ">",      Var(builtins::gtOp) },
-		{ ">=",      Var(builtins::geOp) },
+		{ ">=",     Var(builtins::geOp) },
 		{ "<",      Var(builtins::ltOp) },
-		{ "<=",      Var(builtins::leOp) }
+		{ "<=",     Var(builtins::leOp) },
 	});
 }
 
