@@ -21,14 +21,14 @@ namespace builtins {
 		return Var();
 	}
 
-	std::vector<std::string> getArgNames(Ast& args, Scope* scope)
+	std::vector<std::string> getArgNames(const Ast& args, Scope* scope)
 	{
 		std::vector<std::string> argNames;
 		if (args.type == Ast::VAR) {
 			Var res = scope->evaluateVar(args.var);
 			argNames.push_back(res.toString());
 		} else {
-			for (Ast& arg: args.list) {
+			for (const Ast& arg: args.list) {
 				Var res = scope->evaluate(arg);
 				argNames.push_back(res.toString());
 			}
@@ -36,7 +36,7 @@ namespace builtins {
 		return argNames;
 	}
 
-	Var defFnCall(std::vector<Ast>& args, Scope* scope)
+	Var defFnCall(const std::vector<Ast>& args, Scope* scope)
 	{
 		if (args.size() < 2) {
 			throw "Function should be used as: '(def name (args...) do...)'";
@@ -183,7 +183,7 @@ void Scope::set(std::string name, Var val)
 	vars.insert({name, val});
 }
 
-Var Scope::evaluate(Ast& ast, bool evaluateFunction /* = true */)
+Var Scope::evaluate(const Ast& ast, bool evaluateFunction /* = true */)
 {
 	switch (ast.type) {
 	case Ast::VAR:
@@ -195,7 +195,7 @@ Var Scope::evaluate(Ast& ast, bool evaluateFunction /* = true */)
 	}
 }
 
-Var Scope::evaluateVar(std::string str)
+Var Scope::evaluateVar(const std::string& str)
 {
 	try {
 		Var var = get(str);
@@ -205,7 +205,7 @@ Var Scope::evaluateVar(std::string str)
 	}
 }
 
-Var Scope::evaluateList(std::vector<Ast>& ast, bool evaluateFunction)
+Var Scope::evaluateList(const std::vector<Ast>& ast, bool evaluateFunction)
 {
 	if (evaluateFunction && ast.size() > 0) {
 		if (ast[0].type == Ast::VAR) {
@@ -234,16 +234,16 @@ Scope Scope::generateGlobalScope() {
 	return Scope();
 }
 
-std::vector<Var> Scope::getArgs(std::vector<Ast>& args) {
+std::vector<Var> Scope::getArgs(const std::vector<Ast>& args) {
 	std::vector<Var> fnArgs;
-	for (Ast& expr: args) {
+	for (const Ast& expr: args) {
 		fnArgs.push_back(evaluate(expr));
 	}
 	return fnArgs;
 }
 
 
-Var evaluate(Ast& ast)
+Var evaluate(const Ast& ast)
 {
 	return Scope::generateGlobalScope().evaluate(ast);
 }

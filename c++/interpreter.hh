@@ -48,15 +48,15 @@ public:
 	Var& get(std::string);
 	void set(std::string, Var);
 
-	Var evaluate(Ast&, bool = true);
-	Var evaluateVar(std::string);
-	Var evaluateList(std::vector<Ast>&, bool);
+	Var evaluate(const Ast&, bool = true);
+	Var evaluateVar(const std::string&);
+	Var evaluateList(const std::vector<Ast>&, bool);
 
 	static Scope generateGlobalScope();
 
-	std::vector<Var> getArgs(std::vector<Ast>& args);
+	std::vector<Var> getArgs(const std::vector<Ast>& args);
 };
 
-Var evaluate(Ast&);
+Var evaluate(const Ast&);
 
 #endif
