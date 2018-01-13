@@ -131,6 +131,42 @@ namespace builtins {
 		}
 		return var;
 	}
+
+	Var minusOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'-' function expects 2 argument";
+		}
+		return args[0] - args[1];
+	}
+
+	Var multiplyOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'*' function expects 2 argument";
+		}
+		return args[0] * args[1];
+	}
+
+	Var divideOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'/' function expects 2 argument";
+		}
+		return args[0] / args[1];
+	}
+
+	Var moduloOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'%' function expects 2 argument";
+		}
+		return args[0] % args[1];
+	}
 }
 
 Var::Var()
@@ -302,6 +338,41 @@ Var operator+(const Var& var1, const Var& var2)
 	throw "Cannot only add number or strings";
 }
 
+Var operator-(const Var& var1, const Var& var2)
+{
+	if (var1.type == Var::NUMBER && var2.type == Var::NUMBER) {
+		return Var(var1.num - var2.num);
+	} else {
+		throw "Cannot substract non-numerals";
+	}
+}
+
+Var operator*(const Var& var1, const Var& var2)
+{
+	if (var1.type == Var::NUMBER && var2.type == Var::NUMBER) {
+		return Var(var1.num * var2.num);
+	} else {
+		throw "Cannot multiply non-numerals";
+	}
+}
+
+Var operator/(const Var& var1, const Var& var2)
+{
+	if (var1.type == Var::NUMBER && var2.type == Var::NUMBER) {
+		return Var(var1.num / var2.num);
+	} else {
+		throw "Cannot divide non-numerals";
+	}
+}
+
+Var operator%(const Var& var1, const Var& var2)
+{
+	if (var1.type == Var::NUMBER && var2.type == Var::NUMBER) {
+		return Var(std::fmod(var1.num, var2.num));
+	} else {
+		throw "Cannot take the remainder on non-numerals";
+	}
+}
 
 Var Var::call(ScopeContainer scope, std::vector<Ast>& args)
 {
@@ -325,7 +396,11 @@ Scope::Scope()
 		{ ">=",     Var(builtins::geOp) },
 		{ "<",      Var(builtins::ltOp) },
 		{ "<=",     Var(builtins::leOp) },
-		{ "+",      Var(builtins::plusOp) }
+		{ "+",      Var(builtins::plusOp) },
+		{ "-",      Var(builtins::minusOp) },
+		{ "*",      Var(builtins::multiplyOp) },
+		{ "/",      Var(builtins::divideOp) },
+		{ "%",      Var(builtins::moduloOp) },
 	});
 }
 
