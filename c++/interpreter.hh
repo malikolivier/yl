@@ -59,7 +59,7 @@ public:
 	Scope();
 	Scope(std::shared_ptr<Scope>);
 
-	Var& get(const std::string&);
+	Var* get(const std::string&);
 	void set(std::string, Var);
 };
 

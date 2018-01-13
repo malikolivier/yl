@@ -545,16 +545,15 @@ Scope::Scope(std::shared_ptr<Scope> p)
 	parent = p;
 }
 
-Var& Scope::get(const std::string& name)
+Var* Scope::get(const std::string& name)
 {
-	try {
-		return vars.at(name);
-	} catch (std::out_of_range e) {
-		if (parent) {
-			return parent->get(name);
-		} else {
-			throw e;
-		}
+	auto found = vars.find(name);
+	if (found != vars.end()) {
+		return &found->second;
+	} else if (parent) {
+		return parent->get(name);
+	} else {
+		return nullptr;
 	}
 }
 
@@ -592,12 +591,11 @@ Var ScopeContainer::evaluate(const Ast& ast, bool evaluateFunction /* = true */)
 
 Var ScopeContainer::evaluateVar(const std::string& str)
 {
-	try {
-		Var var = (*scopePtr).get(str);
-		return var;
-	} catch (std::out_of_range _) {
+	Var* var = scopePtr->get(str);
+	if (var)
+		return *var;
+	else
 		return Var::fromString(str);
-	}
 }
 
 Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunction)
@@ -614,12 +612,9 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 			if (identifier == "loop") {
 				return builtins::loopFnCall(ast, *this);
 			}
-			try {
-				Var var = scopePtr->get(identifier);
-				return var.call(*this, ast);
-			} catch (std::out_of_range _) {
-				// Fall back to behaviour below
-			}
+			Var* var = scopePtr->get(identifier);
+			if (var)
+				return var->call(*this, ast);
 		}
 	}
 	Var ret;
