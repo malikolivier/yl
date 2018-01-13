@@ -626,7 +626,7 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 			}
 		}
 	}
-	Var ret = Var();
+	Var ret;
 	for (auto& expr: ast) {
 		ret = evaluate(expr);
 	}
