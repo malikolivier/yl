@@ -1,6 +1,7 @@
 #ifndef INTERPRETER_HH
 #define INTERPRETER_HH
 
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -20,12 +21,12 @@ public:
 	} type;
 	double num;
 	std::string str;
-	Var (*func)(std::vector<Var>, Scope*);
+	std::function<Var (std::vector<Var>&, Scope*)> func;
 
 	Var();
 	Var(double);
 	Var(std::string);
-	Var(Var (*)(std::vector<Var>, Scope*));
+	Var(std::function<Var (std::vector<Var>&, Scope*)>);
 
 	static Var fromStringToVar(std::string);
 	int toInt() const;
@@ -45,7 +46,7 @@ public:
 
 	Scope extend();
 	Var& get(std::string);
-	Var& set(std::string, Var&);
+	void set(std::string, Var);
 
 	Var evaluate(Ast&, bool = true);
 	Var evaluateVar(std::string);
