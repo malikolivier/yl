@@ -1,6 +1,7 @@
 #include "interpreter.hh"
 
 #include <cmath>
+#include <ctime>
 
 const char* UNHANDLED_TYPE_ERROR = "Unhandled type!";
 
@@ -274,6 +275,20 @@ namespace builtins {
 		else
 			return Var();
 	}
+
+	bool rngSeeded = false;
+
+	Var randFn(std::vector<Var>& _args, ScopeContainer _scope)
+	{
+		(void) _args;
+		(void) _scope;
+		if (!rngSeeded) {
+			std::srand(std::time(nullptr));
+			rngSeeded = true;
+		}
+		double n = std::rand();
+		return Var(n / (double) RAND_MAX);
+	}
 }
 
 Var::Var()
@@ -521,6 +536,7 @@ Scope::Scope()
 		{ "if",     Var(builtins::ifFn) },
 		{ "loop",   Var(builtins::loopFn) },
 		{ "argv",   Var(builtins::argvFn) },
+		{ "rand",   Var(builtins::randFn) },
 	});
 }
 
