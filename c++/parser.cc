@@ -5,7 +5,7 @@ Ast::Ast(std::string symbol) {
 	var = symbol;
 }
 
-Ast::Ast(std::vector<Ast>* list_) {
+Ast::Ast(std::vector<Ast> list_) {
 	type = LIST;
 	list = list_;
 }
@@ -162,17 +162,17 @@ public:
 		input = new InputStream(code);
 	}
 
-	std::vector<Ast>* toAst()
+	std::vector<Ast> toAst()
 	{
-		std::vector<Ast>* ast = new std::vector<Ast>();
+		std::vector<Ast> ast;
 		Token* tok = next();
 		while (tok != NULL && tok->type != Token::Close) {
 			if (tok->type == Token::Symbol) {
-				Ast* val = new Ast(tok->symbol);
-				ast->push_back(*val);
+				Ast val(tok->symbol);
+				ast.push_back(val);
 			} else if (tok->type == Token::Open) {
-				Ast* val = new Ast(toAst());
-				ast->push_back(*val);
+				Ast list(toAst());
+				ast.push_back(list);
 			}
 			tok = next();
 		}
@@ -181,7 +181,7 @@ public:
 };
 
 
-std::vector<Ast>* parseCode(std::stringstream& code)
+std::vector<Ast> parseCode(std::stringstream& code)
 {
 	TokenStream tokenStream(&code);
 	return tokenStream.toAst();
@@ -194,20 +194,13 @@ Ast::Ast(std::stringstream& code)
 	list = parseCode(code);
 }
 
-Ast::~Ast()
-{
-	if (type == LIST) {
-		delete list;
-	}
-}
-
 std::ostream& operator<<(std::ostream& os, const Ast& ast)
 {
 	if (ast.type == Ast::VAR) {
 		os << '"' << ast.var << "\" ";
 	} else {
 		os << " (";
-		for (auto const& value: *ast.list) {
+		for (auto const& value: ast.list) {
 			os << value;
 		}
 		os << ") ";

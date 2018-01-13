@@ -50,7 +50,7 @@ public:
 
 	Var evaluate(Ast&, bool = true);
 	Var evaluateVar(std::string);
-	Var evaluateList(std::vector<Ast>*, bool);
+	Var evaluateList(std::vector<Ast>&, bool);
 
 	static Scope generateGlobalScope();
 

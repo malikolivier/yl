@@ -28,7 +28,7 @@ namespace builtins {
 			Var res = scope->evaluateVar(args.var);
 			argNames.push_back(res.toString());
 		} else {
-			for (Ast& arg: *args.list) {
+			for (Ast& arg: args.list) {
 				Var res = scope->evaluate(arg);
 				argNames.push_back(res.toString());
 			}
@@ -44,7 +44,7 @@ namespace builtins {
 		std::string identifier = scope->evaluate(args[0]).toString();
 		std::vector<std::string> argNames = getArgNames(args[1], scope);
 		std::vector<Ast> expr(args.begin() + 2, args.end());
-		Ast ast(&expr);
+		Ast ast(expr);
 		Var func([argNames, scope, ast](std::vector<Var>& fnArgs, Scope* callScope) -> Var {
 			(void) callScope;
 			Scope fnScope = scope->extend();
@@ -57,8 +57,8 @@ namespace builtins {
 				}
 				i++;
 			}
-			Ast ast_ = ast;
-			return fnScope.evaluate(ast_);
+			Ast astCopy = ast;
+			return fnScope.evaluate(astCopy);
 		});
 		scope->set(identifier, func);
 		return func;
@@ -205,18 +205,18 @@ Var Scope::evaluateVar(std::string str)
 	}
 }
 
-Var Scope::evaluateList(std::vector<Ast>* ast, bool evaluateFunction)
+Var Scope::evaluateList(std::vector<Ast>& ast, bool evaluateFunction)
 {
-	if (evaluateFunction && ast->size() > 0) {
-		if ((*ast)[0].type == Ast::VAR) {
-			std::string identifier = (*ast)[0].var;
+	if (evaluateFunction && ast.size() > 0) {
+		if (ast[0].type == Ast::VAR) {
+			std::string identifier = ast[0].var;
 			if (identifier == "def") {
-				std::vector<Ast> args(ast->begin() + 1, ast->end());
+				std::vector<Ast> args(ast.begin() + 1, ast.end());
 				return builtins::defFnCall(args, this);
 			}
 			try {
 				Var var = get(identifier);
-				std::vector<Ast> args(ast->begin() + 1, ast->end());
+				std::vector<Ast> args(ast.begin() + 1, ast.end());
 				return var.call(this, args);
 			} catch (std::out_of_range _) {
 				// Fall back to behaviour below
@@ -224,7 +224,7 @@ Var Scope::evaluateList(std::vector<Ast>* ast, bool evaluateFunction)
 		}
 	}
 	Var ret = Var();
-	for (auto& expr: *ast) {
+	for (auto& expr: ast) {
 		ret = evaluate(expr);
 	}
 	return ret;
