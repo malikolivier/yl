@@ -117,6 +117,20 @@ namespace builtins {
 		}
 		return Var::fromBool(args[0] <= args[1]);
 	}
+
+	Var plusOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 1) {
+			throw "'+' function expects at least one argument";
+		}
+		Var var = args[0];
+		std::vector<Var> nextArgs(args.begin() + 1, args.end());
+		for (const Var& arg: nextArgs) {
+			var = var + arg;
+		}
+		return var;
+	}
 }
 
 Var::Var()
@@ -263,6 +277,31 @@ bool operator>=(const Var& var1, const Var& var2)
 	return var1 > var2 || var1 == var2;
 }
 
+Var operator+(const Var& var1, const Var& var2)
+{
+	switch (var1.type) {
+	case Var::NUMBER:
+		if (var2.type == Var::NUMBER) {
+			return Var(var1.num + var2.num);
+		} else if (var2.type == Var::STRING) {
+			Var var1s(var1.toString());
+			return Var(var1s.str + var2.str);
+		}
+		break;
+	case Var::STRING:
+		if (var2.type == Var::NUMBER) {
+			Var var2s(var2.toString());
+			return Var(var1.str + var2s.str);
+		} else if (var2.type == Var::STRING) {
+			return Var(var1.str + var2.str);
+		}
+		break;
+	default:
+		{} // Fall through
+	}
+	throw "Cannot only add number or strings";
+}
+
 
 Var Var::call(ScopeContainer scope, std::vector<Ast>& args)
 {
@@ -286,6 +325,7 @@ Scope::Scope()
 		{ ">=",     Var(builtins::geOp) },
 		{ "<",      Var(builtins::ltOp) },
 		{ "<=",     Var(builtins::leOp) },
+		{ "+",      Var(builtins::plusOp) }
 	});
 }
 
