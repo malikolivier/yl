@@ -180,6 +180,29 @@ namespace builtins {
 		}
 		return args[0] % args[1];
 	}
+
+	Var ifFn(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) args;
+		(void) _scope;
+		return Var();
+	}
+
+	Var ifFnCall(const std::vector<Ast>& args, ScopeContainer scope)
+	{
+		if (args.size() < 2) {
+			throw "'if' function should be used as: '(if cond (then) (else))'";
+		}
+		Var cond = scope.evaluate(args[0]);
+		if (cond.type == Var::FALSE) {
+			if (args.size() > 2)
+				return scope.evaluate(args[2]);
+			else
+				return Var();
+		} else {
+			return scope.evaluate(args[1]);
+		}
+	}
 }
 
 Var::Var()
@@ -415,6 +438,7 @@ Scope::Scope()
 		{ "*",      Var(builtins::multiplyOp) },
 		{ "/",      Var(builtins::divideOp) },
 		{ "%",      Var(builtins::moduloOp) },
+		{ "if",     Var(builtins::ifFn) },
 	});
 }
 
@@ -486,6 +510,10 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 			if (identifier == "def") {
 				std::vector<Ast> args(ast.begin() + 1, ast.end());
 				return builtins::defFnCall(args, *this);
+			}
+			if (identifier == "if") {
+				std::vector<Ast> args(ast.begin() + 1, ast.end());
+				return builtins::ifFnCall(args, *this);
 			}
 			try {
 				Var var = scopePtr->get(identifier);
