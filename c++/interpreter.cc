@@ -63,6 +63,19 @@ namespace builtins {
 		(*(scope.scopePtr)).set(identifier, func);
 		return func;
 	}
+
+	Var notOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 1) {
+			throw "'!' function expects 1 argument";
+		}
+		if (args[0].type == Var::FALSE) {
+			return Var(1);
+		} else {
+			return Var();
+		}
+	}
 }
 
 Var::Var()
@@ -151,7 +164,8 @@ Scope::Scope()
 {
 	vars = std::unordered_map<std::string, Var>({
 		{ "print",  Var(builtins::printFn) },
-		{ "def",    Var(builtins::defFn) }
+		{ "def",    Var(builtins::defFn) },
+		{ "!",      Var(builtins::notOp) },
 	});
 }
 
