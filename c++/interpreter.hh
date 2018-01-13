@@ -2,6 +2,7 @@
 #define INTERPRETER_HH
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -9,6 +10,7 @@
 #include "parser.hh"
 
 class Scope;
+class ScopeContainer;
 
 class Var
 {
@@ -21,38 +23,46 @@ public:
 	} type;
 	double num;
 	std::string str;
-	std::function<Var (std::vector<Var>&, Scope*)> func;
+	std::function<Var (std::vector<Var>&, ScopeContainer)> func;
 
 	Var();
 	Var(double);
 	Var(std::string);
-	Var(std::function<Var (std::vector<Var>&, Scope*)>);
+	Var(std::function<Var (std::vector<Var>&, ScopeContainer)>);
 
 	static Var fromStringToVar(std::string);
 	int toInt() const;
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);
 
-	Var call(Scope*, std::vector<Ast>& args);
+	Var call(ScopeContainer, std::vector<Ast>& args);
 };
 
 class Scope
 {
 public:
-	Scope* parent;
+	std::shared_ptr<Scope> parent;
 	std::unordered_map<std::string, Var> vars;
 
-	Scope(Scope* = NULL);
+	Scope();
+	Scope(std::shared_ptr<Scope>);
 
-	Scope extend();
 	Var& get(const std::string&);
 	void set(std::string, Var);
+};
+
+class ScopeContainer
+{
+public:
+	std::shared_ptr<Scope> scopePtr;
+
+	ScopeContainer();
+	ScopeContainer(std::shared_ptr<Scope>);
+	ScopeContainer extend() const;
 
 	Var evaluate(const Ast&, bool = true);
 	Var evaluateVar(const std::string&);
 	Var evaluateList(const std::vector<Ast>&, bool);
-
-	static Scope generateGlobalScope();
 
 	std::vector<Var> getArgs(const std::vector<Ast>& args);
 };

@@ -5,7 +5,7 @@
 const char* UNHANDLED_TYPE_ERROR = "Unhandled type!";
 
 namespace builtins {
-	Var printFn(std::vector<Var>& args, Scope* _scope)
+	Var printFn(std::vector<Var>& args, ScopeContainer _scope)
 	{
 		(void) _scope;
 		for (const Var& arg: args) {
@@ -14,53 +14,53 @@ namespace builtins {
 		return Var();
 	}
 
-	Var defFn(std::vector<Var>& args, Scope* _scope)
+	Var defFn(std::vector<Var>& args, ScopeContainer _scope)
 	{
 		(void) args;
 		(void) _scope;
 		return Var();
 	}
 
-	std::vector<std::string> getArgNames(const Ast& args, Scope* scope)
+	std::vector<std::string> getArgNames(const Ast& args, ScopeContainer scope)
 	{
 		std::vector<std::string> argNames;
 		if (args.type == Ast::VAR) {
-			Var res = scope->evaluateVar(args.var);
+			Var res = scope.evaluateVar(args.var);
 			argNames.push_back(res.toString());
 		} else {
 			for (const Ast& arg: args.list) {
-				Var res = scope->evaluate(arg);
+				Var res = scope.evaluate(arg);
 				argNames.push_back(res.toString());
 			}
 		}
 		return argNames;
 	}
 
-	Var defFnCall(const std::vector<Ast>& args, Scope* scope)
+	Var defFnCall(const std::vector<Ast>& args, ScopeContainer scope)
 	{
 		if (args.size() < 2) {
 			throw "Function should be used as: '(def name (args...) do...)'";
 		}
-		std::string identifier = scope->evaluate(args[0]).toString();
+		std::string identifier = scope.evaluate(args[0]).toString();
 		std::vector<std::string> argNames = getArgNames(args[1], scope);
 		std::vector<Ast> expr(args.begin() + 2, args.end());
 		Ast ast(expr);
-		Var func([argNames, scope, ast](std::vector<Var>& fnArgs, Scope* callScope) -> Var {
+		Var func([argNames, scope, ast](std::vector<Var>& fnArgs, ScopeContainer callScope) -> Var {
 			(void) callScope;
-			Scope fnScope = scope->extend();
+			ScopeContainer fnScope = scope.extend();
 			unsigned int i = 0;
 			for (std::string name: argNames) {
 				if (i < fnArgs.size()) {
-					fnScope.set(name, fnArgs[i]);
+					fnScope.scopePtr->set(name, fnArgs[i]);
 				} else {
-					fnScope.set(name, Var());
+					fnScope.scopePtr->set(name, Var());
 				}
 				i++;
 			}
 			Ast astCopy = ast;
 			return fnScope.evaluate(astCopy);
 		});
-		scope->set(identifier, func);
+		(*(scope.scopePtr)).set(identifier, func);
 		return func;
 	}
 }
@@ -82,7 +82,7 @@ Var::Var(std::string s)
 	str = s;
 }
 
-Var::Var(std::function<Var (std::vector<Var>&, Scope*)> f)
+Var::Var(std::function<Var (std::vector<Var>&, ScopeContainer)> f)
 {
 	type = FUNCTION;
 	func = f;
@@ -136,9 +136,9 @@ std::ostream& operator<<(std::ostream& os, const Var& var)
 	return os;
 }
 
-Var Var::call(Scope* scope, std::vector<Ast>& args)
+Var Var::call(ScopeContainer scope, std::vector<Ast>& args)
 {
-	std::vector<Var> fnArgs = scope->getArgs(args);
+	std::vector<Var> fnArgs = scope.getArgs(args);
 	switch (type) {
 	case FUNCTION:
 		return func(fnArgs, scope);
@@ -147,22 +147,17 @@ Var Var::call(Scope* scope, std::vector<Ast>& args)
 	}
 }
 
-Scope::Scope(Scope* p /* = NULL */)
+Scope::Scope()
 {
-	parent = p;
-	if (p)
-		vars = std::unordered_map<std::string, Var>({});
-	else {
-		vars = std::unordered_map<std::string, Var>({
-			{ "print",  Var(builtins::printFn) },
-			{ "def",    Var(builtins::defFn) }
-		});
-	}
+	vars = std::unordered_map<std::string, Var>({
+		{ "print",  Var(builtins::printFn) },
+		{ "def",    Var(builtins::defFn) }
+	});
 }
 
-Scope Scope::extend()
+Scope::Scope(std::shared_ptr<Scope> p)
 {
-	return Scope(this);
+	parent = p;
 }
 
 Var& Scope::get(const std::string& name)
@@ -183,41 +178,56 @@ void Scope::set(std::string name, Var val)
 	vars.insert({name, val});
 }
 
-Var Scope::evaluate(const Ast& ast, bool evaluateFunction /* = true */)
+ScopeContainer::ScopeContainer() : scopePtr(new Scope)
+{
+}
+
+ScopeContainer::ScopeContainer(std::shared_ptr<Scope> ptr)
+{
+	scopePtr = ptr;
+}
+
+ScopeContainer ScopeContainer::extend() const
+{
+	std::shared_ptr<Scope> ptr(new Scope(scopePtr));
+	return ScopeContainer(ptr);
+}
+
+Var ScopeContainer::evaluate(const Ast& ast, bool evaluateFunction /* = true */)
 {
 	switch (ast.type) {
 	case Ast::VAR:
-		return Scope::evaluateVar(ast.var);
+		return evaluateVar(ast.var);
 	case Ast::LIST:
-		return Scope::evaluateList(ast.list, evaluateFunction);
+		return evaluateList(ast.list, evaluateFunction);
 	default:
 		throw UNHANDLED_TYPE_ERROR;
 	}
 }
 
-Var Scope::evaluateVar(const std::string& str)
+Var ScopeContainer::evaluateVar(const std::string& str)
 {
 	try {
-		Var var = get(str);
+		Var var = (*scopePtr).get(str);
 		return var;
 	} catch (std::out_of_range _) {
 		return Var::fromStringToVar(str);
 	}
 }
 
-Var Scope::evaluateList(const std::vector<Ast>& ast, bool evaluateFunction)
+Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunction)
 {
 	if (evaluateFunction && ast.size() > 0) {
 		if (ast[0].type == Ast::VAR) {
 			std::string identifier = ast[0].var;
 			if (identifier == "def") {
 				std::vector<Ast> args(ast.begin() + 1, ast.end());
-				return builtins::defFnCall(args, this);
+				return builtins::defFnCall(args, *this);
 			}
 			try {
-				Var var = get(identifier);
+				Var var = scopePtr->get(identifier);
 				std::vector<Ast> args(ast.begin() + 1, ast.end());
-				return var.call(this, args);
+				return var.call(*this, args);
 			} catch (std::out_of_range _) {
 				// Fall back to behaviour below
 			}
@@ -230,11 +240,7 @@ Var Scope::evaluateList(const std::vector<Ast>& ast, bool evaluateFunction)
 	return ret;
 }
 
-Scope Scope::generateGlobalScope() {
-	return Scope();
-}
-
-std::vector<Var> Scope::getArgs(const std::vector<Ast>& args) {
+std::vector<Var> ScopeContainer::getArgs(const std::vector<Ast>& args) {
 	std::vector<Var> fnArgs;
 	for (const Ast& expr: args) {
 		fnArgs.push_back(evaluate(expr));
@@ -245,5 +251,5 @@ std::vector<Var> Scope::getArgs(const std::vector<Ast>& args) {
 
 Var evaluate(const Ast& ast)
 {
-	return Scope::generateGlobalScope().evaluate(ast);
+	return ScopeContainer().evaluate(ast);
 }

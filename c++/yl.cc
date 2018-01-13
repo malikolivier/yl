@@ -11,7 +11,7 @@ using namespace std;
 int interactiveMode()
 {
 	string codeInput;
-	Scope scope = Scope::generateGlobalScope();
+	ScopeContainer scope;
 	do {
 		stringstream codeStream;
 		cout << "> ";
