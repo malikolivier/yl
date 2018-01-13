@@ -14,6 +14,20 @@ namespace builtins {
 		return Var();
 	}
 
+	Var letFn(std::vector<Var>& args, ScopeContainer scope)
+	{
+		if (args.size() < 1) {
+			throw "'let' function should be used as: '(let name val)'";
+		}
+		std::string identifier = args[0].toString();
+		Var rhs = Var();
+		if (args.size() > 1) {
+			rhs = args[1];
+		}
+		scope.scopePtr->set(identifier, rhs);
+		return rhs;
+	}
+
 	Var defFn(std::vector<Var>& args, ScopeContainer _scope)
 	{
 		(void) args;
@@ -389,6 +403,7 @@ Scope::Scope()
 {
 	vars = std::unordered_map<std::string, Var>({
 		{ "print",  Var(builtins::printFn) },
+		{ "let",    Var(builtins::letFn) },
 		{ "def",    Var(builtins::defFn) },
 		{ "!",      Var(builtins::notOp) },
 		{ "=",      Var(builtins::eqOp) },
