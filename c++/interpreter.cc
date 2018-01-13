@@ -4,6 +4,8 @@
 
 const char* UNHANDLED_TYPE_ERROR = "Unhandled type!";
 
+std::vector<Var> ARGS;
+
 namespace builtins {
 	Var printFn(std::vector<Var>& args, ScopeContainer _scope)
 	{
@@ -259,6 +261,19 @@ namespace builtins {
 		}
 		return ret;
 	}
+
+	Var argvFn(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 1) {
+			throw "'argv' function expects one argument";
+		}
+		unsigned int n = args[0].toInt();
+		if (n < ARGS.size())
+			return ARGS[n];
+		else
+			return Var();
+	}
 }
 
 Var::Var()
@@ -505,6 +520,7 @@ Scope::Scope()
 		{ "%",      Var(builtins::moduloOp) },
 		{ "if",     Var(builtins::ifFn) },
 		{ "loop",   Var(builtins::loopFn) },
+		{ "argv",   Var(builtins::argvFn) },
 	});
 }
 
@@ -613,4 +629,11 @@ std::vector<Var> ScopeContainer::getArgs(const std::vector<Ast>& args) {
 Var evaluate(const Ast& ast)
 {
 	return ScopeContainer().evaluate(ast);
+}
+
+void ylSetArgv(int argc, char** argv)
+{
+	for (int i = 0; i < argc; i++) {
+		ARGS.push_back(Var::fromString(argv[i]));
+	}
 }

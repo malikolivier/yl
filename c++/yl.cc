@@ -26,11 +26,12 @@ int interactiveMode()
 
 string CLI_FLAG_INLINE_CODE("-e");
 
-stringstream getCode(int argc, char** argv)
+stringstream getCodeAndSetArgv(int argc, char** argv)
 {
 	stringstream code;
 	if (argc > 1 && argv[0] == CLI_FLAG_INLINE_CODE) {
 		code << argv[1];
+		ylSetArgv(argc - 2, &argv[2]);
 	} else {
 		ifstream file(argv[0], ifstream::in);
 		if (!file.good()) {
@@ -41,13 +42,14 @@ stringstream getCode(int argc, char** argv)
 			throw err;
 		}
 		code << file.rdbuf();
+		ylSetArgv(argc - 1, &argv[1]);
 	}
 	return code;
 }
 
 int runProgram(int argc, char** argv)
 {
-	stringstream code = getCode(argc, argv);
+	stringstream code = getCodeAndSetArgv(argc, argv);
 	Ast program(code);
 	Var ret = evaluate(program);
 	return ret.toInt();

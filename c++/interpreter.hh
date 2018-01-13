@@ -81,4 +81,6 @@ public:
 
 Var evaluate(const Ast&);
 
+void ylSetArgv(int argc, char** argv);
+
 #endif
