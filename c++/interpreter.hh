@@ -33,6 +33,7 @@ public:
 	static Var fromBool(bool);
 	static Var fromString(std::string);
 	int toInt() const;
+	double toDouble() const;
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);
 	friend bool operator==(const Var&, const Var&);

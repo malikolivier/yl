@@ -219,8 +219,23 @@ namespace builtins {
 			list.push_back(scope.evaluateVar(ast.var));
 			break;
 		case Ast::LIST:
-			for (const Ast& node: ast.list) {
-				list.push_back(scope.evaluate(node));
+			if (ast.list.size() > 1 && ast.list[0].var == "range") {
+				double min, max;
+				if (ast.list.size() > 2) {
+					min = scope.evaluate(ast.list[1]).toDouble();
+					max = scope.evaluate(ast.list[2]).toDouble();
+				} else {
+					min = 0;
+					max = scope.evaluate(ast.list[1]).toDouble();
+				}
+				while (min < max) {
+					list.push_back(Var(min));
+					min += 1;
+				}
+			} else {
+				for (const Ast& node: ast.list) {
+					list.push_back(scope.evaluate(node));
+				}
 			}
 			break;
 		default:
@@ -294,6 +309,15 @@ int Var::toInt() const
 		return num;
 	} else {
 		return 0;
+	}
+}
+
+double Var::toDouble() const
+{
+	if (type == NUMBER) {
+		return num;
+	} else {
+		throw "Cannot coerce non-number to number";
 	}
 }
 
