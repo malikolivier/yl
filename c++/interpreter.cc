@@ -203,6 +203,47 @@ namespace builtins {
 			return scope.evaluate(args[1]);
 		}
 	}
+
+	Var loopFn(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) args;
+		(void) _scope;
+		return Var();
+	}
+
+	std::vector<Var> getLoopList(const Ast& ast, ScopeContainer scope)
+	{
+		std::vector<Var> list;
+		switch (ast.type) {
+		case Ast::VAR:
+			list.push_back(scope.evaluateVar(ast.var));
+			break;
+		case Ast::LIST:
+			for (const Ast& node: ast.list) {
+				list.push_back(scope.evaluate(node));
+			}
+			break;
+		default:
+			throw UNHANDLED_TYPE_ERROR;
+		}
+		return list;
+	}
+
+	Var loopFnCall(const std::vector<Ast>& args, ScopeContainer scope)
+	{
+		if (args.size() < 3) {
+			throw "'loop' function should be used as: '(loop id (list...) (do...))'";
+		}
+		std::string identifier = scope.evaluate(args[0]).toString();
+		std::vector<Var> varList = getLoopList(args[1], scope);
+		Var ret;
+		for (Var& var: varList) {
+			ScopeContainer loopScope = scope.extend();
+			loopScope.scopePtr->set(identifier, var);
+			ret = loopScope.evaluate(args[2], false);
+		}
+		return ret;
+	}
 }
 
 Var::Var()
@@ -439,6 +480,7 @@ Scope::Scope()
 		{ "/",      Var(builtins::divideOp) },
 		{ "%",      Var(builtins::moduloOp) },
 		{ "if",     Var(builtins::ifFn) },
+		{ "loop",   Var(builtins::loopFn) },
 	});
 }
 
@@ -514,6 +556,10 @@ Var ScopeContainer::evaluateList(const std::vector<Ast>& ast, bool evaluateFunct
 			if (identifier == "if") {
 				std::vector<Ast> args(ast.begin() + 1, ast.end());
 				return builtins::ifFnCall(args, *this);
+			}
+			if (identifier == "loop") {
+				std::vector<Ast> args(ast.begin() + 1, ast.end());
+				return builtins::loopFnCall(args, *this);
 			}
 			try {
 				Var var = scopePtr->get(identifier);
