@@ -41,7 +41,6 @@ stringstream getCode(int argc, char** argv)
 			throw err;
 		}
 		code << file.rdbuf();
-		file.close();
 	}
 	return code;
 }
