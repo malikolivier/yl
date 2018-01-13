@@ -18,8 +18,12 @@ int interactiveMode()
 		getline(cin, codeInput);
 		codeStream << codeInput;
 		Ast program(codeStream);
-		Var ret = scope.evaluate(program, false);
-		cout << ret << endl;
+		try {
+			Var ret = scope.evaluate(program, false);
+			cout << ret << endl;
+		} catch (const char* e) {
+			cerr << "ERROR: " << e << endl;
+		}
 	} while (true);
 	return 0;
 }
@@ -64,7 +68,10 @@ int main(int argc, char** argv)
 		try {
 			ret = runProgram(argc - 1, &argv[1]);
 		} catch (string e) {
-			cout << e << endl;
+			cerr << "ERROR: " << e << endl;
+			ret = 1;
+		} catch (const char* e) {
+			cerr << "ERROR: " << e << endl;
 			ret = 1;
 		}
 	}
