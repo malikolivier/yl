@@ -71,8 +71,7 @@ namespace builtins {
 				}
 				i++;
 			}
-			Ast astCopy = ast;
-			return fnScope.evaluate(astCopy);
+			return fnScope.evaluate(ast, false);
 		});
 		(*(scope.scopePtr)).set(identifier, func);
 		return func;
