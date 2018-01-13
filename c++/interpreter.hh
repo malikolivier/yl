@@ -45,7 +45,7 @@ public:
 	Scope(Scope* = NULL);
 
 	Scope extend();
-	Var& get(std::string);
+	Var& get(const std::string&);
 	void set(std::string, Var);
 
 	Var evaluate(const Ast&, bool = true);

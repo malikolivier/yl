@@ -165,7 +165,7 @@ Scope Scope::extend()
 	return Scope(this);
 }
 
-Var& Scope::get(std::string name)
+Var& Scope::get(const std::string& name)
 {
 	try {
 		return vars.at(name);
