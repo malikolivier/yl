@@ -36,6 +36,10 @@ public:
 	std::string toString() const;
 	friend std::ostream& operator<<(std::ostream& os, const Var& var);
 	friend bool operator==(const Var&, const Var&);
+	friend bool operator<(const Var&, const Var&);
+	friend bool operator<=(const Var&, const Var&);
+	friend bool operator>(const Var&, const Var&);
+	friend bool operator>=(const Var&, const Var&);
 
 	Var call(ScopeContainer, std::vector<Ast>& args);
 };

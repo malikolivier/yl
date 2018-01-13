@@ -81,6 +81,42 @@ namespace builtins {
 		}
 		return Var::fromBool(args[0] == args[1]);
 	}
+
+	Var gtOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'>' function expects 2 argument";
+		}
+		return Var::fromBool(args[0] > args[1]);
+	}
+
+	Var geOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'>=' function expects 2 argument";
+		}
+		return Var::fromBool(args[0] >= args[1]);
+	}
+
+	Var ltOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'<' function expects 2 argument";
+		}
+		return Var::fromBool(args[0] < args[1]);
+	}
+
+	Var leOp(std::vector<Var>& args, ScopeContainer _scope)
+	{
+		(void) _scope;
+		if (args.size() < 2) {
+			throw "'<=' function expects 2 argument";
+		}
+		return Var::fromBool(args[0] <= args[1]);
+	}
 }
 
 Var::Var()
@@ -190,6 +226,44 @@ bool operator==(const Var& var1, const Var& var2)
 	}
 }
 
+bool operator<(const Var& var1, const Var& var2)
+{
+	switch (var1.type) {
+	case Var::FALSE:
+		return var2.type != Var::FALSE;
+	case Var::NUMBER:
+		if (var2.type == Var::NUMBER)
+			return var1.num < var2.num;
+		else
+			return var2.type != Var::FALSE;
+	case Var::STRING:
+		if (var2.type == Var::STRING)
+			return var1.str < var2.str;
+		else
+			return var2.type == Var::FUNCTION;
+	case Var::FUNCTION:
+		return var2.type != Var::FUNCTION;
+	default:
+		return UNHANDLED_TYPE_ERROR;
+	}
+}
+
+bool operator<=(const Var& var1, const Var& var2)
+{
+	return var1 < var2 || var1 == var2;
+}
+
+bool operator>(const Var& var1, const Var& var2)
+{
+	return !(var1 <= var2);
+}
+
+bool operator>=(const Var& var1, const Var& var2)
+{
+	return var1 > var2 || var1 == var2;
+}
+
+
 Var Var::call(ScopeContainer scope, std::vector<Ast>& args)
 {
 	std::vector<Var> fnArgs = scope.getArgs(args);
@@ -207,7 +281,11 @@ Scope::Scope()
 		{ "print",  Var(builtins::printFn) },
 		{ "def",    Var(builtins::defFn) },
 		{ "!",      Var(builtins::notOp) },
-		{ "=",      Var(builtins::eqOp) }
+		{ "=",      Var(builtins::eqOp) },
+		{ ">",      Var(builtins::gtOp) },
+		{ ">=",      Var(builtins::geOp) },
+		{ "<",      Var(builtins::ltOp) },
+		{ "<=",      Var(builtins::leOp) }
 	});
 }
 
