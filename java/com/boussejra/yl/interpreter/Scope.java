@@ -1,9 +1,11 @@
 package com.boussejra.yl.interpreter;
 
 import com.boussejra.yl.YlException;
+import com.boussejra.yl.interpreter.InterpreterException;
 import com.boussejra.yl.parser.Ast;
 import com.boussejra.yl.parser.AstType;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -26,6 +28,8 @@ public class Scope {
                 }
                 return Var.FALSE;
             }));
+            this.vars.put("def", new Var( args -> Var.FALSE));
+            this.vars.put("let", new Var( args -> Var.FALSE));
             this.vars.put("!", new Var( args -> {
                 if (args.size() < 1) {
                     // Seems java does not support exceptions inside lambdas
@@ -81,12 +85,12 @@ public class Scope {
         }
     }
 
-    private Var evaluateList(ArrayList<Ast> list, boolean evaluateFunction)  throws YlException {
+    private Var evaluateList(ArrayList<Ast> list, boolean evaluateFunction) throws YlException {
         if (evaluateFunction && list.size() > 0) {
             if (list.get(0).getType() == AstType.NODE) {
                 String identifier = list.get(0).getSym();
                 if (identifier.equals("def")) {
-                    // TODO
+                    return this.defFnCall(list.subList(1, list.size()));
                 }
                 if (identifier.equals("let")) {
                     // TODO
@@ -109,4 +113,49 @@ public class Scope {
         return ret;
     }
 
+    private Var defFnCall(List<Ast> list) throws InterpreterException, YlException {
+        if (list.size() < 2) {
+            throw new InterpreterException("'def' should be used as (def name (args) do something)");
+        }
+        final Scope scope = this;
+        final String identifier = this.evaluate(list.get(0)).toString();
+        final ArrayList<String> argNames = this.getArgNames(list.get(1));
+        final Ast ast = new Ast(new ArrayList<Ast>(list.subList(2, list.size())));
+        Var func = new Var( fnArgs -> {
+            Scope fnScope = scope.extend();
+            int i = 0;
+            for (String name: argNames) {
+                if (i < fnArgs.size()) {
+                    fnScope.set(name, fnArgs.get(i));
+                } else {
+                    fnScope.set(name, Var.FALSE);
+                }
+                i++;
+            }
+            try {
+                return fnScope.evaluate(ast, false);
+            } catch (YlException e) {
+                // Seems java does not support exceptions inside lambdas
+                // https://github.com/pivovarit/ThrowingFunction
+                System.err.println(e);
+                System.exit(1);
+                return Var.FALSE; // Dead code must be added to make the compiler happy
+            }
+        });
+        this.set(identifier, func);
+        return func;
+    }
+
+    private ArrayList<String> getArgNames(Ast ast) throws YlException {
+        ArrayList<String> argNames = new ArrayList<String>();
+        if (ast.getType() == AstType.NODE) {
+            argNames.add(this.evaluateVar(ast.getSym()).toString());
+        } else {
+            ArrayList<Ast> list = ast.getList();
+            for (Ast exp: list) {
+                argNames.add(this.evaluate(exp).toString());
+            }
+        }
+        return argNames;
+    }
 }
