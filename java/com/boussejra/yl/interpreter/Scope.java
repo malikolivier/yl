@@ -93,7 +93,7 @@ public class Scope {
                     return this.defFnCall(list.subList(1, list.size()));
                 }
                 if (identifier.equals("let")) {
-                    // TODO
+                    return this.letFnCall(list.subList(1, list.size()));
                 }
                 if (identifier.equals("if")) {
                     // TODO
@@ -157,5 +157,16 @@ public class Scope {
             }
         }
         return argNames;
+    }
+
+    private Var letFnCall(List<Ast> list) throws InterpreterException, YlException {
+        if (list.size() < 1) {
+            throw new InterpreterException("'let' should be used as '(let name value)'");
+        }
+        String identifier = this.evaluate(list.get(0)).toString();
+        Var rhs = list.size() > 1 ? this.evaluate(list.get(1))
+                                  : Var.FALSE;
+        this.set(identifier, rhs);
+        return rhs;
     }
 }
