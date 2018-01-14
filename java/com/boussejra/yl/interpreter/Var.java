@@ -28,6 +28,15 @@ public class Var {
         this.num = d;
     }
 
+    public Var(boolean b) {
+        if (b) {
+            this.type = VarType.NUMBER;
+            this.num = 1;
+        } else {
+            this.type = VarType.FALSE;
+        }
+    }
+
     public Var(String string) {
         this.type = VarType.STRING;
         this.str = string;
@@ -36,6 +45,10 @@ public class Var {
     public Var(Function<ArrayList<Var>, Var> func) {
         this.type = VarType.FUNCTION;
         this.func = func;
+    }
+
+    public VarType getType() {
+        return this.type;
     }
 
     public int toInt() {

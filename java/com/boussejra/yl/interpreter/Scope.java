@@ -26,6 +26,15 @@ public class Scope {
                 }
                 return Var.FALSE;
             }));
+            this.vars.put("!", new Var( args -> {
+                if (args.size() < 1) {
+                    // Seems java does not support exceptions inside lambdas
+                    // https://github.com/pivovarit/ThrowingFunction
+                    System.err.println("'!' function expects 1 argument");
+                    System.exit(1);
+                }
+                return new Var(args.get(0).getType() == VarType.FALSE);
+            }));
         }
     }
 
