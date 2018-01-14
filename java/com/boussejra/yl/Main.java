@@ -55,7 +55,7 @@ public class Main {
                 String code = reader.readLine();
                 try {
                     Program program = new Program(code, new String[0]);
-                    Var ret = scope.evaluate(program.getAst());
+                    Var ret = scope.evaluate(program.getAst(), false);
                     System.out.println(ret);
                 } catch(YlException e) {
                     System.err.println(e);

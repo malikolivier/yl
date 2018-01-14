@@ -28,7 +28,7 @@ public class Program {
     }
 
     public Var run() throws YlException {
-        return new Scope().evaluate(this.ast);
+        return new Scope().evaluate(this.ast, false);
     }
 
     @Override
