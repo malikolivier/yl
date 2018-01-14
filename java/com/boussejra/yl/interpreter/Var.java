@@ -1,8 +1,12 @@
 package com.boussejra.yl.interpreter;
 
+import com.boussejra.yl.YlException;
+import com.boussejra.yl.interpreter.InterpreterException;
 import com.boussejra.yl.interpreter.VarType;
+import com.boussejra.yl.parser.Ast;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 
@@ -54,13 +58,30 @@ public class Var {
         }
     }
 
+    public Var call(Scope scope, List<Ast> args) throws YlException {
+        ArrayList<Var> fnArgs = new ArrayList<Var>();
+        for (Ast arg: args) {
+            fnArgs.add(scope.evaluate(arg));
+        }
+        switch (this.type) {
+        case FUNCTION:
+            return this.func.apply(fnArgs);
+        default:
+            throw new InterpreterException("Cannot call uncallable object!");
+        }
+    }
+
     @Override
     public String toString() {
         switch (this.type) {
         case FALSE:
             return "()";
         case NUMBER:
-            return Double.toString(this.num);
+            double floored = Math.floor(this.num);
+            if (Math.abs(this.num - Math.floor(this.num)) < 0.000001)
+                return Integer.toString((int) floored);
+            else
+                return Double.toString(this.num);
         case STRING:
             return this.str;
         case FUNCTION:

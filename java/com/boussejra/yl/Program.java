@@ -1,7 +1,10 @@
 package com.boussejra.yl;
 
+import com.boussejra.yl.YlException;
+import com.boussejra.yl.interpreter.Scope;
 import com.boussejra.yl.interpreter.Var;
 import com.boussejra.yl.parser.Ast;
+import com.boussejra.yl.parser.AstType;
 import com.boussejra.yl.parser.ParseException;
 
 import java.util.ArrayList;
@@ -20,8 +23,12 @@ public class Program {
         }
     }
 
-    public Var run() {
-        return Var.FALSE;
+    public Ast getAst() {
+        return this.ast;
+    }
+
+    public Var run() throws YlException {
+        return new Scope().evaluate(this.ast);
     }
 
     @Override

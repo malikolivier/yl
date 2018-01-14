@@ -23,6 +23,14 @@ elif [ "$1" = "rust" ]; then
 elif [ "$1" = "haskell" ]; then
 	echo -n "Haskell	"
 	INTERPRETER="haskell/yl"
+elif [ "$1" = "java" ]; then
+	echo -n "Java	"
+	run_java () {
+		cd java
+		java com.boussejra.yl.Main "$1" "$2"
+		cd ..
+	}
+	INTERPRETER="run_java"
 else
 	# Run all languages!
 	$0 node
@@ -32,6 +40,7 @@ else
 	$0 ruby
 	$0 rust
 	$0 haskell
+	$0 java
 	exit
 fi
 

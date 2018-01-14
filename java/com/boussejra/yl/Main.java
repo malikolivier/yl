@@ -1,6 +1,8 @@
 package com.boussejra.yl;
 
 import com.boussejra.yl.Program;
+import com.boussejra.yl.YlException;
+import com.boussejra.yl.interpreter.Scope;
 import com.boussejra.yl.interpreter.Var;
 import com.boussejra.yl.parser.ParseException;
 
@@ -24,7 +26,7 @@ public class Main {
             } catch (IOException e) {
                 System.err.println(e);
                 System.exit(1);
-            } catch (ParseException e) {
+            } catch (YlException e) {
                 System.err.println(e);
                 System.exit(1);
             }
@@ -47,14 +49,15 @@ public class Main {
     private static void interactiveMode() {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            Scope scope = new Scope();
             do {
                 System.out.print("> ");
                 String code = reader.readLine();
                 try {
                     Program program = new Program(code, new String[0]);
-                    Var ret = program.run();
+                    Var ret = scope.evaluate(program.getAst());
                     System.out.println(ret);
-                } catch(ParseException e) {
+                } catch(YlException e) {
                     System.err.println(e);
                 }
             } while (true);
