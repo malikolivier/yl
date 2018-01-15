@@ -171,6 +171,9 @@ public class Scope {
                     return Var.FALSE; // Dead code for javac to compile
                 }
             }));
+            this.vars.put("rand", new Var( args -> {
+                return new Var(Math.random());
+            }));
         }
     }
 
