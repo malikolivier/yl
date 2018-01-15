@@ -27,8 +27,12 @@ public class Program {
         return this.ast;
     }
 
+    public ArrayList<Var> getArgs() {
+        return this.args;
+    }
+
     public Var run() throws YlException {
-        return new Scope().evaluate(this.ast, false);
+        return new Scope(this).evaluate(this.ast, false);
     }
 
     @Override

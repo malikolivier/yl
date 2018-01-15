@@ -1,5 +1,6 @@
 package com.boussejra.yl.interpreter;
 
+import com.boussejra.yl.Program;
 import com.boussejra.yl.YlException;
 import com.boussejra.yl.interpreter.InterpreterException;
 import com.boussejra.yl.parser.Ast;
@@ -11,17 +12,26 @@ import java.util.HashMap;
 
 
 public class Scope {
+    private Program program;
     private Scope parent;
     private HashMap<String, Var> vars;
 
     public Scope() {
-        this(null);
+        this((Scope) null);
+    }
+
+    public Scope(Program program) {
+        this();
+        this.program = program;
     }
 
     public Scope(Scope parent) {
         this.parent = parent;
         this.vars = new HashMap<String, Var>();
-        if (parent == null) {
+        if (parent != null) {
+            this.program = parent.program;
+        } else {
+            // Populate global scope
             this.vars.put("print", new Var( args -> {
                 for (Var arg: args) {
                     System.out.println(arg);
@@ -141,6 +151,25 @@ public class Scope {
                     System.exit(1);
                 }
                 return ret;
+            }));
+            this.vars.put("argv", new Var( args -> {
+                if (args.size() < 1) {
+                    System.err.println("'argv' function expects 1 argument");
+                    System.exit(1);
+                }
+                int n = args.get(0).toInt();
+                try {
+                    ArrayList<Var> ylArgs = this.getYlArgs();
+                    if (n < ylArgs.size()) {
+                        return ylArgs.get(n);
+                    } else {
+                        return Var.FALSE;
+                    }
+                } catch (InterpreterException e) {
+                    System.err.println(e);
+                    System.exit(1);
+                    return Var.FALSE; // Dead code for javac to compile
+                }
             }));
         }
     }
@@ -329,5 +358,13 @@ public class Scope {
 
         }
         return list;
+    }
+
+    private ArrayList<Var> getYlArgs() throws InterpreterException {
+        if (this.program != null) {
+            return this.program.getArgs();
+        } else {
+            throw new InterpreterException("Seems like YlArgs were not set! Are you in interactive mode?");
+        }
     }
 }
