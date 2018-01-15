@@ -127,4 +127,37 @@ public class Var {
             return false; // Unreachable... Avoid javac error
         }
     }
+
+    public boolean lt(Var var) {
+        switch (this.type) {
+        case FALSE:
+            return var.type != VarType.FALSE;
+        case NUMBER:
+            if (var.type == VarType.NUMBER)
+                return this.num < var.num;
+            else
+                return var.type != VarType.FALSE;
+        case STRING:
+            if (var.type == VarType.STRING)
+                return this.str.compareTo(var.str) < 0;
+            else
+                return var.type == VarType.FUNCTION;
+        case FUNCTION:
+            return var.type != VarType.FUNCTION;
+        default:
+            return false; // Unreachable... Avoid javac error
+        }
+    }
+
+    public boolean le(Var var) {
+        return this.lt(var) || this.equals(var);
+    }
+
+    public boolean gt(Var var) {
+        return !this.le(var);
+    }
+
+    public boolean ge(Var var) {
+        return this.gt(var) || this.equals(var);
+    }
 }

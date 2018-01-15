@@ -46,6 +46,34 @@ public class Scope {
                 }
                 return new Var(args.get(0).equals(args.get(1)));
             }));
+            this.vars.put(">", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'>' function expects 2 arguments");
+                    System.exit(1);
+                }
+                return new Var(args.get(0).gt(args.get(1)));
+            }));
+            this.vars.put(">=", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'>=' function expects 2 arguments");
+                    System.exit(1);
+                }
+                return new Var(args.get(0).ge(args.get(1)));
+            }));
+            this.vars.put("<", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'<' function expects 2 arguments");
+                    System.exit(1);
+                }
+                return new Var(args.get(0).lt(args.get(1)));
+            }));
+            this.vars.put("<=", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'<=' function expects 2 arguments");
+                    System.exit(1);
+                }
+                return new Var(args.get(0).le(args.get(1)));
+            }));
         }
     }
 
