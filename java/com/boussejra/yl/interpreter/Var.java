@@ -160,4 +160,59 @@ public class Var {
     public boolean ge(Var var) {
         return this.gt(var) || this.equals(var);
     }
+
+    public Var add(Var var) throws InterpreterException {
+        switch (this.type) {
+        case FALSE:
+            return var;
+        case NUMBER:
+            if (var.type == VarType.NUMBER) {
+                return new Var(this.num + var.num);
+            } else if (var.type == VarType.STRING) {
+                Var var1s = new Var(this.toString());
+                return new Var(var1s.str + var.str);
+            }
+            break;
+        case STRING:
+            if (var.type == VarType.NUMBER) {
+                Var var2s = new Var(var.toString());
+                return new Var(this.str + var2s.str);
+            } else if (var.type == VarType.STRING) {
+                return new Var(this.str + var.str);
+            }
+        }
+        throw new InterpreterException("Cannot only add number or strings");
+    }
+
+    public Var sub(Var var) throws InterpreterException {
+        if (this.type == VarType.NUMBER && var.type == VarType.NUMBER) {
+            return new Var(this.num - var.num);
+        } else {
+            throw new InterpreterException("Cannot substract non-numerals");
+        }
+    }
+
+    public Var time(Var var) throws InterpreterException {
+        if (this.type == VarType.NUMBER && var.type == VarType.NUMBER) {
+            return new Var(this.num * var.num);
+        } else {
+            throw new InterpreterException("Cannot multiply non-numerals");
+        }
+    }
+
+    public Var divide(Var var) throws InterpreterException {
+        if (this.type == VarType.NUMBER && var.type == VarType.NUMBER) {
+            return new Var(this.num / var.num);
+        } else {
+            throw new InterpreterException("Cannot divide non-numerals");
+        }
+    }
+
+    public Var mod(Var var) throws InterpreterException {
+        if (this.type == VarType.NUMBER && var.type == VarType.NUMBER) {
+            return new Var(this.num % var.num);
+        } else {
+            throw new InterpreterException("Cannot take the remainder on non-numerals");
+        }
+    }
 }

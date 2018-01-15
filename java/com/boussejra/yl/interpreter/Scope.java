@@ -74,6 +74,74 @@ public class Scope {
                 }
                 return new Var(args.get(0).le(args.get(1)));
             }));
+            this.vars.put("+", new Var( args -> {
+                Var ret = Var.FALSE;
+                try {
+                    for (Var arg: args) {
+                        ret = ret.add(arg);
+                    }
+                } catch (InterpreterException e) {
+                    System.err.println(e);
+                    System.exit(1);
+                }
+                return ret;
+            }));
+            this.vars.put("-", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'-' function expects 2 arguments");
+                    System.exit(1);
+                }
+                Var ret = Var.FALSE;
+                try {
+                    ret = args.get(0).sub(args.get(1));
+                } catch (InterpreterException e) {
+                    System.err.println(e);
+                    System.exit(1);
+                }
+                return ret;
+            }));
+            this.vars.put("*", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'*' function expects 2 arguments");
+                    System.exit(1);
+                }
+                Var ret = Var.FALSE;
+                try {
+                    ret = args.get(0).time(args.get(1));
+                } catch (InterpreterException e) {
+                    System.err.println(e);
+                    System.exit(1);
+                }
+                return ret;
+            }));
+            this.vars.put("/", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'/' function expects 2 arguments");
+                    System.exit(1);
+                }
+                Var ret = Var.FALSE;
+                try {
+                    ret = args.get(0).divide(args.get(1));
+                } catch (InterpreterException e) {
+                    System.err.println(e);
+                    System.exit(1);
+                }
+                return ret;
+            }));
+            this.vars.put("%", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'%' function expects 2 arguments");
+                    System.exit(1);
+                }
+                Var ret = Var.FALSE;
+                try {
+                    ret = args.get(0).mod(args.get(1));
+                } catch (InterpreterException e) {
+                    System.err.println(e);
+                    System.exit(1);
+                }
+                return ret;
+            }));
         }
     }
 
