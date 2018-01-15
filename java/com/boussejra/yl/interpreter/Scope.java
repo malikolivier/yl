@@ -199,7 +199,7 @@ public class Scope {
                     return this.letFnCall(list.subList(1, list.size()));
                 }
                 if (identifier.equals("if")) {
-                    // TODO
+                    return this.ifFnCall(list.subList(1, list.size()));
                 }
                 if (identifier.equals("loop")) {
                     // TODO
@@ -271,5 +271,19 @@ public class Scope {
                                   : Var.FALSE;
         this.set(identifier, rhs);
         return rhs;
+    }
+
+    private Var ifFnCall(List<Ast> list) throws InterpreterException, YlException {
+        if (list.size() < 2) {
+            throw new InterpreterException("'if' should be used as '(if cond then else)'");
+        }
+        Var cond = this.evaluate(list.get(0));
+        if (cond.toBool()) {
+            return this.evaluate(list.get(1));
+        } else if (list.size() > 2) {
+            return this.evaluate(list.get(2));
+        } else {
+            return Var.FALSE;
+        }
     }
 }
