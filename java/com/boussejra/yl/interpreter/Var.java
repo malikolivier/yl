@@ -59,6 +59,14 @@ public class Var {
         }
     }
 
+    public double toDouble() throws InterpreterException {
+        if (this.type == VarType.NUMBER) {
+            return this.num;
+        } else {
+            throw new InterpreterException("Cannot coerce non-number to number!");
+        }
+    }
+
     public boolean toBool() {
         return this.type != VarType.FALSE;
     }

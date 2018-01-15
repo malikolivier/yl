@@ -307,9 +307,26 @@ public class Scope {
         if (ast.getType() == AstType.NODE) {
             list.add(this.evaluateVar(ast.getSym()));
         } else {
-            for (Ast exp: ast.getList()) {
-                list.add(this.evaluate(exp));
+            ArrayList<Ast> exps = ast.getList();
+            if (exps.get(0).getSym().equals("range")) {
+                double min, max;
+                if (exps.size() < 3) {
+                    min = 0;
+                    max = this.evaluate(exps.get(1)).toDouble();
+                } else {
+                    min = this.evaluate(exps.get(1)).toDouble();
+                    max = this.evaluate(exps.get(2)).toDouble();
+                }
+                while (min < max) {
+                    list.add(new Var(min));
+                    min += 1;
+                }
+            } else {
+                for (Ast exp: exps) {
+                    list.add(this.evaluate(exp));
+                }
             }
+
         }
         return list;
     }
