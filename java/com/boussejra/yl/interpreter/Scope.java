@@ -202,7 +202,7 @@ public class Scope {
                     return this.ifFnCall(list.subList(1, list.size()));
                 }
                 if (identifier.equals("loop")) {
-                    // TODO
+                    return this.loopFnCall(list.subList(1, list.size()));
                 }
                 Var var = this.get(identifier);
                 if (var != null)
@@ -285,5 +285,32 @@ public class Scope {
         } else {
             return Var.FALSE;
         }
+    }
+
+    private Var loopFnCall(List<Ast> list) throws InterpreterException, YlException {
+        if (list.size() < 3) {
+            throw new InterpreterException("'loop' should be used as '(loop identifier (list...) (do something))'");
+        }
+        String identifier = this.evaluate(list.get(0)).toString();
+        ArrayList<Var> loopValues = this.getLoopList(list.get(1));
+        Var ret = Var.FALSE;
+        for (Var var: loopValues) {
+            Scope loopScope = this.extend();
+            loopScope.set(identifier, var);
+            ret = loopScope.evaluate(list.get(2));
+        }
+        return ret;
+    }
+
+    private ArrayList<Var> getLoopList(Ast ast) throws YlException {
+        ArrayList<Var> list = new ArrayList<Var>();
+        if (ast.getType() == AstType.NODE) {
+            list.add(this.evaluateVar(ast.getSym()));
+        } else {
+            for (Ast exp: ast.getList()) {
+                list.add(this.evaluate(exp));
+            }
+        }
+        return list;
     }
 }
