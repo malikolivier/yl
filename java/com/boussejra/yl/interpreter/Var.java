@@ -103,4 +103,28 @@ public class Var {
             return ""; // Unreachable... Avoid javac error
         }
     }
+
+    public boolean equals(Var var) {
+        switch (this.type) {
+        case FALSE:
+            return var.type == VarType.FALSE;
+        case NUMBER:
+            if (var.type == VarType.NUMBER)
+                return Math.abs(this.num - var.num) < 0.000001;
+            else
+                return false;
+        case STRING:
+            if (var.type == VarType.STRING)
+                return this.str.equals(var.str);
+            else
+                return false;
+        case FUNCTION:
+            if (var.type == VarType.FUNCTION)
+                return this.func == var.func;
+            else
+                return false;
+        default:
+            return false; // Unreachable... Avoid javac error
+        }
+    }
 }

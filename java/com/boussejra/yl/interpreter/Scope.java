@@ -39,6 +39,13 @@ public class Scope {
                 }
                 return new Var(args.get(0).getType() == VarType.FALSE);
             }));
+            this.vars.put("=", new Var( args -> {
+                if (args.size() < 2) {
+                    System.err.println("'=' function expects 2 arguments");
+                    System.exit(1);
+                }
+                return new Var(args.get(0).equals(args.get(1)));
+            }));
         }
     }
 
