@@ -368,7 +368,7 @@ func evaluateList(list []Ast, scope *Scope, evaluateFunction bool) Var {
 }
 
 func defFnCall(args []Ast, scope *Scope) Var {
-	if len(args) < 3 {
+	if len(args) < 2 {
 		panic("'def' should be used as: '(def name (args...) do...)'")
 	}
 	identifier := varToString(evaluate(args[0], scope, true))
