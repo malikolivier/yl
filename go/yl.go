@@ -33,14 +33,9 @@ func main() {
 }
 
 func run(codeBuf io.RuneReader) {
-	for {
-		r, _, err := codeBuf.ReadRune()
-		if err == io.EOF {
-			break
-		}
-		check(err)
-		fmt.Println(r, string(r))
-	}
+	ast, err := parse(codeBuf)
+	check(err)
+	fmt.Printf("%+v\n", ast)
 }
 
 func runPrompt() {
