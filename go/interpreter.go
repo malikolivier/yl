@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 )
 
@@ -119,6 +120,9 @@ func createParentScope() Scope {
 			} else {
 				return newVarFalse()
 			}
+		}},
+		"rand": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			return Var{VarNum, rand.Float64(), "", nil}
 		}}}}
 }
 
