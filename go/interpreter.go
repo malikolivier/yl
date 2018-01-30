@@ -107,7 +107,8 @@ func createParentScope() Scope {
 			}
 			return args[0].mod(args[1])
 		}},
-		"if": Var{VarFunc, 0, "", nil}}}
+		"if":   Var{VarFunc, 0, "", nil},
+		"loop": Var{VarFunc, 0, "", nil}}}
 }
 
 func scopeGet(scope *Scope, key string) (Var, bool) {
@@ -185,6 +186,14 @@ func varToString(v Var) string {
 		return "(def function (args ...) ...)"
 	default:
 		panic("Unknown v.kind")
+	}
+}
+
+func varToFloat64(v Var) float64 {
+	if v.kind == VarNum {
+		return v.num
+	} else {
+		panic("Cannot coerce non-number to number")
 	}
 }
 
@@ -352,7 +361,7 @@ func evaluateList(list []Ast, scope *Scope, evaluateFunction bool) Var {
 		case "if":
 			return ifFnCall(list[1:], scope)
 		case "loop":
-			return newVarFalse() // TODO
+			return loopFnCall(list[1:], scope)
 		default:
 			v, ok := scopeGet(scope, identifier)
 			if ok {
@@ -417,4 +426,45 @@ func ifFnCall(args []Ast, scope *Scope) Var {
 	} else {
 		return evaluate(args[1], scope, true)
 	}
+}
+
+func loopFnCall(args []Ast, scope *Scope) Var {
+	if len(args) < 3 {
+		panic("'loop' function should be used as: '(loop id (list...) (do...))'")
+	}
+	identifier := varToString(evaluate(args[0], scope, true))
+	varList := getLoopList(args[1], scope)
+	ret := newVarFalse()
+	for _, v := range varList {
+		loopScope := scopeExtend(scope)
+		scopeSet(&loopScope, identifier, v)
+		ret = evaluate(args[2], &loopScope, false)
+	}
+	return ret
+}
+
+func getLoopList(ast Ast, scope *Scope) []Var {
+	var list []Var
+	if ast.kind == AstNode {
+		list = append(list, evaluateVar(ast.node, scope))
+	} else {
+		if len(ast.list) > 1 && ast.list[0].kind == AstNode && ast.list[0].node == "range" {
+			var min, max float64
+			if len(ast.list) > 2 {
+				min = varToFloat64(evaluate(ast.list[1], scope, true))
+				max = varToFloat64(evaluate(ast.list[2], scope, true))
+			} else {
+				max = varToFloat64(evaluate(ast.list[1], scope, true))
+			}
+			for min < max {
+				list = append(list, Var{VarNum, min, "", nil})
+				min = min + 1
+			}
+		} else {
+			for _, node := range ast.list {
+				list = append(list, evaluate(node, scope, true))
+			}
+		}
+	}
+	return list
 }
