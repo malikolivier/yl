@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -36,7 +37,13 @@ func createParentScope() Scope {
 			scopeSet(scope, identifier, rhs)
 			return rhs
 		}},
-		"def": Var{VarFunc, 0, "", nil}}}
+		"def": Var{VarFunc, 0, "", nil},
+		"=": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'=' function expects 2 arguments!")
+			}
+			return varFromBool(args[0].eq(args[1]))
+		}}}}
 }
 
 func scopeGet(scope *Scope, key string) (Var, bool) {
@@ -121,6 +128,33 @@ func varCall(v Var, scope *Scope, list []Ast) Var {
 		return v.fn(args, scope)
 	} else {
 		panic("Cannot call uncallable object")
+	}
+}
+
+func (v1 *Var) eq(v2 Var) bool {
+	switch v1.kind {
+	case VarFalse:
+		return v1.kind == v2.kind
+	case VarNum:
+		if v2.kind == VarNum {
+			return math.Abs(v1.num-v2.num) < 0.000001
+		} else {
+			return false
+		}
+	case VarStr:
+		if v2.kind == VarStr {
+			return v1.str == v2.str
+		} else {
+			return false
+		}
+	case VarFunc:
+		if v2.kind == VarFunc {
+			return &v1.fn == &v2.fn
+		} else {
+			return false
+		}
+	default:
+		panic("Unknown v1.kind")
 	}
 }
 
