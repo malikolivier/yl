@@ -77,6 +77,17 @@ func createParentScope() Scope {
 				ret = ret.add(arg)
 			}
 			return ret
+		}},
+		"-": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 1 {
+				panic("'-' function expects at least 1 argument!")
+			}
+			if len(args) == 1 {
+				arg0 := Var{VarNum, 0, "", nil}
+				return arg0.sub(args[0])
+			} else {
+				return args[0].sub(args[1])
+			}
 		}}}}
 }
 
@@ -250,6 +261,14 @@ func (v1 *Var) add(v2 Var) Var {
 		}
 	}
 	panic("Can only add number or strings!")
+}
+
+func (v1 *Var) sub(v2 Var) Var {
+	if v1.kind == VarNum && v2.kind == VarNum {
+		return Var{VarNum, v1.num - v2.num, "", nil}
+	} else {
+		panic("Cannot substract non-numerals")
+	}
 }
 
 func evaluate(ast Ast, scope *Scope, evaluateFunction bool) Var {
