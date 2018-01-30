@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -16,14 +15,12 @@ func check(e error) {
 }
 
 func main() {
-	codePtr := flag.String("e", "", "inline code")
-	flag.Parse()
-	tail := flag.Args()
-	if *codePtr != "" {
-		reader := strings.NewReader(*codePtr)
+	args := os.Args[1:]
+	if len(args) >= 2 && args[0] == "-e" {
+		reader := strings.NewReader(args[1])
 		run(reader)
-	} else if len(tail) != 0 {
-		file, err := os.Open(tail[0])
+	} else if len(args) >= 1 {
+		file, err := os.Open(args[0])
 		check(err)
 		reader := bufio.NewReader(file)
 		run(reader)
