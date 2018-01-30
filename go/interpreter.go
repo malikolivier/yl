@@ -35,9 +35,9 @@ const (
 
 type Var struct {
 	kind int
-	num float64
-	str string
-	fn func([]Var, *Scope)Var
+	num  float64
+	str  string
+	fn   func([]Var, *Scope) Var
 }
 
 func newVarFalse() Var {
@@ -72,7 +72,7 @@ func varToString(v Var) string {
 }
 
 func evaluate(ast Ast, scope *Scope, evaluateFunction bool) Var {
-	switch (ast.kind) {
+	switch ast.kind {
 	case AstNode:
 		return evaluateVar(ast.node, scope)
 	case AstList:
