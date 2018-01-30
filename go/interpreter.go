@@ -106,7 +106,8 @@ func createParentScope() Scope {
 				panic("'%' function expects 2 arguments!")
 			}
 			return args[0].mod(args[1])
-		}}}}
+		}},
+		"if": Var{VarFunc, 0, "", nil}}}
 }
 
 func scopeGet(scope *Scope, key string) (Var, bool) {
@@ -349,7 +350,7 @@ func evaluateList(list []Ast, scope *Scope, evaluateFunction bool) Var {
 		case "def":
 			return defFnCall(list[1:], scope)
 		case "if":
-			return newVarFalse() // TODO
+			return ifFnCall(list[1:], scope)
 		case "loop":
 			return newVarFalse() // TODO
 		default:
@@ -400,4 +401,20 @@ func getParameterNames(args Ast, scope *Scope) []string {
 		}
 	}
 	return parameterNames
+}
+
+func ifFnCall(args []Ast, scope *Scope) Var {
+	if len(args) < 2 {
+		panic("'if' function should be used as: '(if cond (then) (else))'")
+	}
+	cond := evaluate(args[0], scope, true)
+	if cond.kind == VarFalse {
+		if len(args) > 2 {
+			return evaluate(args[2], scope, true)
+		} else {
+			return newVarFalse()
+		}
+	} else {
+		return evaluate(args[1], scope, true)
+	}
 }
