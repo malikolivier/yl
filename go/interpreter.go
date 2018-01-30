@@ -23,6 +23,18 @@ func createParentScope() Scope {
 				panic("'!' function expects 1 argument!")
 			}
 			return varFromBool(args[0].kind == VarFalse)
+		}},
+		"let": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 1 {
+				panic("'let' function should be used as '(let name val)'!")
+			}
+			identifier := varToString(args[0])
+			rhs := newVarFalse()
+			if len(args) > 1 {
+				rhs = args[1]
+			}
+			scopeSet(scope, identifier, rhs)
+			return rhs
 		}}}}
 }
 
@@ -36,6 +48,10 @@ func scopeGet(scope *Scope, key string) (Var, bool) {
 		var zeroValue Var
 		return zeroValue, false
 	}
+}
+
+func scopeSet(scope *Scope, key string, v Var) {
+	scope.vars[key] = v
 }
 
 const (
