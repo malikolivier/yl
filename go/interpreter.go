@@ -43,6 +43,30 @@ func createParentScope() Scope {
 				panic("'=' function expects 2 arguments!")
 			}
 			return varFromBool(args[0].eq(args[1]))
+		}},
+		">": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'>' function expects 2 arguments!")
+			}
+			return varFromBool(args[0].gt(args[1]))
+		}},
+		">=": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'>=' function expects 2 arguments!")
+			}
+			return varFromBool(args[0].ge(args[1]))
+		}},
+		"<": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'<' function expects 2 arguments!")
+			}
+			return varFromBool(args[0].lt(args[1]))
+		}},
+		"<=": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'<=' function expects 2 arguments!")
+			}
+			return varFromBool(args[0].le(args[1]))
 		}}}}
 }
 
@@ -156,6 +180,41 @@ func (v1 *Var) eq(v2 Var) bool {
 	default:
 		panic("Unknown v1.kind")
 	}
+}
+
+func (v1 *Var) lt(v2 Var) bool {
+	switch v1.kind {
+	case VarFalse:
+		return v2.kind != VarFalse
+	case VarNum:
+		if v2.kind == VarNum {
+			return v1.num < v2.num
+		} else {
+			return v2.kind != VarFalse
+		}
+	case VarStr:
+		if v2.kind == VarStr {
+			return v1.str < v2.str
+		} else {
+			return v2.kind == VarFunc
+		}
+	case VarFunc:
+		return v2.kind != VarFunc
+	default:
+		panic("Unknown v1.kind")
+	}
+}
+
+func (v1 *Var) le(v2 Var) bool {
+	return v1.lt(v2) || v1.eq(v2)
+}
+
+func (v1 *Var) gt(v2 Var) bool {
+	return !v1.le(v2)
+}
+
+func (v1 *Var) ge(v2 Var) bool {
+	return v1.gt(v2) || v1.eq(v2)
 }
 
 func evaluate(ast Ast, scope *Scope, evaluateFunction bool) Var {
