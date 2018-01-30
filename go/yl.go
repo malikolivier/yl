@@ -14,15 +14,19 @@ func check(e error) {
 	}
 }
 
+var ARGS []string
+
 func main() {
 	args := os.Args[1:]
 	if len(args) >= 2 && args[0] == "-e" {
 		reader := strings.NewReader(args[1])
+		ARGS = args[2:]
 		run(reader)
 	} else if len(args) >= 1 {
 		file, err := os.Open(args[0])
 		check(err)
 		reader := bufio.NewReader(file)
+		ARGS = args[1:]
 		run(reader)
 	} else {
 		runPrompt()

@@ -108,7 +108,18 @@ func createParentScope() Scope {
 			return args[0].mod(args[1])
 		}},
 		"if":   Var{VarFunc, 0, "", nil},
-		"loop": Var{VarFunc, 0, "", nil}}}
+		"loop": Var{VarFunc, 0, "", nil},
+		"argv": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 1 {
+				panic("'argv' function expects 1 argument!")
+			}
+			i := varToInt(args[0])
+			if i < len(ARGS) {
+				return newVarFromString(ARGS[i])
+			} else {
+				return newVarFalse()
+			}
+		}}}}
 }
 
 func scopeGet(scope *Scope, key string) (Var, bool) {
