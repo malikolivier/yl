@@ -67,6 +67,16 @@ func createParentScope() Scope {
 				panic("'<=' function expects 2 arguments!")
 			}
 			return varFromBool(args[0].le(args[1]))
+		}},
+		"+": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 1 {
+				panic("'+' function expects at least 1 argument!")
+			}
+			ret := args[0]
+			for _, arg := range args[1:] {
+				ret = ret.add(arg)
+			}
+			return ret
 		}}}}
 }
 
@@ -117,7 +127,12 @@ func varFromBool(b bool) Var {
 }
 
 func newVarFromString(str string) Var {
-	return Var{VarStr, 0, str, nil}
+	num, err := strconv.ParseFloat(str, 64)
+	if err == nil {
+		return Var{VarNum, num, "", nil}
+	} else {
+		return Var{VarStr, 0, str, nil}
+	}
 }
 
 func varToInt(v Var) int {
@@ -215,6 +230,26 @@ func (v1 *Var) gt(v2 Var) bool {
 
 func (v1 *Var) ge(v2 Var) bool {
 	return v1.gt(v2) || v1.eq(v2)
+}
+
+func (v1 *Var) add(v2 Var) Var {
+	switch v1.kind {
+	case VarNum:
+		if v2.kind == VarNum {
+			return Var{VarNum, v1.num + v2.num, "", nil}
+		} else if v2.kind == VarStr {
+			str := varToString(*v1)
+			return Var{VarStr, 0, str + v2.str, nil}
+		}
+	case VarStr:
+		if v2.kind == VarNum {
+			str := varToString(v2)
+			return Var{VarNum, 0, v1.str + str, nil}
+		} else if v2.kind == VarStr {
+			return Var{VarStr, 0, v1.str + v2.str, nil}
+		}
+	}
+	panic("Can only add number or strings!")
 }
 
 func evaluate(ast Ast, scope *Scope, evaluateFunction bool) Var {
