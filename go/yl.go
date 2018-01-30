@@ -35,9 +35,21 @@ func main() {
 func run(codeBuf io.RuneReader) {
 	ast, err := parse(codeBuf)
 	check(err)
-	fmt.Printf("%+v\n", ast)
+	scope := createParentScope()
+	ret := evaluate(ast, &scope, false)
+	os.Exit(varToInt(ret))
 }
 
 func runPrompt() {
-	fmt.Println("> ")
+	scope := createParentScope()
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("> ")
+		code, err := reader.ReadString('\n')
+		check(err)
+		ast, err := parse(strings.NewReader(code))
+		check(err)
+		ret := evaluate(ast, &scope, false)
+		fmt.Println(varToString(ret))
+	}
 }
