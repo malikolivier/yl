@@ -31,6 +31,9 @@ elif [ "$1" = "java" ]; then
 		cd ..
 	}
 	INTERPRETER="run_java"
+elif [ "$1" = "go" ]; then
+	echo -n "Go	"
+	INTERPRETER="go/go"
 else
 	# Run all languages!
 	$0 node
@@ -41,6 +44,7 @@ else
 	$0 rust
 	$0 haskell
 	$0 java
+	$0 go
 	exit
 fi
 
