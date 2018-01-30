@@ -35,7 +35,8 @@ func createParentScope() Scope {
 			}
 			scopeSet(scope, identifier, rhs)
 			return rhs
-		}}}}
+		}},
+		"def": Var{VarFunc, 0, "", nil}}}
 }
 
 func scopeGet(scope *Scope, key string) (Var, bool) {
@@ -52,6 +53,10 @@ func scopeGet(scope *Scope, key string) (Var, bool) {
 
 func scopeSet(scope *Scope, key string, v Var) {
 	scope.vars[key] = v
+}
+
+func scopeExtend(scope *Scope) Scope {
+	return Scope{scope, map[string]Var{}}
 }
 
 const (
@@ -144,7 +149,7 @@ func evaluateList(list []Ast, scope *Scope, evaluateFunction bool) Var {
 		identifier := list[0].node
 		switch identifier {
 		case "def":
-			return newVarFalse() // TODO
+			return defFnCall(list[1:], scope)
 		case "if":
 			return newVarFalse() // TODO
 		case "loop":
@@ -161,4 +166,40 @@ func evaluateList(list []Ast, scope *Scope, evaluateFunction bool) Var {
 		ret = evaluate(exp, scope, true)
 	}
 	return ret
+}
+
+func defFnCall(args []Ast, scope *Scope) Var {
+	if len(args) < 3 {
+		panic("'def' should be used as: '(def name (args...) do...)'")
+	}
+	identifier := varToString(evaluate(args[0], scope, true))
+	parameterNames := getParameterNames(args[1], scope)
+	ast := Ast{AstList, "", args[2:]}
+	rhs := Var{VarFunc, 0, "", func(fnArgs []Var, callScope *Scope) Var {
+		fnScope := scopeExtend(scope)
+		for i, name := range parameterNames {
+			if i < len(fnArgs) {
+				scopeSet(&fnScope, name, fnArgs[i])
+			} else {
+				scopeSet(&fnScope, name, newVarFalse())
+			}
+		}
+		return evaluate(ast, &fnScope, false)
+	}}
+	scopeSet(scope, identifier, rhs)
+	return rhs
+}
+
+func getParameterNames(args Ast, scope *Scope) []string {
+	var parameterNames []string
+	if args.kind == AstNode {
+		res := evaluateVar(args.node, scope)
+		parameterNames = append(parameterNames, varToString(res))
+	} else {
+		for _, arg := range args.list {
+			res := evaluate(arg, scope, true)
+			parameterNames = append(parameterNames, varToString(res))
+		}
+	}
+	return parameterNames
 }
