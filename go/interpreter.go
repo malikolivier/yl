@@ -88,6 +88,24 @@ func createParentScope() Scope {
 			} else {
 				return args[0].sub(args[1])
 			}
+		}},
+		"*": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'*' function expects 2 arguments!")
+			}
+			return args[0].mul(args[1])
+		}},
+		"/": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'/' function expects 2 arguments!")
+			}
+			return args[0].div(args[1])
+		}},
+		"%": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 2 {
+				panic("'%' function expects 2 arguments!")
+			}
+			return args[0].mod(args[1])
 		}}}}
 }
 
@@ -268,6 +286,39 @@ func (v1 *Var) sub(v2 Var) Var {
 		return Var{VarNum, v1.num - v2.num, "", nil}
 	} else {
 		panic("Cannot substract non-numerals")
+	}
+}
+
+func (v1 *Var) mul(v2 Var) Var {
+	if v1.kind == VarNum && v2.kind == VarNum {
+		return Var{VarNum, v1.num * v2.num, "", nil}
+	} else {
+		panic("Cannot multiply non-numerals")
+	}
+}
+
+func (v1 *Var) div(v2 Var) Var {
+	if v1.kind == VarNum && v2.kind == VarNum {
+		return Var{VarNum, v1.num / v2.num, "", nil}
+	} else {
+		panic("Cannot divide non-numerals")
+	}
+}
+
+func (v1 *Var) mod(v2 Var) Var {
+	if v1.kind == VarNum && v2.kind == VarNum {
+		mod := math.Abs(v2.num)
+		ret := v1.num
+		for math.Abs(ret) >= mod || ret < 0 {
+			if v1.num < 0 {
+				ret = ret + mod
+			} else {
+				ret = ret - mod
+			}
+		}
+		return Var{VarNum, ret, "", nil}
+	} else {
+		panic("Cannot take the remainder on non-numerals")
 	}
 }
 
