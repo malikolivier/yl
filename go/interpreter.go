@@ -17,6 +17,12 @@ func createParentScope() Scope {
 				fmt.Println(varToString(arg))
 			}
 			return newVarFalse()
+		}},
+		"!": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			if len(args) < 1 {
+				panic("'!' function expects 1 argument!")
+			}
+			return varFromBool(args[0].kind == VarFalse)
 		}}}}
 }
 
@@ -48,6 +54,14 @@ type Var struct {
 
 func newVarFalse() Var {
 	return Var{VarFalse, 0, "", nil}
+}
+
+func varFromBool(b bool) Var {
+	if b {
+		return Var{VarNum, 1, "", nil}
+	} else {
+		return newVarFalse()
+	}
 }
 
 func newVarFromString(str string) Var {
