@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -10,8 +11,13 @@ type Scope struct {
 }
 
 func createParentScope() Scope {
-	var vars map[string]Var
-	return Scope{nil, vars}
+	return Scope{nil, map[string]Var{
+		"print": Var{VarFunc, 0, "", func(args []Var, scope *Scope) Var {
+			for _, arg := range args {
+				fmt.Println(varToString(arg))
+			}
+			return newVarFalse()
+		}}}}
 }
 
 func scopeGet(scope *Scope, key string) (Var, bool) {
@@ -71,6 +77,18 @@ func varToString(v Var) string {
 	}
 }
 
+func varCall(v Var, scope *Scope, list []Ast) Var {
+	var args []Var
+	for _, exp := range list {
+		args = append(args, evaluate(exp, scope, true))
+	}
+	if v.kind == VarFunc {
+		return v.fn(args, scope)
+	} else {
+		panic("Cannot call uncallable object")
+	}
+}
+
 func evaluate(ast Ast, scope *Scope, evaluateFunction bool) Var {
 	switch ast.kind {
 	case AstNode:
@@ -92,6 +110,25 @@ func evaluateVar(str string, scope *Scope) Var {
 }
 
 func evaluateList(list []Ast, scope *Scope, evaluateFunction bool) Var {
-	// TODO
-	return newVarFalse()
+	if evaluateFunction && len(list) > 0 && list[0].kind == AstNode {
+		identifier := list[0].node
+		switch identifier {
+		case "def":
+			return newVarFalse() // TODO
+		case "if":
+			return newVarFalse() // TODO
+		case "loop":
+			return newVarFalse() // TODO
+		default:
+			v, ok := scopeGet(scope, identifier)
+			if ok {
+				return varCall(v, scope, list[1:])
+			}
+		}
+	}
+	ret := newVarFalse()
+	for _, exp := range list {
+		ret = evaluate(exp, scope, true)
+	}
+	return ret
 }
