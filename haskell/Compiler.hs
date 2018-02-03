@@ -69,7 +69,7 @@ data CompileContext = CompileContext { scope            :: Scope
                                      -- Indicate whethe ylAst should be treated as a function to be evaluated
                                      , evaluateFunction :: Bool
                                      -- Indicate whether a return value is needed in the current block
-                                     , returnValue      :: Bool
+                                     -- , returnValue      :: Bool
                                      -- Count the number of variables defined.
                                      -- This is to assigned them a unique name in C
                                      , varCount         :: Int
@@ -86,8 +86,8 @@ data Scope = ScopeTopLevel [(String, String)]
 
 startContext = CompileContext { scope=ScopeTopLevel []
                               , cAst=initialCAst
-                              , evaluateFunction=True
-                              , returnValue=True
+                              , evaluateFunction=False
+                              --, returnValue=True
                               , varCount=1
                               , currentFunction=__var_main_0000
                               }
@@ -103,11 +103,24 @@ turn_to_code cAst = show cAst
 -- Update context
 ctxCompile :: CompileContext -> Ast -> CompileContext
 ctxCompile ctx (AstNode string) = compileVal ctx string
-ctxCompile ctx (AstList []) = ctxAddReturnFalse ctx
+ctxCompile ctx (AstList list) = ctxCompileList ctx list
 
 compileVal :: CompileContext -> String -> CompileContext
 compileVal ctx string =
     ctxAddReturnValue ctx $ ctxParseSymbol ctx string
+
+ctxCompileList :: CompileContext -> [Ast] -> CompileContext
+ctxCompileList ctx [] = ctxAddReturnFalse ctx
+ctxCompileList ctx list
+    | evaluateFunction ctx = ctx --TODO
+    | otherwise            = ctxCompileSimpleList ctx list
+    where
+        ctxCompileSimpleList ctx (h:[]) =
+            ctxCompile (ctx { evaluateFunction=True }) h
+        ctxCompileSimpleList ctx (h:next) =
+            let newCtx = ctxCompile (ctx { evaluateFunction=True }) h in
+                ctxCompileSimpleList newCtx next
+
 
 
 ctxAddReturnValue :: CompileContext -> Value -> CompileContext
