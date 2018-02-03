@@ -15,10 +15,6 @@ module CAst
 , CExp(..)
 , CBinOperator(..)
 , CUnaryOperator(..)
-, join_with_dot_op
-, setReturnRegValueToFalse
-, setReturnRegValue
-, cAstAddFunction
 ) where
 
 import           Data.List
@@ -255,27 +251,3 @@ instance Show CUnaryOperator where
     show CUnDeref        = "*"
     show CUnRef          = "&"
     show (CUnCast ctype) = "( " ++ show ctype ++ ")"
-
-join_with_dot_op :: [String] -> CExp
-join_with_dot_op [] = undefined
-join_with_dot_op list =
-    let rev = reverse list
-        join (h:[])   = CVariableExp h
-        join (h:next) = CBinaryExp (CBinDot, join next, CVariableExp h)
-    in
-    join rev
-
-cAstAddFunction :: CAst -> CFuncDeclaration -> CAst
-cAstAddFunction ast fn =
-    let funcs = functions ast in
-    ast { functions=(fn:funcs) }
-
-setReturnRegValueToFalse :: CFuncDeclaration -> CFuncDeclaration
-setReturnRegValueToFalse fn =
-    setReturnRegValue fn $ CBinaryExp (CBinSingleEq, CVariableExp "RET", CVariableExp "FALSE")
-
-setReturnRegValue :: CFuncDeclaration -> CExp -> CFuncDeclaration
-setReturnRegValue fn expr =
-    let procs = func_proc fn
-        new_proc = CStatementExp expr in
-    fn { func_proc=new_proc:procs}

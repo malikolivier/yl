@@ -6,39 +6,13 @@ module Compiler
 import           Text.Read
 
 import           CAst
+import           CAstHelper
 import           Parser
 
 
 
 stdlib = CInclude { lib_name="stdlib.h", builtin=True }
-enum_var_type = CEnum { enum_name="var_type", enum=["VAR_TYPE_FALSE",
-                                                    "VAR_TYPE_INT",
-                                                    "VAR_TYPE_FLOAT",
-                                                    "VAR_TYPE_STRING",
-                                                    "VAR_TYPE_FUNC"] }
-var_union = CUnion { union_name="" -- anonymous union
-                   , union_vars=[ CVarDeclaration {identifier="i", ctype=CLong}
-                                , CVarDeclaration {identifier="f", ctype=CDouble}
-                                , CVarDeclaration {identifier="str", ctype=CPointer CChar}
-                                , CVarDeclaration {identifier="fn", ctype=CVoidFunc}
-                                ]
-                   }
-var_struct = CStruct { struct_name="var"
-                     , members=[ CVarDeclaration { identifier="type"
-                                                 , ctype=CTypeEnum enum_var_type
-                                                 }
-                               , CVarDeclaration { identifier="u"
-                                                 , ctype=CTypeUnion var_union
-                                                 }
-                               ]
-                     }
 
-yl_false_initialization = StructInitialization [("type", IdentifierInitialization "VAR_TYPE_FALSE")]
-make_yl_false :: [Char] -> CVarDeclarationAndInitialization
-make_yl_false identifier = CVarDeclarationAndInitialization {
-      declaration=CVarDeclaration {identifier=identifier, ctype=CTypeStruct var_struct}
-    , initialization=yl_false_initialization
-}
 
 var_toi_fn_statements =
     [CStatementSwitch ( CBinaryExp (CBinDot, CVariableExp "obj", CVariableExp "type")
@@ -83,8 +57,8 @@ initialCAst = CAst { includes=[stdlib],
                                        ],
                      global_vars=[ CVarDeclOrInit_Decl CVarDeclaration{identifier="ARGC", ctype=CInt}
                                  , CVarDeclOrInit_Decl CVarDeclaration{identifier="ARGV", ctype=CPointer (CTypeStruct var_struct)}
-                                 , CVarDeclOrInit_DeclInit $ make_yl_false "FALSE"
-                                 , CVarDeclOrInit_DeclInit $ make_yl_false "RET"
+                                 , CVarDeclOrInit_DeclInit $ declare_yl_false "FALSE"
+                                 , CVarDeclOrInit_DeclInit $ declare_yl_false "RET"
                                  ],
                      functions = [var_toi_fn, main_fn]}
 
@@ -128,10 +102,8 @@ turn_to_code cAst = show cAst
 
 -- Update context
 ctxCompile :: CompileContext -> Ast -> CompileContext
-ctxCompile ctx (AstList []) = ctxAddReturnFalse ctx
-    -- | returnValue ctx =
-    -- | otherwise       = ctx
 ctxCompile ctx (AstNode string) = compileVal ctx string
+ctxCompile ctx (AstList []) = ctxAddReturnFalse ctx
 
 compileVal :: CompileContext -> String -> CompileContext
 compileVal ctx string =
