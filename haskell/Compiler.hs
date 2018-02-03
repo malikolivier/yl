@@ -31,12 +31,7 @@ var_toi_fn = CFuncDeclaration { func_name="var_toi"
                               , return_type=CInt
                               , func_proc=var_toi_fn_statements}
 
-__var_main_0000 =
-    CFuncDeclaration { func_name="__var_main_0000"
-                     , func_parameters=[]
-                     , return_type=CVoid
-                     , func_proc=[]
-                     }
+__var_main_0 = newFunction "main" 0
 main_fn =
     CFuncDeclaration { func_name="main"
                      , func_parameters=[ CVarDeclaration { identifier="argc"
@@ -47,7 +42,7 @@ main_fn =
                                                          }
                                        ]
                      , return_type=CInt
-                     , func_proc=[ CStatementExp $ CCallExp ("__var_main_0000", [])
+                     , func_proc=[ CStatementExp $ CCallExp ("__var_main_0", [])
                                  , CStatementReturn $ CCallExp ("var_toi", [CVariableExp "RET"])
                                  ]
                   }
@@ -96,7 +91,7 @@ startContext = CompileContext { scope=ScopeTopLevel []
                               , evaluateFunction=False
                               --, returnValue=True
                               , varCount=1
-                              , functionStack=[__var_main_0000]
+                              , functionStack=[__var_main_0]
                               , topLevel=True
                               }
 

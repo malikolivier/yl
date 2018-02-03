@@ -7,6 +7,7 @@ module CAstHelper
 , Value(..)
 , Register(..)
 , setRegValue
+, newFunction
 ) where
 
 import           CAst
@@ -137,3 +138,12 @@ setRegValue fn reg val =
     case val of
         VAR_TYPE_FALSE -> fn { func_proc=set_type_proc:procs }
         _              -> fn { func_proc=set_type_proc:set_val_proc:procs }
+
+newFunction :: String -> Integer -> CFuncDeclaration
+newFunction identifier varCount =
+    let generated_name = "__var_" ++ identifier ++ "_" ++ show varCount in
+    CFuncDeclaration { func_name=generated_name
+                     , func_parameters=[]
+                     , return_type=CVoid
+                     , func_proc=[]
+                     }
