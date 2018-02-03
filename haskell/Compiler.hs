@@ -107,11 +107,11 @@ turn_to_code cAst = show cAst
 ctxCompile :: CompileContext -> Ast -> CompileContext
 ctxCompile ctx (AstNode string) = compileVal ctx string
 ctxCompile ctx (AstList list)
-    | topLevel ctx = ctx { cAst=cAstAddFunction ast topLevelFn }
+    | topLevel ctx = newCtx { cAst=cAstAddFunction ast topLevelFn }
     | otherwise    = newCtx
         where
-            newCtx = ctxCompileList ctx list
-            ast    = cAst ctx
+            newCtx     = ctxCompileList (ctx { topLevel=False }) list
+            ast        = cAst ctx
             topLevelFn = currentFunction newCtx
 
 compileVal :: CompileContext -> String -> CompileContext
