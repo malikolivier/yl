@@ -43,13 +43,21 @@ join_with_dot_op list =
     in
     join rev
 
-yl_false_initialization = StructInitialization [("type", IdentifierInitialization "VAR_TYPE_FALSE")]
-declare_yl_false :: [Char] -> CVarDeclarationAndInitialization
-declare_yl_false identifier = CVarDeclarationAndInitialization {
-      declaration=CVarDeclaration {identifier=identifier, ctype=CTypeStruct var_struct}
-    , initialization=yl_false_initialization
-}
+declare_yl :: String -> CVarInitialization -> CVarDeclarationAndInitialization
+declare_yl identifier init_var =
+    CVarDeclarationAndInitialization {
+          declaration=CVarDeclaration {identifier=identifier, ctype=CTypeStruct var_struct}
+        , initialization=init_var
+    }
 
+declare_yl_false :: [Char] -> CVarDeclarationAndInitialization
+declare_yl_false identifier =
+    declare_yl identifier $ StructInitialization [("type", IdentifierInitialization "VAR_TYPE_FALSE")]
+
+declare_yl_int :: [Char] -> Integer -> CVarDeclarationAndInitialization
+declare_yl_int identifier i =
+    declare_yl identifier $ StructInitialization [ ("type", IdentifierInitialization "VAR_TYPE_INT")
+                                                 , ("u.i",  IntInitialization i)]
 
 cAstAddFunction :: CAst -> CFuncDeclaration -> CAst
 cAstAddFunction ast fn =
