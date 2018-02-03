@@ -111,10 +111,15 @@ declare_yl_func identifier fn =
 
 cAstAddFunction :: CAst -> CFuncDeclaration -> CAst
 cAstAddFunction ast fn =
-    let funcs = functions ast in
-    ast { functions=(fn:funcs) }
+    let funcs = functions ast
+        -- Reverse function as when building a function, new statements are
+        -- always added at the beginning of the statement list
+        rev_proc_fn = fn { func_proc=reverse $ func_proc fn } in
+    ast { functions=(rev_proc_fn:funcs) }
 
 -- Set arbitrary register to arbitrary data
+-- Functions are built by appending new statements at the beginning of the statement list!
+-- So we will need to reverse the order of statements after the function is built
 setRegValue :: CFuncDeclaration -> Register -> Value -> CFuncDeclaration
 setRegValue fn reg (VAR_TYPE_IDENTIFIER identifier) =
     let procs = func_proc fn

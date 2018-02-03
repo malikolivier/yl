@@ -75,6 +75,8 @@ data CompileContext = CompileContext { scope            :: Scope
                                      , varCount         :: Int
                                      -- Store current function before it is completed
                                      , currentFunction  :: CFuncDeclaration
+                                     -- Indicate if we are in the toplevel or not
+                                     , topLevel         :: Bool
                                      }
                                      deriving (Show)
 
@@ -90,6 +92,7 @@ startContext = CompileContext { scope=ScopeTopLevel []
                               --, returnValue=True
                               , varCount=1
                               , currentFunction=__var_main_0000
+                              , topLevel=True
                               }
 
 compile :: Ast -> CAst
@@ -103,14 +106,20 @@ turn_to_code cAst = show cAst
 -- Update context
 ctxCompile :: CompileContext -> Ast -> CompileContext
 ctxCompile ctx (AstNode string) = compileVal ctx string
-ctxCompile ctx (AstList list) = ctxCompileList ctx list
+ctxCompile ctx (AstList list)
+    | topLevel ctx = ctx { cAst=cAstAddFunction ast topLevelFn }
+    | otherwise    = newCtx
+        where
+            newCtx = ctxCompileList ctx list
+            ast    = cAst ctx
+            topLevelFn = currentFunction newCtx
 
 compileVal :: CompileContext -> String -> CompileContext
 compileVal ctx string =
-    ctxAddReturnValue ctx $ ctxParseSymbol ctx string
+    ctxSetRegister ctx RET_REGISTER $ ctxParseSymbol ctx string
 
 ctxCompileList :: CompileContext -> [Ast] -> CompileContext
-ctxCompileList ctx [] = ctxAddReturnFalse ctx
+ctxCompileList ctx [] = ctxSetRegister ctx RET_REGISTER VAR_TYPE_FALSE
 ctxCompileList ctx list
     | evaluateFunction ctx = ctx --TODO
     | otherwise            = ctxCompileSimpleList ctx list
@@ -121,19 +130,10 @@ ctxCompileList ctx list
             let newCtx = ctxCompile (ctx { evaluateFunction=True }) h in
                 ctxCompileSimpleList newCtx next
 
-
-
-ctxAddReturnValue :: CompileContext -> Value -> CompileContext
-ctxAddReturnValue ctx val =
-    let fn = setRegValue (currentFunction ctx) RET_REGISTER val
-        ast = cAst ctx in
-    ctx { cAst=cAstAddFunction ast fn}
-
-ctxAddReturnFalse :: CompileContext -> CompileContext
-ctxAddReturnFalse ctx =
-    let fn = setRegValue (currentFunction ctx) RET_REGISTER VAR_TYPE_FALSE
-        ast = cAst ctx in
-    ctx { cAst=cAstAddFunction ast fn}
+ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
+ctxSetRegister ctx reg val =
+    let fn = setRegValue (currentFunction ctx) reg val in
+    ctx { currentFunction=fn }
 
 ctxParseSymbol :: CompileContext -> String -> Value
 ctxParseSymbol ctx symbol =
