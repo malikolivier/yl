@@ -73,12 +73,16 @@ data CompileContext = CompileContext { scope            :: Scope
                                      -- Count the number of variables defined.
                                      -- This is to assigned them a unique name in C
                                      , varCount         :: Int
-                                     -- Store current function before it is completed
-                                     , currentFunction  :: CFuncDeclaration
+                                     -- Store function call stack
+                                     , functionStack    :: [CFuncDeclaration]
                                      -- Indicate if we are in the toplevel or not
                                      , topLevel         :: Bool
                                      }
                                      deriving (Show)
+
+currentFunction :: CompileContext -> CFuncDeclaration
+currentFunction ctx = head $ functionStack ctx
+
 
 data Scope = ScopeTopLevel [(String, String)]
            | ChildScope { vars   :: [(String, String)]
@@ -86,12 +90,13 @@ data Scope = ScopeTopLevel [(String, String)]
                         }
            deriving (Show)
 
+
 startContext = CompileContext { scope=ScopeTopLevel []
                               , cAst=initialCAst
                               , evaluateFunction=False
                               --, returnValue=True
                               , varCount=1
-                              , currentFunction=__var_main_0000
+                              , functionStack=[__var_main_0000]
                               , topLevel=True
                               }
 
@@ -148,7 +153,7 @@ ctxCallFunction ctx ast =
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
 ctxSetRegister ctx reg val =
     let fn = setRegValue (currentFunction ctx) reg val in
-    ctx { currentFunction=fn }
+    ctx { functionStack=fn:tail (functionStack ctx) }
 
 ctxParseSymbol :: CompileContext -> String -> Value
 ctxParseSymbol ctx symbol =
