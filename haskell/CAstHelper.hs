@@ -50,14 +50,29 @@ declare_yl identifier init_var =
         , initialization=init_var
     }
 
-declare_yl_false :: [Char] -> CVarDeclarationAndInitialization
+declare_yl_false :: String -> CVarDeclarationAndInitialization
 declare_yl_false identifier =
     declare_yl identifier $ StructInitialization [("type", IdentifierInitialization "VAR_TYPE_FALSE")]
 
-declare_yl_int :: [Char] -> Integer -> CVarDeclarationAndInitialization
+declare_yl_int :: String -> Integer -> CVarDeclarationAndInitialization
 declare_yl_int identifier i =
     declare_yl identifier $ StructInitialization [ ("type", IdentifierInitialization "VAR_TYPE_INT")
                                                  , ("u.i",  IntInitialization i)]
+
+declare_yl_float :: String -> Double -> CVarDeclarationAndInitialization
+declare_yl_float identifier f =
+    declare_yl identifier $ StructInitialization [ ("type", IdentifierInitialization "VAR_TYPE_FLOAT")
+                                                 , ("u.f",  FloatInitialization f)]
+
+declare_yl_string :: String -> String -> CVarDeclarationAndInitialization
+declare_yl_string identifier str =
+    declare_yl identifier $ StructInitialization [ ("type", IdentifierInitialization "VAR_TYPE_STRING")
+                                                 , ("u.str",  StringInitialization str)]
+
+declare_yl_func :: String -> String -> CVarDeclarationAndInitialization
+declare_yl_func identifier fn =
+    declare_yl identifier $ StructInitialization [ ("type", IdentifierInitialization "VAR_TYPE_FUNC")
+                                                 , ("u.fn",  IdentifierInitialization fn)]
 
 cAstAddFunction :: CAst -> CFuncDeclaration -> CAst
 cAstAddFunction ast fn =

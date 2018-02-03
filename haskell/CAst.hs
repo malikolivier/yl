@@ -68,8 +68,9 @@ data CVarDeclarationOrInitialization = CVarDeclOrInit_Decl CVarDeclaration
                                      | CVarDeclOrInit_DeclInit CVarDeclarationAndInitialization
 
 data CVarInitialization = IntInitialization Integer
-                        | FloatInitialization Float
+                        | FloatInitialization Double
                         | StructInitialization [([Char], CVarInitialization)]
+                        | StringInitialization String
                         | IdentifierInitialization [Char]
 
 data CFuncDeclaration = CFuncDeclaration { func_name       :: [Char]
