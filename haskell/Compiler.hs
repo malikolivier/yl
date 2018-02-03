@@ -118,7 +118,7 @@ ctxAddReturnValue ctx val =
 
 ctxAddReturnFalse :: CompileContext -> CompileContext
 ctxAddReturnFalse ctx =
-    let fn = setReturnRegValueToFalse (currentFunction ctx)
+    let fn = setRegValue (currentFunction ctx) RET_REGISTER VAR_TYPE_FALSE
         ast = cAst ctx in
     ctx { cAst=cAstAddFunction ast fn}
 

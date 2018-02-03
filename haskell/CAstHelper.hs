@@ -1,7 +1,5 @@
 module CAstHelper
 ( join_with_dot_op
-, setReturnRegValueToFalse
-, setReturnRegValue
 , cAstAddFunction
 , declare_yl_false
 , enum_var_type
@@ -116,22 +114,6 @@ cAstAddFunction ast fn =
     let funcs = functions ast in
     ast { functions=(fn:funcs) }
 
-setReturnRegValueToFalse :: CFuncDeclaration -> CFuncDeclaration
-setReturnRegValueToFalse fn =
-    setRegValueToFalse fn "RET"
-
-setReturnRegValue :: CFuncDeclaration -> CExp -> CFuncDeclaration
-setReturnRegValue fn expr =
-    let procs = func_proc fn
-        new_proc = CStatementExp (CBinaryExp (CBinSingleEq, CVariableExp "RET", expr)) in
-    fn { func_proc=new_proc:procs }
-
-setRegValueToFalse :: CFuncDeclaration -> String -> CFuncDeclaration
-setRegValueToFalse fn regName =
-    let procs = func_proc fn
-        new_proc = CStatementExp (CBinaryExp (CBinSingleEq, CVariableExp regName, CVariableExp "FALSE")) in
-    fn { func_proc=new_proc:procs }
-
 -- Set arbitrary register to arbitrary data
 setRegValue :: CFuncDeclaration -> Register -> Value -> CFuncDeclaration
 setRegValue fn reg (VAR_TYPE_IDENTIFIER identifier) =
@@ -150,16 +132,3 @@ setRegValue fn reg val =
     case val of
         VAR_TYPE_FALSE -> fn { func_proc=set_type_proc:procs }
         _              -> fn { func_proc=set_type_proc:set_val_proc:procs }
-
-
-setRegValueToInt :: CFuncDeclaration -> String -> Integer -> CFuncDeclaration
-setRegValueToInt fn regName integer =
-    let procs = func_proc fn
-        rhs_type = join_with_dot_op [regName, "type"]
-        lhs_type = CVariableExp "VAR_TYPE_INT"
-        rhs_val = join_with_dot_op [regName, "u", "i"]
-        lhs_val = CIntExp integer
-        set_type_proc = CStatementExp (CBinaryExp (CBinSingleEq, rhs_type, lhs_type))
-        set_val_proc = CStatementExp (CBinaryExp (CBinSingleEq, rhs_val, lhs_val))
-    in
-    fn { func_proc=set_type_proc:set_val_proc:procs }
