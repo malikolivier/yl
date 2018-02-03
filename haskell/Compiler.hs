@@ -121,7 +121,10 @@ compileVal ctx string =
 ctxCompileList :: CompileContext -> [Ast] -> CompileContext
 ctxCompileList ctx [] = ctxSetRegister ctx RET_REGISTER VAR_TYPE_FALSE
 ctxCompileList ctx list
-    | evaluateFunction ctx = ctx --TODO
+    | evaluateFunction ctx =
+        case (head list) of
+            AstNode _ ->     ctxCompileFunction ctx list
+            AstList _ ->     ctxCompileSimpleList ctx list
     | otherwise            = ctxCompileSimpleList ctx list
     where
         ctxCompileSimpleList ctx (h:[]) =
@@ -129,6 +132,18 @@ ctxCompileList ctx list
         ctxCompileSimpleList ctx (h:next) =
             let newCtx = ctxCompile (ctx { evaluateFunction=True }) h in
                 ctxCompileSimpleList newCtx next
+        ctxCompileFunction ctx ((AstNode identifier):next) =
+            case identifier of
+                "def" -> ctxCreateFunction ctx next
+                _     -> ctxCallFunction ctx next
+
+ctxCreateFunction :: CompileContext -> [Ast] -> CompileContext
+ctxCreateFunction ctx ast =
+    ctx -- TODO
+
+ctxCallFunction :: CompileContext -> [Ast] -> CompileContext
+ctxCallFunction ctx ast =
+    ctx -- TODO
 
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
 ctxSetRegister ctx reg val =
