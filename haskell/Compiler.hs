@@ -110,9 +110,9 @@ compileVal ctx string =
     ctxAddReturnValue ctx $ ctxParseSymbol ctx string
 
 
-ctxAddReturnValue :: CompileContext -> CExp -> CompileContext
-ctxAddReturnValue ctx expr =
-    let fn = setReturnRegValue (currentFunction ctx) expr
+ctxAddReturnValue :: CompileContext -> Value -> CompileContext
+ctxAddReturnValue ctx val =
+    let fn = setRegValue (currentFunction ctx) RET_REGISTER val
         ast = cAst ctx in
     ctx { cAst=cAstAddFunction ast fn}
 
@@ -122,20 +122,20 @@ ctxAddReturnFalse ctx =
         ast = cAst ctx in
     ctx { cAst=cAstAddFunction ast fn}
 
-ctxParseSymbol :: CompileContext -> String -> CExp
+ctxParseSymbol :: CompileContext -> String -> Value
 ctxParseSymbol ctx symbol =
     let varName = scopeGet (scope ctx) symbol in
     case varName of
         Nothing         -> parseSymbol symbol
-        Just identifier -> CVariableExp identifier
+        Just identifier -> VAR_TYPE_IDENTIFIER identifier
 
-parseSymbol :: String -> CExp
+parseSymbol :: String -> Value
 parseSymbol symbol =
     case (readMaybe symbol :: Maybe Integer) of
-        Just int -> CIntExp int
+        Just int -> VAR_TYPE_INT int
         Nothing  ->  case (readMaybe symbol :: Maybe Double) of
-            Just f  -> CFloatExp f
-            Nothing -> CStringExp symbol
+            Just f  -> VAR_TYPE_FLOAT f
+            Nothing -> VAR_TYPE_STRING symbol
 
 scopeGet :: Scope -> String -> Maybe String
 scopeGet (ScopeTopLevel vars) identifier = lookup identifier vars
