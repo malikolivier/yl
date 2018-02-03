@@ -1,6 +1,9 @@
-.PHONY: yl yl-debug
+.PHONY: yl ylc yl-debug
 
 yl:
+	ghc -O2 --make $@
+
+ylc:
 	ghc -O2 --make $@
 
 yl-debug:
