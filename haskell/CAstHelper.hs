@@ -9,7 +9,7 @@ module CAstHelper
 , setRegValue
 ) where
 
-import CAst
+import           CAst
 
 data Value = VAR_TYPE_FALSE
            | VAR_TYPE_INT Integer
@@ -23,27 +23,27 @@ data Register = RET_REGISTER
               | REGISTER_NO Integer
 
 instance Show Register where
-    show RET_REGISTER     = "RET"
+    show RET_REGISTER    = "RET"
     show (REGISTER_NO i) = "REG" ++ show i
 
 enum_exp :: Value -> CExp
-enum_exp VAR_TYPE_FALSE = CVariableExp "VAR_TYPE_FALSE"
-enum_exp (VAR_TYPE_INT _) = CVariableExp "VAR_TYPE_INT"
-enum_exp (VAR_TYPE_FLOAT _) = CVariableExp "VAR_TYPE_FLOAT"
+enum_exp VAR_TYPE_FALSE      = CVariableExp "VAR_TYPE_FALSE"
+enum_exp (VAR_TYPE_INT _)    = CVariableExp "VAR_TYPE_INT"
+enum_exp (VAR_TYPE_FLOAT _)  = CVariableExp "VAR_TYPE_FLOAT"
 enum_exp (VAR_TYPE_STRING _) = CVariableExp "VAR_TYPE_STRING"
-enum_exp (VAR_TYPE_FUNC _) = CVariableExp "VAR_TYPE_FUNC"
+enum_exp (VAR_TYPE_FUNC _)   = CVariableExp "VAR_TYPE_FUNC"
 
 val_struct_accessor :: Value -> String
-val_struct_accessor (VAR_TYPE_INT _) = "i"
-val_struct_accessor (VAR_TYPE_FLOAT _) = "f"
+val_struct_accessor (VAR_TYPE_INT _)    = "i"
+val_struct_accessor (VAR_TYPE_FLOAT _)  = "f"
 val_struct_accessor (VAR_TYPE_STRING _) = "str"
-val_struct_accessor (VAR_TYPE_FUNC _) = "fn"
+val_struct_accessor (VAR_TYPE_FUNC _)   = "fn"
 
 val_exp :: Value -> CExp
-val_exp (VAR_TYPE_INT i) = CIntExp i
-val_exp (VAR_TYPE_FLOAT f) = CFloatExp f
+val_exp (VAR_TYPE_INT i)      = CIntExp i
+val_exp (VAR_TYPE_FLOAT f)    = CFloatExp f
 val_exp (VAR_TYPE_STRING str) = CStringExp str
-val_exp (VAR_TYPE_FUNC fn) = CVariableExp fn
+val_exp (VAR_TYPE_FUNC fn)    = CVariableExp fn
 
 enum_var_type = CEnum { enum_name="var_type", enum=["VAR_TYPE_FALSE",
                                                     "VAR_TYPE_INT",
