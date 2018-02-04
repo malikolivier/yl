@@ -255,11 +255,14 @@ scopeGetCIdentifier scope identifier =
 
 scopeSet :: Scope -> String -> ValueInScope -> Scope
 scopeSet scope yl_identifier value =
-    case scope of
-        ScopeTopLevel vars ->
-            ScopeTopLevel ((yl_identifier, value):vars)
-        ChildScope { vars=vars, parent=p } ->
-            ChildScope { vars=(yl_identifier, value):vars, parent=p }
+    case (scopeGet scope yl_identifier) of
+        Just _ -> error(yl_identifier ++ " is already defined in scope!")
+        Nothing ->
+            case scope of
+                ScopeTopLevel vars ->
+                    ScopeTopLevel ((yl_identifier, value):vars)
+                ChildScope { vars=vars, parent=p } ->
+                    ChildScope { vars=(yl_identifier, value):vars, parent=p }
 
 -- Will have to change an uncallable value to callable value and vice-versa
 -- during assignment, especially when setting scope before calling a function or
