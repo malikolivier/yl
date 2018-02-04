@@ -214,8 +214,7 @@ ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
 
 -- Look in scope for called object (it should exist)
 -- Set function parameters to value of provided arguments
--- Call function
--- Set RET register to output of called function
+-- Call function (the RET register will be set inside the function)
 ctxCallFunction :: CompileContext -> String -> [Ast] -> CompileContext
 ctxCallFunction ctx identifier arguments =
     let maybeCalledValue = scopeGet (scope ctx) identifier in
@@ -224,12 +223,12 @@ ctxCallFunction ctx identifier arguments =
         Just calledValue ->
             case value_in_scope_type calledValue of
                 NotCallable     -> error("Cannot call uncallable object: " ++ identifier)
-                Callable params -> call ctx identifier params arguments
+                Callable params -> call ctx (c_identifier calledValue) params arguments
     where
         call :: CompileContext -> String -> [String] -> [Ast] -> CompileContext
-        call ctx identifier params arguments =
+        call ctx c_identifier params arguments =
             let ctx' = setParamValues ctx params arguments in
-            ctx' -- TODO
+            ctxAddFunctionCall ctx c_identifier
 
         setParamValues :: CompileContext -> [String] -> [Ast] -> CompileContext
         setParamValues ctx [] arguments = ctx
@@ -248,6 +247,11 @@ ctxSetRegister ctx reg val = ctxSetVarValue ctx (show reg) val
 ctxSetVarValue :: CompileContext -> String -> Value -> CompileContext
 ctxSetVarValue ctx c_identifier val =
     let fn = setVarValue (currentFunction ctx) c_identifier val in
+    ctx { functionStack=fn:tail (functionStack ctx) }
+
+ctxAddFunctionCall :: CompileContext -> String -> CompileContext
+ctxAddFunctionCall ctx c_identifier =
+    let fn = addCallToFunctionPointerNoArg (currentFunction ctx) c_identifier in
     ctx { functionStack=fn:tail (functionStack ctx) }
 
 ctxParseSymbol :: CompileContext -> String -> Value

@@ -12,6 +12,7 @@ module CAstHelper
 , cAstAddGlobalVar
 , mangledName
 , setVarValue
+, addCallToFunctionPointerNoArg
 ) where
 
 import           CAst
@@ -171,3 +172,10 @@ setVarValue fn lhs val =
     case val of
         VAR_TYPE_FALSE -> fn { func_proc=set_type_proc:procs }
         _              -> fn { func_proc=set_type_proc:set_val_proc:procs }
+
+addCallToFunctionPointerNoArg :: CFuncDeclaration -> String -> CFuncDeclaration
+addCallToFunctionPointerNoArg fn fn_pointer =
+    let procs = func_proc fn
+        call_fn_pointer_proc = CStatementExp (CCallExp (fn_pointer, []))
+    in
+    fn { func_proc=call_fn_pointer_proc:procs }
