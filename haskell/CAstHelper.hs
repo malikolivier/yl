@@ -11,6 +11,7 @@ module CAstHelper
 , declare_var
 , cAstAddGlobalVar
 , mangledName
+, setVarValue
 ) where
 
 import           CAst
@@ -126,25 +127,8 @@ cAstAddFunction ast fn =
     ast { functions=(rev_proc_fn:funcs) }
 
 -- Set arbitrary register to arbitrary value
--- Functions are built by appending new statements at the beginning of the statement list!
--- So we will need to reverse the order of statements after the function is built
 setRegValue :: CFuncDeclaration -> Register -> Value -> CFuncDeclaration
-setRegValue fn reg (VAR_TYPE_IDENTIFIER identifier) =
-    let procs = func_proc fn
-        new_proc = CStatementExp (CBinaryExp (CBinSingleEq, CVariableExp (show reg), CVariableExp identifier)) in
-    fn { func_proc=new_proc:procs }
-setRegValue fn reg val =
-    let procs = func_proc fn
-        rhs_type = join_with_dot_op [show reg, "type"]
-        lhs_type = enum_exp val
-        rhs_val = join_with_dot_op [show reg, "u", val_struct_accessor val]
-        lhs_val = val_exp val
-        set_type_proc = CStatementExp (CBinaryExp (CBinSingleEq, rhs_type, lhs_type))
-        set_val_proc = CStatementExp (CBinaryExp (CBinSingleEq, rhs_val, lhs_val))
-    in
-    case val of
-        VAR_TYPE_FALSE -> fn { func_proc=set_type_proc:procs }
-        _              -> fn { func_proc=set_type_proc:set_val_proc:procs }
+setRegValue fn reg val = setVarValue fn (show reg) val
 
 newFunction :: String -> Int -> CFuncDeclaration
 newFunction identifier varCount =
@@ -166,3 +150,24 @@ cAstAddGlobalVar ast identifier varCount =
 mangledName :: String -> Int -> String
 mangledName identifier varCount =
     "__var_" ++ identifier ++ "_" ++ show varCount
+
+-- Set arbitrary variable to arbitrary value
+-- Functions are built by appending new statements at the beginning of the statement list!
+-- So we will need to reverse the order of statements after the function is built
+setVarValue :: CFuncDeclaration -> String -> Value -> CFuncDeclaration
+setVarValue fn lhs (VAR_TYPE_IDENTIFIER identifier) =
+    let procs = func_proc fn
+        new_proc = CStatementExp (CBinaryExp (CBinSingleEq, CVariableExp lhs, CVariableExp identifier)) in
+    fn { func_proc=new_proc:procs }
+setVarValue fn lhs val =
+    let procs = func_proc fn
+        rhs_type = join_with_dot_op [lhs, "type"]
+        lhs_type = enum_exp val
+        rhs_val = join_with_dot_op [lhs, "u", val_struct_accessor val]
+        lhs_val = val_exp val
+        set_type_proc = CStatementExp (CBinaryExp (CBinSingleEq, rhs_type, lhs_type))
+        set_val_proc = CStatementExp (CBinaryExp (CBinSingleEq, rhs_val, lhs_val))
+    in
+    case val of
+        VAR_TYPE_FALSE -> fn { func_proc=set_type_proc:procs }
+        _              -> fn { func_proc=set_type_proc:set_val_proc:procs }

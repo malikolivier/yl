@@ -221,8 +221,11 @@ ctxCallFunction ctx identifier arguments =
     ctx -- TODO
 
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
-ctxSetRegister ctx reg val =
-    let fn = setRegValue (currentFunction ctx) reg val in
+ctxSetRegister ctx reg val = ctxSetVarValue ctx (show reg) val
+
+ctxSetVarValue :: CompileContext -> String -> Value -> CompileContext
+ctxSetVarValue ctx c_identifier val =
+    let fn = setVarValue (currentFunction ctx) c_identifier val in
     ctx { functionStack=fn:tail (functionStack ctx) }
 
 ctxParseSymbol :: CompileContext -> String -> Value
