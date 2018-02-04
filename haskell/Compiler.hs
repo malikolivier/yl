@@ -142,6 +142,7 @@ ctxCompileList ctx list
         ctxCompileFunction ctx ((AstNode identifier):next) =
             case identifier of
                 "def" -> ctxCreateFunction ctx next
+                "let" -> ctxCreateVariable ctx next
                 _     -> ctxCallFunction ctx identifier next
 
 -- Create new function
@@ -211,6 +212,19 @@ ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
                     cAstAddGlobalVar cAst' str varCount
                 AstList _   ->
                     error("'def' parameters should be symbols!")
+
+ctxCreateVariable :: CompileContext -> [Ast] -> CompileContext
+ctxCreateVariable ctx []            = error "'let' should have at least 1 argument!"
+ctxCreateVariable ctx (AstList _:_) = error "First argument of 'let' should be a symbol!"
+ctxCreateVariable ctx (lhs:[])      = ctxCreateVariable ctx [lhs, AstList []]
+ctxCreateVariable ctx (AstNode lhs:rhs:_)   =
+    let ctx' = ctxCompile (ctx {evaluateFunction=True}) rhs
+        c_identifier = mangledName lhs (varCount ctx')
+        scope' = scopeSetNotCallable (scope ctx') lhs c_identifier
+        cAst' = cAstAddGlobalVar (cAst ctx') lhs (varCount ctx')
+        ctx'' = ctx' { scope=scope', cAst=cAst', varCount=varCount ctx' + 1 }
+    in
+    ctxSetVarValue ctx'' c_identifier (VAR_TYPE_IDENTIFIER "RET")
 
 -- Look in scope for called object (it should exist)
 -- Set function parameters to value of provided arguments
