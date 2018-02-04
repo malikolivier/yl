@@ -139,6 +139,7 @@ ctxCompileList ctx list
             case identifier of
                 "def" -> ctxCreateFunction ctx next
                 "let" -> ctxCreateVariable ctx next
+                "print" -> ctxCallPrint ctx next
                 _     -> ctxCallFunction ctx identifier next
 
 -- Create new function
@@ -250,6 +251,15 @@ ctxCallFunction ctx identifier arguments =
                 ctx'' = ctxSetVarValue ctx' param (VAR_TYPE_IDENTIFIER "RET")
             in
             setParamValues ctx'' next_param next_arg
+
+ctxCallPrint :: CompileContext -> [Ast] -> CompileContext
+ctxCallPrint ctx [] = ctx
+ctxCallPrint ctx (argument:next) =
+    let ctx' = ctxCompile (ctx { evaluateFunction=True }) argument
+        fn = addCallToFunctionPointer (currentFunction ctx') "print" [VAR_TYPE_IDENTIFIER "RET"]
+        ctx'' = ctx' { functionStack=fn:tail (functionStack ctx') }
+    in
+    ctxCallPrint ctx'' next
 
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
 ctxSetRegister ctx reg val = ctxSetVarValue ctx (show reg) val

@@ -16,6 +16,7 @@ module CAstHelper
 , mangledName
 , setVarValue
 , addCallToFunctionPointerNoArg
+, addCallToFunctionPointer
 ) where
 
 import           CAst
@@ -235,8 +236,17 @@ setVarValue fn lhs val =
         _              -> fn { func_proc=set_type_proc:set_val_proc:procs }
 
 addCallToFunctionPointerNoArg :: CFuncDeclaration -> String -> CFuncDeclaration
-addCallToFunctionPointerNoArg fn fn_pointer =
+addCallToFunctionPointerNoArg fn fn_pointer = addCallToFunctionPointer fn fn_pointer []
+
+addCallToFunctionPointer :: CFuncDeclaration -> String -> [Value] -> CFuncDeclaration
+addCallToFunctionPointer fn fn_pointer values =
     let procs = func_proc fn
-        call_fn_pointer_proc = CStatementExp (CCallExp (fn_pointer, []))
+        call_fn_pointer_proc = CStatementExp (CCallExp (fn_pointer, map valueToExp values))
     in
     fn { func_proc=call_fn_pointer_proc:procs }
+    where
+        valueToExp :: Value -> CExp
+        valueToExp value =
+            case value of
+                VAR_TYPE_IDENTIFIER identifier -> CVariableExp identifier
+                _                              -> error("Not implemented")
