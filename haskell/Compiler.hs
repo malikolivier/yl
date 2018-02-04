@@ -218,7 +218,29 @@ ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
 -- Set RET register to output of called function
 ctxCallFunction :: CompileContext -> String -> [Ast] -> CompileContext
 ctxCallFunction ctx identifier arguments =
-    ctx -- TODO
+    let maybeCalledValue = scopeGet (scope ctx) identifier in
+    case maybeCalledValue of
+        Nothing          -> error("Undefined symbol not callable " ++ identifier)
+        Just calledValue ->
+            case value_in_scope_type calledValue of
+                NotCallable     -> error("Cannot call uncallable object: " ++ identifier)
+                Callable params -> call ctx identifier params arguments
+    where
+        call :: CompileContext -> String -> [String] -> [Ast] -> CompileContext
+        call ctx identifier params arguments =
+            let ctx' = setParamValues ctx params arguments in
+            ctx' -- TODO
+
+        setParamValues :: CompileContext -> [String] -> [Ast] -> CompileContext
+        setParamValues ctx [] arguments = ctx
+        setParamValues ctx (param:next) [] = -- set param to FALSE
+            let ctx' = setParamValues ctx next [] in
+            ctxSetVarValue ctx' param VAR_TYPE_FALSE
+        setParamValues ctx (param:next_param) (argument:next_arg) =
+            let ctx'  = ctxCompile (ctx { evaluateFunction=True }) argument
+                ctx'' = ctxSetVarValue ctx' param (VAR_TYPE_IDENTIFIER "RET")
+            in
+            setParamValues ctx'' next_param next_arg
 
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
 ctxSetRegister ctx reg val = ctxSetVarValue ctx (show reg) val
