@@ -77,7 +77,7 @@ currentFunction ctx = head $ functionStack ctx
 data ValueInScopeType = Callable [String]
                       | NotCallable
                       deriving (Show)
-data ValueInScope = ValueInScope { c_identifier :: String
+data ValueInScope = ValueInScope { c_identifier        :: String
                                  , value_in_scope_type :: ValueInScopeType
                                  }
                   deriving (Show)
@@ -137,10 +137,10 @@ ctxCompileList ctx list
                 ctxCompileSimpleList newCtx next
         ctxCompileFunction ctx ((AstNode identifier):next) =
             case identifier of
-                "def" -> ctxCreateFunction ctx next
-                "let" -> ctxCreateVariable ctx next
+                "def"   -> ctxCreateFunction ctx next
+                "let"   -> ctxCreateVariable ctx next
                 "print" -> ctxCallPrint ctx next
-                _     -> ctxCallFunction ctx identifier next
+                _       -> ctxCallFunction ctx identifier next
 
 -- Create new function
 -- Add function to outer scope
