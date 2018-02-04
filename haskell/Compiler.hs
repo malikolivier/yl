@@ -14,7 +14,7 @@ import           Parser
 stdlib = CInclude { lib_name="stdlib.h", builtin=True }
 
 
-var_toi_fn_statements =
+var_toi_fn_statements = -- TODO Add case for VAR_TYPE_FLOAT
     [CStatementSwitch ( CBinaryExp (CBinDot, CVariableExp "obj", CVariableExp "type")
                       , [ (CVariableExp "VAR_TYPE_INT"
                           , [CStatementReturn $ join_with_dot_op ["obj", "u", "i"]]
