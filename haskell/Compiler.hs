@@ -228,7 +228,7 @@ ctxCallFunction ctx identifier arguments =
         call :: CompileContext -> String -> [String] -> [Ast] -> CompileContext
         call ctx c_identifier params arguments =
             let ctx' = setParamValues ctx params arguments in
-            ctxAddFunctionCall ctx c_identifier
+            ctxAddFunctionCall ctx' c_identifier
 
         setParamValues :: CompileContext -> [String] -> [Ast] -> CompileContext
         setParamValues ctx [] arguments = ctx
