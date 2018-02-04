@@ -10,10 +10,6 @@ import           CAstHelper
 import           Parser
 
 
-
-stdlib = CInclude { lib_name="stdlib.h", builtin=True }
-
-
 var_toi_fn_statements = -- TODO Add case for VAR_TYPE_FLOAT
     [CStatementSwitch ( CBinaryExp (CBinDot, CVariableExp "obj", CVariableExp "type")
                       , [ (CVariableExp "VAR_TYPE_INT"
@@ -46,7 +42,7 @@ main_fn =
                                  , CStatementReturn $ CCallExp ("var_toi", [CVariableExp "RET"])
                                  ]
                   }
-initialCAst = CAst { includes=[stdlib],
+initialCAst = CAst { includes=[stdlib, stdio],
                      type_declarations=[ CTypeDeclarationEnum enum_var_type
                                        , CTypeDeclarationStruct var_struct
                                        ],
@@ -55,7 +51,7 @@ initialCAst = CAst { includes=[stdlib],
                                  , CVarDeclOrInit_DeclInit $ declare_yl_false "FALSE"
                                  , CVarDeclOrInit_DeclInit $ declare_yl_false "RET"
                                  ],
-                     functions = [var_toi_fn, main_fn]}
+                     functions = [print_fn_decl, var_toi_fn, main_fn]}
 
 -- Keep track of current context during compilation
 data CompileContext = CompileContext { scope            :: Scope

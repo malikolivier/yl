@@ -228,7 +228,10 @@ instance Show CStatement where
         let print_case (expr, statements) =
                 "case " ++ show expr ++ ":\n\t" ++ intercalate "" (map show statements)
             content = intercalate "\n" $ map print_case case_list
-            default_content = "default: " ++ intercalate "\n" (map show default_case_statements) in
+            default_content = case length default_case_statements of
+                0 -> ""
+                _ -> "default: " ++ intercalate "\n" (map show default_case_statements)
+        in
         "switch (" ++ show condition ++ ") { " ++ content ++ default_content ++ "}"
     show CStatementBreak = "break;\n"
     show CStatementEmpty = ";\n"

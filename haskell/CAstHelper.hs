@@ -1,5 +1,8 @@
 module CAstHelper
-( join_with_dot_op
+( stdlib
+, stdio
+, print_fn_decl
+, join_with_dot_op
 , cAstAddFunction
 , declare_yl_false
 , enum_var_type
@@ -51,6 +54,10 @@ val_exp (VAR_TYPE_FLOAT f)    = CFloatExp f
 val_exp (VAR_TYPE_STRING str) = CStringExp str
 val_exp (VAR_TYPE_FUNC fn)    = CVariableExp fn
 
+stdlib = CInclude { lib_name="stdlib.h", builtin=True }
+stdio  = CInclude { lib_name="stdio.h", builtin=True }
+
+
 enum_var_type = CEnum { enum_name="var_type", enum=["VAR_TYPE_FALSE",
                                                     "VAR_TYPE_INT",
                                                     "VAR_TYPE_FLOAT",
@@ -74,6 +81,28 @@ var_struct = CStruct { struct_name="var"
                                ]
                      }
 
+print_fn_statements =
+    [CStatementSwitch ( CBinaryExp (CBinDot, CVariableExp "obj", CVariableExp "type")
+                      , [ (CVariableExp "VAR_TYPE_FALSE"
+                          , [ CStatementExp $ CCallExp ("printf", [ CStringExp "()\n"
+                                                                  ]
+                                                       )
+                            , CStatementBreak
+                            ]
+                          )
+                        ]
+                      , [] -- No default statement
+                      )
+    ]
+
+print_fn_decl = CFuncDeclaration { func_name="print"
+                                 , func_parameters=[ CVarDeclaration { identifier="obj"
+                                                                     , ctype=CTypeStruct var_struct
+                                                                     }
+                                                   ]
+                                 , return_type=CVoid
+                                 , func_proc=print_fn_statements
+}
 
 join_with_dot_op :: [String] -> CExp
 join_with_dot_op [] = undefined
