@@ -111,7 +111,7 @@ ctxCompile ctx (AstList list)
     | otherwise    = newCtx
         where
             newCtx     = ctxCompileList (ctx { topLevel=False }) list
-            ast        = cAst ctx
+            ast        = cAst newCtx
             topLevelFn = currentFunction newCtx
 
 compileVal :: CompileContext -> String -> CompileContext
