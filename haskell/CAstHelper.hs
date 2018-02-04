@@ -125,7 +125,7 @@ cAstAddFunction ast fn =
         rev_proc_fn = fn { func_proc=reverse $ func_proc fn } in
     ast { functions=(rev_proc_fn:funcs) }
 
--- Set arbitrary register to arbitrary data
+-- Set arbitrary register to arbitrary value
 -- Functions are built by appending new statements at the beginning of the statement list!
 -- So we will need to reverse the order of statements after the function is built
 setRegValue :: CFuncDeclaration -> Register -> Value -> CFuncDeclaration

@@ -135,7 +135,7 @@ ctxCompileList ctx list
         ctxCompileFunction ctx ((AstNode identifier):next) =
             case identifier of
                 "def" -> ctxCreateFunction ctx next
-                _     -> ctxCallFunction ctx next
+                _     -> ctxCallFunction ctx identifier next
 
 -- Create new function
 -- Add function to outer scope
@@ -188,10 +188,12 @@ ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
                 AstList _   ->
                     error("'def' parameters should be symbols!")
 
-
-
-ctxCallFunction :: CompileContext -> [Ast] -> CompileContext
-ctxCallFunction ctx ast =
+-- Look in scope for called object (it should exist)
+-- Set function parameters to value of provided arguments
+-- Call function
+-- Set RET register to output of called function
+ctxCallFunction :: CompileContext -> String -> [Ast] -> CompileContext
+ctxCallFunction ctx identifier arguments =
     ctx -- TODO
 
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
