@@ -162,6 +162,7 @@ cAstAddGlobalVar ast identifier varCount =
     in
     ast { global_vars=decl:global_vars ast }
 
+
 mangledName :: String -> Int -> String
 mangledName identifier varCount =
     "__var_" ++ identifier ++ "_" ++ show varCount

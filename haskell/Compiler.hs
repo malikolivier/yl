@@ -78,9 +78,16 @@ data CompileContext = CompileContext { scope            :: Scope
 currentFunction :: CompileContext -> CFuncDeclaration
 currentFunction ctx = head $ functionStack ctx
 
+data ValueInScopeType = Callable [String]
+                      | NotCallable
+                      deriving (Show)
+data ValueInScope = ValueInScope { c_identifier :: String
+                                 , value_in_scope_type :: ValueInScopeType
+                                 }
+                  deriving (Show)
 
-data Scope = ScopeTopLevel [(String, String)]
-           | ChildScope { vars   :: [(String, String)]
+data Scope = ScopeTopLevel [(String, ValueInScope)]
+           | ChildScope { vars   :: [(String, ValueInScope)]
                         , parent :: Scope
                         }
            deriving (Show)
@@ -148,7 +155,10 @@ ctxCreateFunction ctx (_:[]) = error "'def' should have at least 2 arguments"
 ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
     let newFn = newFunction identifier (varCount ctx)
         function_name = func_name newFn
-        outerScope = scopeSet (scope ctx) identifier function_name
+        outerScope = scopeSet (scope ctx) identifier ( ValueInScope { c_identifier=function_name
+                                                                    , value_in_scope_type=Callable (getParameterNames parameters (varCount ctx + 1))
+                                                                    }
+                                                     )
         fnScope = addParametersToFunctionScope (scopeExtend outerScope) parameters (varCount ctx + 1)
         fnCAst = addGlobalVars (cAst ctx) parameters (varCount ctx + 1)
         varCount' = 1 + scopeLength fnScope
@@ -167,16 +177,30 @@ ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
     in
         ctxSetRegister completedCtx RET_REGISTER (VAR_TYPE_FUNC function_name)
     where
+        getParameterNames :: Ast -> Int -> [String]
+        getParameterNames (AstNode str) varCount =
+            [mangledName str varCount]
+        getParameterNames (AstList []) varCount = []
+        getParameterNames (AstList (h:next)) varCount =
+            case h of
+                AstNode str ->
+                    (mangledName str varCount):getParameterNames (AstList next) (varCount + 1)
+                AstList _   ->
+                    error("'def' parameters should be symbols!")
+
+        addParametersToFunctionScope :: Scope -> Ast -> Int -> Scope
         addParametersToFunctionScope scope (AstNode str) varCount =
-            scopeSet scope str (mangledName str varCount)
+            scopeSetNotCallable scope str (mangledName str varCount)
         addParametersToFunctionScope scope (AstList []) varCount = scope
         addParametersToFunctionScope scope (AstList (h:next)) varCount =
             let scope' = addParametersToFunctionScope scope (AstList next) (varCount + 1) in
             case h of
                 AstNode str ->
-                    scopeSet scope' str (mangledName str varCount)
+                    scopeSetNotCallable scope' str (mangledName str varCount)
                 AstList _   ->
                     error("'def' parameters should be symbols!")
+
+        addGlobalVars :: CAst -> Ast -> Int -> CAst
         addGlobalVars cAst (AstNode str) varCount =
             cAstAddGlobalVar cAst str varCount
         addGlobalVars cAst (AstList []) varCount = cAst
@@ -203,7 +227,7 @@ ctxSetRegister ctx reg val =
 
 ctxParseSymbol :: CompileContext -> String -> Value
 ctxParseSymbol ctx symbol =
-    let varName = scopeGet (scope ctx) symbol in
+    let varName = scopeGetCIdentifier (scope ctx) symbol in
     case varName of
         Nothing         -> parseSymbol symbol
         Just identifier -> VAR_TYPE_IDENTIFIER identifier
@@ -216,20 +240,33 @@ parseSymbol symbol =
             Just f  -> VAR_TYPE_FLOAT f
             Nothing -> VAR_TYPE_STRING symbol
 
-scopeGet :: Scope -> String -> Maybe String
+scopeGet :: Scope -> String -> Maybe ValueInScope
 scopeGet (ScopeTopLevel vars) identifier = lookup identifier vars
 scopeGet (ChildScope {vars=vars, parent=p}) identifier =
     case (lookup identifier vars) of
         Just v  -> Just v
         Nothing -> scopeGet p identifier
 
-scopeSet :: Scope -> String -> String -> Scope
-scopeSet scope yl_identifier c_identifier =
+scopeGetCIdentifier :: Scope -> String -> Maybe String
+scopeGetCIdentifier scope identifier =
+    case (scopeGet scope identifier) of
+        Just v  -> Just (c_identifier v)
+        Nothing -> Nothing
+
+scopeSet :: Scope -> String -> ValueInScope -> Scope
+scopeSet scope yl_identifier value =
     case scope of
         ScopeTopLevel vars ->
-            ScopeTopLevel ((yl_identifier, c_identifier):vars)
+            ScopeTopLevel ((yl_identifier, value):vars)
         ChildScope { vars=vars, parent=p } ->
-            ChildScope { vars=(yl_identifier, c_identifier):vars, parent=p }
+            ChildScope { vars=(yl_identifier, value):vars, parent=p }
+
+-- Will have to change an uncallable value to callable value and vice-versa
+-- during assignment, especially when setting scope before calling a function or
+-- using let
+scopeSetNotCallable :: Scope -> String -> String -> Scope
+scopeSetNotCallable scope yl_identifier c_identifier =
+    scopeSet scope yl_identifier (ValueInScope { c_identifier=c_identifier, value_in_scope_type=NotCallable})
 
 scopeExtend :: Scope -> Scope
 scopeExtend scope =
