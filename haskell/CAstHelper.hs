@@ -90,6 +90,38 @@ print_fn_statements =
                             , CStatementBreak
                             ]
                           )
+                        , (CVariableExp "VAR_TYPE_INT"
+                            , [ CStatementExp $ CCallExp ("printf", [ CStringExp "%ld\n"
+                                                                    , join_with_dot_op ["obj", "u", "i"]
+                                                                    ]
+                                                         )
+                              , CStatementBreak
+                              ]
+                          )
+                        , (CVariableExp "VAR_TYPE_FLOAT"
+                            , [ CStatementExp $ CCallExp ("printf", [ CStringExp "%f\n"
+                                                                    , join_with_dot_op ["obj", "u", "f"]
+                                                                    ]
+                                                         )
+                              , CStatementBreak
+                              ]
+                          )
+                        , (CVariableExp "VAR_TYPE_STRING"
+                            , [ CStatementExp $ CCallExp ("printf", [ CStringExp "%s\n"
+                                                                    , join_with_dot_op ["obj", "u", "str"]
+                                                                    ]
+                                                         )
+                              , CStatementBreak
+                              ]
+                          )
+                        , (CVariableExp "VAR_TYPE_FUNC"
+                            , [ CStatementExp $ CCallExp ("printf", [ CStringExp "Function pointer at %p\n"
+                                                                    , join_with_dot_op ["obj", "u", "fn"]
+                                                                    ]
+                                                         )
+                              , CStatementBreak
+                              ]
+                          )
                         ]
                       , [] -- No default statement
                       )
