@@ -8,6 +8,9 @@ module CAstHelper
 , Register(..)
 , setRegValue
 , newFunction
+, declare_var
+, cAstAddGlobalVar
+, mangledName
 ) where
 
 import           CAst
@@ -79,6 +82,10 @@ join_with_dot_op list =
     in
     join rev
 
+declare_var :: String -> CVarDeclaration
+declare_var identifier =
+    CVarDeclaration {identifier=identifier, ctype=CTypeStruct var_struct}
+
 declare_yl :: String -> CVarInitialization -> CVarDeclarationAndInitialization
 declare_yl identifier init_var =
     CVarDeclarationAndInitialization {
@@ -139,11 +146,22 @@ setRegValue fn reg val =
         VAR_TYPE_FALSE -> fn { func_proc=set_type_proc:procs }
         _              -> fn { func_proc=set_type_proc:set_val_proc:procs }
 
-newFunction :: String -> Integer -> CFuncDeclaration
+newFunction :: String -> Int -> CFuncDeclaration
 newFunction identifier varCount =
-    let generated_name = "__var_" ++ identifier ++ "_" ++ show varCount in
-    CFuncDeclaration { func_name=generated_name
+    CFuncDeclaration { func_name=mangledName identifier varCount
                      , func_parameters=[]
                      , return_type=CVoid
                      , func_proc=[]
                      }
+
+cAstAddGlobalVar :: CAst -> String -> Int -> CAst
+cAstAddGlobalVar ast identifier varCount =
+    let decl = CVarDeclOrInit_Decl CVarDeclaration { identifier=mangledName identifier varCount
+                                                   , ctype=CTypeStruct var_struct
+                                                   }
+    in
+    ast { global_vars=decl:global_vars ast }
+
+mangledName :: String -> Int -> String
+mangledName identifier varCount =
+    "__var_" ++ identifier ++ "_" ++ show varCount

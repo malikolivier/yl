@@ -137,9 +137,58 @@ ctxCompileList ctx list
                 "def" -> ctxCreateFunction ctx next
                 _     -> ctxCallFunction ctx next
 
+-- Create new function
+-- Add function to outer scope
+-- Declare function arguments, add them to fnScope, extended from outer scope
+-- Add new global variables to context cAst
+-- Push new function on the function stack
 ctxCreateFunction :: CompileContext -> [Ast] -> CompileContext
-ctxCreateFunction ctx ast =
-    ctx -- TODO
+ctxCreateFunction ctx []     = error "'def' should have at least 2 arguments"
+ctxCreateFunction ctx (_:[]) = error "'def' should have at least 2 arguments"
+ctxCreateFunction ctx ((AstNode identifier):parameters:expr) =
+    let newFn = newFunction identifier (varCount ctx)
+        function_name = func_name newFn
+        outerScope = scopeSet (scope ctx) identifier function_name
+        fnScope = addParametersToFunctionScope (scopeExtend outerScope) parameters (varCount ctx + 1)
+        fnCAst = addGlobalVars (cAst ctx) parameters (varCount ctx + 1)
+        varCount' = 1 + scopeLength fnScope
+        functionStack' = newFn:(functionStack ctx)
+        fnCtx = ctx { scope=fnScope, cAst=fnCAst, evaluateFunction=False,
+                      varCount=varCount', functionStack=functionStack' }
+        fnCompileCompletedCtx = ctxCompile fnCtx (AstList expr)
+        fnCompileCompletedCtxCAst = cAstAddFunction (cAst fnCompileCompletedCtx) (currentFunction fnCompileCompletedCtx)
+        completedCtx = CompileContext { scope=outerScope
+                                      , cAst=fnCompileCompletedCtxCAst
+                                      , evaluateFunction=evaluateFunction ctx
+                                      , varCount=varCount fnCompileCompletedCtx
+                                      , functionStack=functionStack ctx
+                                      , topLevel=topLevel ctx
+                                      }
+    in
+        ctxSetRegister completedCtx RET_REGISTER (VAR_TYPE_FUNC function_name)
+    where
+        addParametersToFunctionScope scope (AstNode str) varCount =
+            scopeSet scope str (mangledName str varCount)
+        addParametersToFunctionScope scope (AstList []) varCount = scope
+        addParametersToFunctionScope scope (AstList (h:next)) varCount =
+            let scope' = addParametersToFunctionScope scope (AstList next) (varCount + 1) in
+            case h of
+                AstNode str ->
+                    scopeSet scope' str (mangledName str varCount)
+                AstList _   ->
+                    error("'def' parameters should be symbols!")
+        addGlobalVars cAst (AstNode str) varCount =
+            cAstAddGlobalVar cAst str varCount
+        addGlobalVars cAst (AstList []) varCount = cAst
+        addGlobalVars cAst (AstList (h:next)) varCount =
+            let cAst' = addGlobalVars cAst (AstList next) (varCount + 1) in
+            case h of
+                AstNode str ->
+                    cAstAddGlobalVar cAst' str varCount
+                AstList _   ->
+                    error("'def' parameters should be symbols!")
+
+
 
 ctxCallFunction :: CompileContext -> [Ast] -> CompileContext
 ctxCallFunction ctx ast =
@@ -171,3 +220,25 @@ scopeGet (ChildScope {vars=vars, parent=p}) identifier =
     case (lookup identifier vars) of
         Just v  -> Just v
         Nothing -> scopeGet p identifier
+
+scopeSet :: Scope -> String -> String -> Scope
+scopeSet scope yl_identifier c_identifier =
+    case scope of
+        ScopeTopLevel vars ->
+            ScopeTopLevel ((yl_identifier, c_identifier):vars)
+        ChildScope { vars=vars, parent=p } ->
+            ChildScope { vars=(yl_identifier, c_identifier):vars, parent=p }
+
+scopeExtend :: Scope -> Scope
+scopeExtend scope =
+    ChildScope { vars=[], parent=scope }
+
+scopeLength :: Scope -> Int
+scopeLength scope =
+    case scope of
+        ScopeTopLevel vars            -> length vars
+        ChildScope {vars=v, parent=p} -> length v
+
+incrVarCount :: CompileContext -> CompileContext
+incrVarCount ctx =
+    ctx { varCount=varCount ctx + 1 }
