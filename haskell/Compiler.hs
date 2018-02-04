@@ -126,7 +126,6 @@ compileVal ctx string =
     ctxSetRegister ctx RET_REGISTER $ ctxParseSymbol ctx string
 
 ctxCompileList :: CompileContext -> [Ast] -> CompileContext
-ctxCompileList ctx [] = ctxSetRegister ctx RET_REGISTER VAR_TYPE_FALSE
 ctxCompileList ctx list
     | evaluateFunction ctx =
         case (head list) of
@@ -134,8 +133,7 @@ ctxCompileList ctx list
             AstList _ ->     ctxCompileSimpleList ctx list
     | otherwise            = ctxCompileSimpleList ctx list
     where
-        ctxCompileSimpleList ctx (h:[]) =
-            ctxCompile (ctx { evaluateFunction=True }) h
+        ctxCompileSimpleList ctx [] = ctxSetRegister ctx RET_REGISTER VAR_TYPE_FALSE
         ctxCompileSimpleList ctx (h:next) =
             let newCtx = ctxCompile (ctx { evaluateFunction=True }) h in
                 ctxCompileSimpleList newCtx next
