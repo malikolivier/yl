@@ -165,8 +165,9 @@ instance Show CAst where
         let headers = intercalate "" $ map show i
             type_decl = intercalate "" $ map show types
             vars_str = intercalate "" $ map show vars
+            fn_prototypes = intercalate "" $ map function_prototype f
             fn_str = intercalate "" $ map show f in
-        headers ++ type_decl ++ vars_str ++ fn_str
+        headers ++ type_decl ++ vars_str ++ fn_prototypes ++ fn_str
 
 instance Show CTypeDeclaration where
     show (CTypeDeclarationEnum enum)     = show enum
@@ -188,6 +189,13 @@ instance Show CFuncDeclaration where
             params_str = intercalate ", " $ map print_param params
             procs = intercalate "" $ map show statements in
         show ret ++ "\n" ++ name ++ "(" ++ params_str ++ ")\n{\n" ++ procs ++ "\n}\n"
+
+function_prototype :: CFuncDeclaration -> String
+function_prototype CFuncDeclaration { func_name=name, func_parameters=params, return_type=ret, func_proc=_} =
+    let print_param CVarDeclaration{identifier=id_, ctype=ctype} = show ctype ++ " " ++ id_
+        params_str = intercalate ", " $ map print_param params
+    in
+    show ret ++ " " ++ name ++ "(" ++ params_str ++ ");\n"
 
 instance Show CVarInitialization where
     show (IntInitialization i) = show i
