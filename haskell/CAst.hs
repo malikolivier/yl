@@ -186,14 +186,18 @@ instance Show CVarDeclarationOrInitialization where
 instance Show CFuncDeclaration where
     show CFuncDeclaration { func_name=name, func_parameters=params, return_type=ret, func_proc=statements} =
         let print_param CVarDeclaration{identifier=id_, ctype=ctype} = show ctype ++ " " ++ id_
-            params_str = intercalate ", " $ map print_param params
+            params_str = case length params of
+                0 -> "void"
+                _ -> intercalate ", " $ map print_param params
             procs = intercalate "" $ map show statements in
         show ret ++ "\n" ++ name ++ "(" ++ params_str ++ ")\n{\n" ++ procs ++ "\n}\n"
 
 function_prototype :: CFuncDeclaration -> String
 function_prototype CFuncDeclaration { func_name=name, func_parameters=params, return_type=ret, func_proc=_} =
     let print_param CVarDeclaration{identifier=id_, ctype=ctype} = show ctype ++ " " ++ id_
-        params_str = intercalate ", " $ map print_param params
+        params_str = case length params of
+            0 -> "void"
+            _ -> intercalate ", " $ map print_param params
     in
     show ret ++ " " ++ name ++ "(" ++ params_str ++ ");\n"
 
