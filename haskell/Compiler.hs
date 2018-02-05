@@ -140,6 +140,7 @@ ctxCompileList ctx list
                 "def"   -> ctxCreateFunction ctx next
                 "let"   -> ctxCreateVariable ctx next
                 "print" -> ctxCallPrint ctx next
+                "+"     -> ctxCallAdd ctx next
                 _       -> ctxCallFunction ctx identifier next
 
 -- Create new function
@@ -260,6 +261,11 @@ ctxCallPrint ctx (argument:next) =
         ctx'' = ctx' { functionStack=fn:tail (functionStack ctx') }
     in
     ctxCallPrint ctx'' next
+
+ctxCallAdd :: CompileContext -> [Ast] -> CompileContext
+ctxCallAdd ctx []              = error "'+' expects at least 2 arguments"
+ctxCallAdd ctx (_:[])          = error "'+' expects at least 2 arguments"
+ctxCallAdd ctx (argument:next) =
 
 ctxSetRegister :: CompileContext -> Register -> Value -> CompileContext
 ctxSetRegister ctx reg val = ctxSetVarValue ctx (show reg) val
