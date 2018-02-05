@@ -1,6 +1,7 @@
 module SemanticAST
 ( semantic_parse
 , SemanticAST(..)
+, IdentifierNode(..)
 ) where
 
 import Parser
@@ -27,7 +28,9 @@ data SemanticAST = IntegerNode Integer
                             , loop_values :: LoopValues
                             , loop_procedure :: SemanticAST
                             }
+                 | FuncCallNode (SemanticAST, [SemanticAST])
                  | ListNode [SemanticAST]
+                 | NoopNode
                  deriving (Show)
 
 data LoopValues = LoopValuesList [SemanticAST]
