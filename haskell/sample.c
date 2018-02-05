@@ -243,7 +243,8 @@ void my_function_0_fn(int num, ...)
 
 /* Example of generated user defined function */
 /* (let x 1)
-   (def add_to_x (a) (+ x a))                 */
+   (def add_to_x (a) (+ x a))
+   (add_to_x x)                               */
 /* Function should be a global variable       */
 struct var add_to_x_0;
 void add_to_x_0_fn(int num, ...);
@@ -265,6 +266,7 @@ void top_level_scope()
 	add_to_x_0.fn->captured_var_count = 1;
 	RET = add_to_x_0;
 	/* End define function */
+	add_to_x_0.fn->fn(1, x_0);
 }
 
 void add_to_x_0_fn(int num, ...)
