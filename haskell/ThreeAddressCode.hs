@@ -21,6 +21,9 @@ data ThreeAddressCode = GoTo Label
                              , call_arg_count :: Integer
                              }
                       | LabelTAC Label
+                      | CreateFunction { fn_name          ::  Address
+                                       , fn_captured_vars :: [Address]
+                                       }
                       | Noop
                       deriving (Show)
 
@@ -55,15 +58,25 @@ data UnOperator = UnOpMinus
                 | UnOpCastToString
                 deriving (Show)
 
-data TranslateContext = TranslateContext { tacs :: [ThreeAddressCode]
-                                         , tempCount :: Integer
-                                         , labelCount :: Integer
+data FunctionTAC = FunctionTAC { functionAddress :: Address
+                               , functionTacs :: [ThreeAddressCode]
+                               }
+                               deriving (Show)
+
+data TranslateContext = TranslateContext { tacs          :: [ThreeAddressCode]
+                                         , functions     :: [FunctionTAC]
+                                         , tempCount     :: Integer
+                                         , labelCount    :: Integer
+                                         , currentFunctionName :: String
                                          }
                                          deriving (Show)
-new_context = TranslateContext { tacs=[], tempCount=0, labelCount=0 }
+new_context = TranslateContext { tacs=[], functions=[], tempCount=0, labelCount=0, currentFunctionName="main" }
 
-translate_to_tac :: SemanticAST -> [ThreeAddressCode]
-translate_to_tac ast = reverse $ tacs $ translate_to_tac_temp new_context ast
+translate_to_tac :: SemanticAST -> [FunctionTAC]
+translate_to_tac ast =
+    let ctx = translate_to_tac_temp new_context ast
+    in
+    FunctionTAC { functionAddress=Name "main_0", functionTacs=tacs ctx } : functions ctx
 
 
 translate_to_tac_temp :: TranslateContext -> SemanticAST -> TranslateContext
@@ -82,6 +95,22 @@ translate_to_tac_temp ctx (ListNode (h:next)) =
     let ctx' = translate_to_tac_temp ctx h
     in
     translate_to_tac_temp ctx' (ListNode next)
+
+translate_to_tac_temp ctx (DefFnNode { fn_identifier=id_
+                                     , fn_parameters=params
+                                     , fn_procedure=procedure
+                                     }) =
+    let funcName = mangle_identifier id_
+        newFunction = CreateFunction { fn_name=funcName
+                                     , fn_captured_vars=map mangle_identifier params
+                                     }
+        ctx' = append_tac ctx newFunction
+        fnCtx = translate_to_tac_temp (ctx' {tacs=[], functions=[]}) procedure
+        ctx'' = ctx' { functions=(FunctionTAC { functionAddress=funcName
+                                              , functionTacs=tacs fnCtx
+                                              }) : functions fnCtx ++ functions ctx' }
+    in
+    append_tac ctx'' (Copy (ReturnAddress, funcName))
 
 translate_to_tac_temp ctx (LetNode { let_identifier=id_
                                    , let_rhs=rhs
