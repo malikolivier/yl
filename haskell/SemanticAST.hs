@@ -26,7 +26,7 @@ data SemanticAST = IntegerNode Integer
                             , loop_values :: LoopValues
                             , loop_procedure :: SemanticAST
                             }
-                 | FuncCallNode (SemanticAST, [SemanticAST])
+                 | FuncCallNode (IdentifierNode, [SemanticAST])
                  | ListNode [SemanticAST]
                  | NoopNode
                  deriving (Show)

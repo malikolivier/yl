@@ -18,7 +18,7 @@ data ThreeAddressCode = GoTo Label
                       | Copy (Address, Address)
                       | Param Address
                       | Call { call_fn :: Address
-                             , call_arg_count :: Integer
+                             , call_arg_count :: Int
                              }
                       | LabelTAC Label
                       | CreateFunction { fn_name          ::  Address
@@ -76,7 +76,7 @@ translate_to_tac :: SemanticAST -> [FunctionTAC]
 translate_to_tac ast =
     let ctx = translate_to_tac_temp new_context ast
     in
-    FunctionTAC { functionAddress=Name "main_0", functionTacs=tacs ctx } : functions ctx
+    FunctionTAC { functionAddress=Name "main_0", functionTacs=reverse $ tacs ctx } : functions ctx
 
 
 translate_to_tac_temp :: TranslateContext -> SemanticAST -> TranslateContext
@@ -107,7 +107,7 @@ translate_to_tac_temp ctx (DefFnNode { fn_identifier=id_
         ctx' = append_tac ctx newFunction
         fnCtx = translate_to_tac_temp (ctx' {tacs=[], functions=[]}) procedure
         ctx'' = ctx' { functions=(FunctionTAC { functionAddress=funcName
-                                              , functionTacs=tacs fnCtx
+                                              , functionTacs=reverse $ tacs fnCtx
                                               }) : functions fnCtx ++ functions ctx' }
     in
     append_tac ctx'' (Copy (ReturnAddress, funcName))
@@ -132,12 +132,38 @@ translate_to_tac_temp ctx (IfNode { if_condition=ifAst
     in
     ctxElse
 
+translate_to_tac_temp ctx (FuncCallNode (id_, argsAst)) =
+    let ctx' = set_arguments ctx argsAst
+    in
+    append_tac ctx' (Call { call_fn=mangle_identifier id_
+                          , call_arg_count=length argsAst
+                          })
+    where
+        set_arguments :: TranslateContext -> [SemanticAST] -> TranslateContext
+        set_arguments ctx [] = ctx
+        set_arguments ctx (h:next) =
+            let ctx' = translate_to_tac_temp ctx h
+                tmpName = TempName (tempCount ctx)
+                ctx'' = copy_to_new_temp_name ctx' ReturnAddress tmpName
+                ctx''' = append_tac ctx'' (Param tmpName)
+            in
+            set_arguments ctx''' next
+
+translate_to_tac_temp ctx LoopNode{} = error("TODO")
+
 append_tac :: TranslateContext -> ThreeAddressCode -> TranslateContext
 append_tac ctx tac = ctx { tacs=tac:tacs ctx }
 
 append_label :: TranslateContext -> Label -> TranslateContext
 append_label ctx label =
     ctx { tacs=(LabelTAC label):tacs ctx, labelCount=labelCount ctx + 1 }
+
+copy_to_new_temp_name :: TranslateContext -> Address -> Address -> TranslateContext
+copy_to_new_temp_name ctx address tmpName =
+    case tmpName of
+        TempName count ->
+            ctx { tacs=(Copy (tmpName, address)):tacs ctx, tempCount=count + 1 }
+        _ -> error("Expected a TempName address!")
 
 return_value :: Address -> ThreeAddressCode
 return_value address = Copy (ReturnAddress, address)
