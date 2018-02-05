@@ -28,17 +28,10 @@ struct var {
 };
 
 struct func {
-	int argc;
-	union {
-		void (*fn0)();
-		void (*fn1)(struct var);
-		void (*fn2)(struct var, struct var);
-		/* ... Generate as many as necessary ... */
-	};
+	void (*fn)(int num, ...);
 	struct var *captured_vars;
 	int captured_var_count;
 };
-
 
 /* Global variables */
 int ARGC;
@@ -225,6 +218,74 @@ void print(int num, ...)
 	va_end(valist);
 	RET.type = VAR_TYPE_FALSE;
 }
+
+/* Example of generated user defined function */
+/* (def my_function (a b) (+ a b))            */
+void my_function_0_fn(int num, ...)
+{
+	/* First set parameters */
+	va_list valist;
+	va_start(valist, num);
+	struct var a_0;
+	struct var b_0;
+	if (num > 0)
+		a_0 = va_arg(valist, struct var);
+	else
+		a_0.type = VAR_TYPE_FALSE;
+	if (num > 1)
+		b_0 = va_arg(valist, struct var);
+	else
+		b_0.type = VAR_TYPE_FALSE;
+	/* ... Go on until all parameters are set */
+	va_end(valist);
+	add(2, a_0, b_0);
+}
+
+/* Example of generated user defined function */
+/* (let x 1)
+   (def add_to_x (a) (+ x a))                 */
+/* Function should be a global variable       */
+struct var add_to_x_0;
+void add_to_x_0_fn(int num, ...);
+
+void top_level_scope()
+{
+	RET.type = VAR_TYPE_INT;
+	RET.i = 1;
+	struct var x_0 = RET;
+	/* Define function */
+	add_to_x_0.type = VAR_TYPE_FUNC;
+	add_to_x_0.fn = malloc(sizeof(struct func));
+	assert(add_to_x_0.fn != NULL);
+	add_to_x_0.fn->fn = add_to_x_0_fn;
+	struct var *captured_vars = malloc(sizeof(struct var) * 1); /* captured_var_count = 1 */
+	assert(captured_vars != NULL);
+	captured_vars[0] = x_0;
+	add_to_x_0.fn->captured_vars = captured_vars;
+	add_to_x_0.fn->captured_var_count = 1;
+	RET = add_to_x_0;
+	/* End define function */
+}
+
+void add_to_x_0_fn(int num, ...)
+{
+	/* First set parameters */
+	va_list valist;
+	va_start(valist, num);
+	struct var a_0;
+	if (num > 0)
+		a_0 = va_arg(valist, struct var);
+	else
+		a_0.type = VAR_TYPE_FALSE;
+	/* ... Go on until all parameters are set */
+	va_end(valist);
+	/* Loop on captured values */
+	struct var x_0 = add_to_x_0.fn->captured_vars[0];
+	/* ... Go on setting captured values */
+	add(2, x_0, a_0);
+}
+
+
 
 int main(int argc, char** argv_)
 {

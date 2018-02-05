@@ -12,11 +12,9 @@ data SemanticAST = IntegerNode Integer
                  | FloatNode Double
                  | StringNode String
                  | IdNode IdentifierNode
-                 | DefFnNode { fn_identifier :: IdentifierNode
-                             , fn_parameters :: [String]
-                             , fn_procedure  :: SemanticAST
-                             -- Stores all the symbols defined in the upper scope
-                             , fn_symbol_table :: [IdentifierNode]
+                 | DefFnNode { fn_identifier    :: IdentifierNode
+                             , fn_parameters    :: [IdentifierNode]
+                             , fn_procedure     :: SemanticAST
                              }
                  | LetNode { let_identifier :: IdentifierNode
                            , let_rhs :: SemanticAST }
@@ -38,8 +36,9 @@ data LoopValues = LoopValuesList [SemanticAST]
                 | LoopRangeFloat (Double, Double)
                 deriving (Show)
 
-data IdentifierNode = IdentifierNode { id_symbol :: String
-                                     , id_count  :: Integer
+data IdentifierNode = IdentifierNode { id_symbol     :: String
+                                     , id_count      :: Integer
+                                     , captured_vars :: [IdentifierNode]
                                      }
                                      deriving (Show)
 

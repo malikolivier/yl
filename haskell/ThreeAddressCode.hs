@@ -17,8 +17,7 @@ data ThreeAddressCode = GoTo Label
                                       }
                       | Copy (Address, Address)
                       | Param Address
-                      | Call { call_rhs :: Address
-                             , call_fn :: Address
+                      | Call { call_fn :: Address
                              , call_arg_count :: Integer
                              }
                       | LabelTAC Label
