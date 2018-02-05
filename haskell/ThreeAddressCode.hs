@@ -84,6 +84,13 @@ translate_to_tac_temp ctx (ListNode (h:next)) =
     in
     translate_to_tac_temp ctx' (ListNode next)
 
+translate_to_tac_temp ctx (LetNode { let_identifier=id_
+                                   , let_rhs=rhs
+                                   }) =
+    let ctx' = translate_to_tac_temp ctx rhs
+    in
+    append_tac ctx' (Copy (mangle_identifier id_, ReturnAddress))
+
 translate_to_tac_temp ctx (IfNode { if_condition=ifAst
                                   , then_procedure=thenAst
                                   , else_procedure=elseAst
@@ -109,4 +116,13 @@ return_value address = Copy (ReturnAddress, address)
 
 mangle_identifier :: IdentifierNode -> Address
 mangle_identifier (IdentifierNode {id_symbol=str, id_count=count}) =
-    Name (str ++ "_" ++ show count)
+    Name (replace str ++ "_" ++ show count)
+    where
+        replace :: String -> String
+        replace [] = []
+        replace (h:next) =
+            let replacedNext = replace next
+                allLetters = "abdefghijklmnopqrstupvwxyzABCDEFGHUIJKLMNOPQRSTUVWXYZ0123456789_"
+            in
+            if not (elem h allLetters)
+                then '_':replacedNext else h:replacedNext
