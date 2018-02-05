@@ -22,6 +22,7 @@ data ThreeAddressCode = GoTo Label
                              }
                       | LabelTAC Label
                       | CreateFunction { fn_name          ::  Address
+                                       , fn_params        :: [Address]
                                        , fn_captured_vars :: [Address]
                                        }
                       | Noop
@@ -102,7 +103,8 @@ translate_to_tac_temp ctx (DefFnNode { fn_identifier=id_
                                      }) =
     let funcName = mangle_identifier id_
         newFunction = CreateFunction { fn_name=funcName
-                                     , fn_captured_vars=map mangle_identifier params
+                                     , fn_params=map mangle_identifier params
+                                     , fn_captured_vars=map mangle_identifier $ captured_vars id_
                                      }
         ctx' = append_tac ctx newFunction
         fnCtx = translate_to_tac_temp (ctx' {tacs=[], functions=[]}) procedure
