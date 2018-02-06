@@ -1,8 +1,10 @@
 module ThreeAddressCode
 ( translate_to_tac
+, pretty_tac
 ) where
 
 import SemanticAST
+import           Data.List
 
 data ThreeAddressCode = GoTo Label
                       | IfTrue (Address, Label)
@@ -63,6 +65,61 @@ data FunctionTAC = FunctionTAC { functionAddress :: Address
                                , functionTacs :: [ThreeAddressCode]
                                }
                                deriving (Show)
+
+class Pretty t where
+    pretty_tac :: t -> String
+    pretty_tac_list :: [t] -> String
+    pretty_tac_list list = pretty_tac_list_from_index list 1
+    pretty_tac_list_from_index :: [t] -> Int -> String
+    pretty_tac_list_from_index [] i = ""
+    pretty_tac_list_from_index (h:next) i =
+        show i ++ ") " ++ pretty_tac h ++ "\n" ++ pretty_tac_list_from_index next (i+1)
+
+instance Pretty ThreeAddressCode where
+    pretty_tac (GoTo l) =
+        "goto " ++ pretty_tac l
+    pretty_tac (IfTrue (ad, l)) =
+        "ifTrue " ++ pretty_tac ad ++ " goto " ++ pretty_tac l
+    pretty_tac (IfFalse (ad, l)) =
+        "ifFalse " ++ pretty_tac ad ++ " goto " ++ pretty_tac l
+    pretty_tac BinOpAssigment {} =
+        undefined
+    pretty_tac UnOpAssigment {} =
+        undefined
+    pretty_tac (Copy (lhs, rhs)) =
+        pretty_tac lhs ++ " := " ++ pretty_tac rhs
+    pretty_tac (Param ad) =
+        "param " ++ pretty_tac ad
+    pretty_tac (Call {call_fn=ad, call_arg_count=c}) =
+        "call " ++ pretty_tac ad ++ " , " ++ show c
+    pretty_tac (LabelTAC l) =
+        pretty_tac l
+    pretty_tac (CreateFunction {fn_name=name, fn_params=params, fn_captured_vars=captured_vars}) =
+        let pretty_params = intercalate ", " (map pretty_tac params)
+            pretty_capts = intercalate ", " (map pretty_tac captured_vars)
+        in
+        "makefn " ++ pretty_tac name ++ "(" ++ pretty_params ++ ") " ++
+            if length captured_vars == 0 then
+                "NO CAPTURES"
+            else
+                "CAPTURES: [" ++ pretty_capts ++ "]"
+    pretty_tac Noop = ""
+
+instance Pretty Label where
+    pretty_tac (Label i) = "label_" ++ show i ++ ":"
+
+instance Pretty Address where
+    pretty_tac (IntConstant i) = '#': show i
+    pretty_tac (FloatConstant d) = '#': show d
+    pretty_tac (StringConstant s) = '#': show s
+    pretty_tac (Name s) = s
+    pretty_tac (TempName i) = 't':show i
+    pretty_tac ReturnAddress = "RET"
+    pretty_tac FalseAddress = "FALSE"
+
+instance Pretty FunctionTAC where
+    pretty_tac FunctionTAC { functionAddress=ad, functionTacs=tacs } =
+        "procedure " ++ pretty_tac ad ++ "\n{\n" ++ pretty_tac_list tacs ++ "}"
 
 data TranslateContext = TranslateContext { tacs          :: [ThreeAddressCode]
                                          , functions     :: [FunctionTAC]
