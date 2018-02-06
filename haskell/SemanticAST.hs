@@ -50,11 +50,13 @@ instance Eq IdentifierNode where
 data SemanticParseContext = SemanticParseContext { scope  :: Scope
                                                  , semAst :: SemanticAST
                                                  }
+                                                 deriving (Show)
 
 data Scope = TopLevel [IdentifierNode]
            | ChildScope { scope_parent :: Scope
                         , scope_vars :: [IdentifierNode]
                         }
+                        deriving (Show)
 
 new_parse_context = SemanticParseContext { scope=TopLevel [], semAst=NoopNode }
 
@@ -93,7 +95,7 @@ semantic_parse_list ctx all@(h:next) True =
         AstList list    -> semantic_parse_list ctx all False
         AstNode "let"   -> semantic_parse_let ctx next
         AstNode "def"   -> semantic_parse_def ctx next
-        AstNode "if"    -> undefined
+        AstNode "if"    -> semantic_parse_if ctx next
         AstNode "loop"  -> undefined
         AstNode identifier ->
             let var = scope_get (scope ctx) identifier in
@@ -198,6 +200,21 @@ semantic_parse_def ctx (lhs:params:procedure) =
                 find_captured_vars NoopNode declared_vars = ([], declared_vars)
 
         set_captured_vars _ = error("Expected DefFnNode. This IS a compiler bug!")
+
+semantic_parse_if :: SemanticParseContext -> [Ast] -> SemanticParseContext
+semantic_parse_if ctx [] = error "'if' should be used as '(if cond then else)'."
+semantic_parse_if ctx (_:[]) = error "'if' should be used as '(if cond then else)'. 'then' is missing!"
+semantic_parse_if ctx (cond:thn:[]) = semantic_parse_if ctx [cond, thn, AstList []]
+semantic_parse_if ctx (cond:thn:els:_) =
+    let ifCtx = semantic_parse_temp ctx cond True
+        thnCtx = semantic_parse_temp ifCtx thn False
+        elsCtx = semantic_parse_temp thnCtx els False
+    in
+    elsCtx { semAst=IfNode { if_condition=semAst ifCtx
+                           , then_procedure=semAst thnCtx
+                           , else_procedure=semAst elsCtx
+                           }
+           }
 
 semantic_parse_call :: SemanticParseContext -> IdentifierNode -> [Ast] -> SemanticParseContext
 semantic_parse_call ctx id_ args =
