@@ -172,7 +172,7 @@ return_value address = Copy (ReturnAddress, address)
 
 mangle_identifier :: IdentifierNode -> Address
 mangle_identifier (IdentifierNode {id_symbol=str, id_count=count}) =
-    Name (replace str ++ "_" ++ show count)
+    Name ("__uvar_" ++ replace str ++ "_" ++ show count)
     where
         replace :: String -> String
         replace [] = []
