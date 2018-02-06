@@ -89,7 +89,7 @@ semantic_parse_list ctx all@(h:next) True =
     case h of
         AstList list    -> semantic_parse_list ctx all False
         AstNode "let"   -> semantic_parse_let ctx next
-        AstNode "def"   -> undefined
+        AstNode "def"   -> semantic_parse_def ctx next
         AstNode "if"    -> undefined
         AstNode "loop"  -> undefined
         AstNode identifier ->
@@ -99,6 +99,7 @@ semantic_parse_list ctx all@(h:next) True =
                 Just id_ -> sementic_parse_call ctx id_ next
 
 semantic_parse_let :: SemanticParseContext -> [Ast] -> SemanticParseContext
+semantic_parse_let ctx [] = error("'let expects at least 1 argument!'")
 semantic_parse_let ctx (lhs:[]) = semantic_parse_let ctx [lhs, AstList []]
 semantic_parse_let ctx (lhs:rhs:_) =
     case lhs of
@@ -110,6 +111,46 @@ semantic_parse_let ctx (lhs:rhs:_) =
                                   , let_rhs=semAst ctx'}
             in
             SemanticParseContext { semAst = semAst', scope=scope' }
+
+semantic_parse_def :: SemanticParseContext -> [Ast] -> SemanticParseContext
+semantic_parse_def ctx [] = error("'def expects at least 2 argument!'")
+semantic_parse_def ctx (lhs:[]) = error("'def expects at least 2 argument!'")
+semantic_parse_def ctx (lhs:params:procedure) =
+    case lhs of
+        AstList _          ->  error("Expect an identifier after 'def'")
+        AstNode identifier ->
+            let parameters = unwrap_params params
+                scope' = scope_set (scope ctx) identifier
+                fn_id = unwrap_maybe $ scope_get scope' identifier
+                fnScope = scope_extend scope'
+                fnScope' = scope_set_many fnScope parameters
+                param_ids = map unwrap_maybe (map (scope_get fnScope') parameters)
+                procs = semantic_parse_temp SemanticParseContext { scope=fnScope', semAst=NoopNode }
+                                            (AstList procedure)
+                                            False
+                semAst' = DefFnNode { fn_identifier=fn_id
+                                    , fn_parameters=param_ids
+                                    , fn_procedure=semAst procs
+                                    }
+            in
+            SemanticParseContext { scope=scope'
+                                 , semAst=semAst'
+                                 }
+    where
+        unwrap_params :: Ast -> [String]
+        unwrap_params (AstNode str) = [str]
+        unwrap_params (AstList []) = []
+        unwrap_params (AstList (ast:next)) =
+            case ast of
+                AstNode str -> str : unwrap_params (AstList next)
+                AstList _   -> error("Expect def parameters should be identifiers!")
+
+        scope_set_many :: Scope -> [String] -> Scope
+        scope_set_many scope [] = scope
+        scope_set_many scope (h:next) =
+            let scope' = scope_set_many scope next in
+            scope_set scope' h
+
 
 sementic_parse_call :: SemanticParseContext -> IdentifierNode -> [Ast] -> SemanticParseContext
 sementic_parse_call ctx id_ args =
@@ -189,6 +230,10 @@ scope_set scope str =
                 add_id_node :: [IdentifierNode] -> String -> Integer -> [IdentifierNode]
                 add_id_node vars str c =
                     IdentifierNode {id_symbol=str, id_count=c, captured_vars=[]} : vars
+
+scope_extend :: Scope -> Scope
+scope_extend scope =
+    ChildScope { scope_vars=[], scope_parent=scope }
 
 parse_string :: String -> SemanticAST
 parse_string string =
