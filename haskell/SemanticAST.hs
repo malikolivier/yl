@@ -58,7 +58,13 @@ data Scope = TopLevel [IdentifierNode]
                         }
                         deriving (Show)
 
-new_parse_context = SemanticParseContext { scope=TopLevel [], semAst=NoopNode }
+make_builtin_symbol symbol_name = IdentifierNode { id_symbol=symbol_name
+                                                 , id_count=0
+                                                 , captured_vars=[]
+                                                 }
+builtin_symbols = map make_builtin_symbol [ "print", "!", "=", ">", ">=", "<", "<="
+                                          , "+", "-", "*", "/", "%", "argv", "rand"]
+new_parse_context = SemanticParseContext { scope=TopLevel builtin_symbols, semAst=NoopNode }
 
 semantic_parse :: Ast -> SemanticAST
 semantic_parse ast = semAst $ semantic_parse_temp new_parse_context ast False
@@ -96,7 +102,7 @@ semantic_parse_list ctx all@(h:next) True =
         AstNode "let"   -> semantic_parse_let ctx next
         AstNode "def"   -> semantic_parse_def ctx next
         AstNode "if"    -> semantic_parse_if ctx next
-        AstNode "loop"  -> undefined
+        AstNode "loop"  -> undefined -- TODO
         AstNode identifier ->
             let var = scope_get (scope ctx) identifier in
             case var of
