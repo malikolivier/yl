@@ -43,6 +43,9 @@ data IdentifierNode = IdentifierNode { id_symbol     :: String
                                      , captured_vars :: [IdentifierNode]
                                      }
                                      deriving (Show)
+instance Eq IdentifierNode where
+    IdentifierNode { id_symbol=s1, id_count=c1 } == IdentifierNode { id_symbol=s2, id_count=c2 } =
+        s1 == s2 && c1 == c2
 
 data SemanticParseContext = SemanticParseContext { scope  :: Scope
                                                  , semAst :: SemanticAST
@@ -96,7 +99,7 @@ semantic_parse_list ctx all@(h:next) True =
             let var = scope_get (scope ctx) identifier in
             case var of
                 Nothing  -> semantic_parse_list ctx all False
-                Just id_ -> sementic_parse_call ctx id_ next
+                Just id_ -> semantic_parse_call ctx id_ next
 
 semantic_parse_let :: SemanticParseContext -> [Ast] -> SemanticParseContext
 semantic_parse_let ctx [] = error("'let expects at least 1 argument!'")
@@ -134,7 +137,7 @@ semantic_parse_def ctx (lhs:params:procedure) =
                                     }
             in
             SemanticParseContext { scope=scope'
-                                 , semAst=semAst'
+                                 , semAst=set_captured_vars semAst'
                                  }
     where
         unwrap_params :: Ast -> [String]
@@ -151,9 +154,53 @@ semantic_parse_def ctx (lhs:params:procedure) =
             let scope' = scope_set_many scope next in
             scope_set scope' h
 
+        -- All identifiers used inside the function that were not first declared are captured variables!
+        --  Do not need to recursively search functions declared inside this function.
+        set_captured_vars :: SemanticAST -> SemanticAST
+        set_captured_vars (all@DefFnNode { fn_identifier=fn_id
+                                         , fn_parameters=param_ids
+                                         , fn_procedure=procs
+                                         }) =
+            let (capt_vars, _) = find_captured_vars procs param_ids
+            in
+            all { fn_identifier=fn_id { captured_vars=capt_vars } }
+            where
+                find_captured_vars :: SemanticAST -> [IdentifierNode] -> ([IdentifierNode], [IdentifierNode])
+                find_captured_vars (IntegerNode _) declared_vars = ([], declared_vars)
+                find_captured_vars (FloatNode _) declared_vars = ([], declared_vars)
+                find_captured_vars (StringNode _) declared_vars = ([], declared_vars)
+                find_captured_vars (IdNode identifier) declared_vars =
+                    (if elem identifier declared_vars then [] else [identifier], declared_vars)
+                find_captured_vars (DefFnNode {fn_identifier=identifier}) declared_vars =
+                    (if elem identifier declared_vars then [] else [identifier], declared_vars)
+                find_captured_vars (LetNode {let_identifier=identifier, let_rhs=rhs}) declared_vars =
+                    find_captured_vars rhs (identifier:declared_vars)
+                find_captured_vars (IfNode {if_condition=cond, else_procedure=els, then_procedure=thn}) declared_vars =
+                    let (capt_vars, decl_vars) = find_captured_vars cond declared_vars
+                        (capt_vars', decl_vars') = find_captured_vars els decl_vars
+                        (capt_vars'', decl_vars'') = find_captured_vars thn decl_vars'
+                    in
+                    (capt_vars ++ capt_vars' ++ capt_vars'', decl_vars'')
+                find_captured_vars (LoopNode {}) declared_vars = undefined
+                find_captured_vars (FuncCallNode (identifier, args)) declared_vars =
+                    let decl_vars = if elem identifier declared_vars then declared_vars else identifier:declared_vars
+                    in
+                    find_captured_vars_in_row args decl_vars
+                    where
+                        find_captured_vars_in_row :: [SemanticAST] -> [IdentifierNode] -> ([IdentifierNode], [IdentifierNode])
+                        find_captured_vars_in_row asts declared_vars = find_captured_vars (ListNode asts) declared_vars
+                find_captured_vars (ListNode []) declared_vars = ([], declared_vars)
+                find_captured_vars (ListNode (h:next)) declared_vars =
+                    let (capt_vars, decl_vars) = find_captured_vars h declared_vars
+                        (capt_vars', decl_vars') = find_captured_vars (ListNode next) decl_vars
+                    in
+                    (capt_vars ++ capt_vars', decl_vars')
+                find_captured_vars NoopNode declared_vars = ([], declared_vars)
 
-sementic_parse_call :: SemanticParseContext -> IdentifierNode -> [Ast] -> SemanticParseContext
-sementic_parse_call ctx id_ args =
+        set_captured_vars _ = error("Expected DefFnNode. This IS a compiler bug!")
+
+semantic_parse_call :: SemanticParseContext -> IdentifierNode -> [Ast] -> SemanticParseContext
+semantic_parse_call ctx id_ args =
     let (ctx', semArgs) = getArgs ctx args
         newCall = FuncCallNode (id_, semArgs)
     in
