@@ -65,7 +65,10 @@ make_builtin_symbol symbol_name = IdentifierNode { id_symbol=symbol_name
                                                  }
 builtin_symbols = map make_builtin_symbol [ "print", "!", "=", ">", ">=", "<", "<="
                                           , "+", "-", "*", "/", "%", "argv", "rand"]
-new_parse_context = SemanticParseContext { scope=TopLevel builtin_symbols, semAst=NoopNode }
+new_parse_context = SemanticParseContext { scope=ChildScope { scope_parent=TopLevel builtin_symbols
+                                                            , scope_vars=[]
+                                                            }
+                                         , semAst=NoopNode }
 
 semantic_parse :: Ast -> SemanticAST
 semantic_parse ast = semAst $ semantic_parse_temp new_parse_context ast False
