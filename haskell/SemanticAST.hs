@@ -4,9 +4,10 @@ module SemanticAST
 , IdentifierNode(..)
 ) where
 
-import Text.Read
+import           Data.List
+import           Text.Read
 
-import Parser
+import           Parser
 
 -- Analysis AST and turn it into a SemanticAST
 
@@ -14,19 +15,19 @@ data SemanticAST = IntegerNode Integer
                  | FloatNode Double
                  | StringNode String
                  | IdNode IdentifierNode
-                 | DefFnNode { fn_identifier    :: IdentifierNode
-                             , fn_parameters    :: [IdentifierNode]
-                             , fn_procedure     :: SemanticAST
+                 | DefFnNode { fn_identifier :: IdentifierNode
+                             , fn_parameters :: [IdentifierNode]
+                             , fn_procedure  :: SemanticAST
                              }
                  | LetNode { let_identifier :: IdentifierNode
-                           , let_rhs :: SemanticAST }
-                 | IfNode { if_condition :: SemanticAST
+                           , let_rhs        :: SemanticAST }
+                 | IfNode { if_condition   :: SemanticAST
                           , else_procedure :: SemanticAST
                           , then_procedure :: SemanticAST
                           }
                  | LoopNode { loop_identifier :: IdentifierNode
-                            , loop_values :: LoopValues
-                            , loop_procedure :: SemanticAST
+                            , loop_values     :: LoopValues
+                            , loop_procedure  :: SemanticAST
                             }
                  | FuncCallNode (IdentifierNode, [SemanticAST])
                  | ListNode [SemanticAST]
@@ -54,7 +55,7 @@ data SemanticParseContext = SemanticParseContext { scope  :: Scope
 
 data Scope = TopLevel [IdentifierNode]
            | ChildScope { scope_parent :: Scope
-                        , scope_vars :: [IdentifierNode]
+                        , scope_vars   :: [IdentifierNode]
                         }
                         deriving (Show)
 
@@ -171,7 +172,7 @@ semantic_parse_def ctx (lhs:params:procedure) =
                                          }) =
             let (capt_vars, _) = find_captured_vars procs param_ids
             in
-            all { fn_identifier=fn_id { captured_vars=capt_vars } }
+            all { fn_identifier=fn_id { captured_vars=nub capt_vars } }
             where
                 find_captured_vars :: SemanticAST -> [IdentifierNode] -> ([IdentifierNode], [IdentifierNode])
                 find_captured_vars (IntegerNode _) declared_vars = ([], declared_vars)
@@ -191,9 +192,10 @@ semantic_parse_def ctx (lhs:params:procedure) =
                     (capt_vars ++ capt_vars' ++ capt_vars'', decl_vars'')
                 find_captured_vars (LoopNode {}) declared_vars = undefined
                 find_captured_vars (FuncCallNode (identifier, args)) declared_vars =
-                    let decl_vars = if elem identifier declared_vars then declared_vars else identifier:declared_vars
+                    let capt_vars = if elem identifier declared_vars then [] else [identifier]
+                        (capt_vars', decl_vars') = find_captured_vars_in_row args declared_vars
                     in
-                    find_captured_vars_in_row args decl_vars
+                    (capt_vars ++ capt_vars', decl_vars')
                     where
                         find_captured_vars_in_row :: [SemanticAST] -> [IdentifierNode] -> ([IdentifierNode], [IdentifierNode])
                         find_captured_vars_in_row asts declared_vars = find_captured_vars (ListNode asts) declared_vars
@@ -247,8 +249,8 @@ scope_get scope id_ =
         TopLevel vars -> find vars id_
         ChildScope {scope_parent=p, scope_vars=vars } ->
             case find vars id_ of
-                Just idNode  -> Just idNode
-                Nothing      -> scope_get p id_
+                Just idNode -> Just idNode
+                Nothing     -> scope_get p id_
     where
         find :: [IdentifierNode] -> String -> Maybe IdentifierNode
         find [] _ = Nothing

@@ -3,23 +3,23 @@ module ThreeAddressCode
 , pretty_tac
 ) where
 
-import SemanticAST
 import           Data.List
+import           SemanticAST
 
 data ThreeAddressCode = GoTo Label
                       | IfTrue (Address, Label)
                       | IfFalse (Address, Label)
                       | BinOpAssigment { bin_op_rhs :: Address
                                        , bin_op_lhs :: (Address, Address)
-                                       , bin_op :: BinOperator
+                                       , bin_op     :: BinOperator
                                        }
                       | UnOpAssigment { un_op_rhs :: Address
                                       , un_op_lhs :: Address
-                                      , un_op :: UnOperator
+                                      , un_op     :: UnOperator
                                       }
                       | Copy (Address, Address)
                       | Param Address
-                      | Call { call_fn :: Address
+                      | Call { call_fn        :: Address
                              , call_arg_count :: Int
                              }
                       | LabelTAC Label
@@ -62,7 +62,7 @@ data UnOperator = UnOpMinus
                 deriving (Show)
 
 data FunctionTAC = FunctionTAC { functionAddress :: Address
-                               , functionTacs :: [ThreeAddressCode]
+                               , functionTacs    :: [ThreeAddressCode]
                                }
                                deriving (Show)
 
@@ -109,13 +109,13 @@ instance Pretty Label where
     pretty_tac (Label i) = "label_" ++ show i ++ ":"
 
 instance Pretty Address where
-    pretty_tac (IntConstant i) = '#': show i
-    pretty_tac (FloatConstant d) = '#': show d
+    pretty_tac (IntConstant i)    = '#': show i
+    pretty_tac (FloatConstant d)  = '#': show d
     pretty_tac (StringConstant s) = '#': show s
-    pretty_tac (Name s) = s
-    pretty_tac (TempName i) = 't':show i
-    pretty_tac ReturnAddress = "RET"
-    pretty_tac FalseAddress = "FALSE"
+    pretty_tac (Name s)           = s
+    pretty_tac (TempName i)       = 't':show i
+    pretty_tac ReturnAddress      = "RET"
+    pretty_tac FalseAddress       = "FALSE"
 
 instance Pretty FunctionTAC where
     pretty_tac FunctionTAC { functionAddress=ad, functionTacs=tacs } =
